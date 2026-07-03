@@ -121,6 +121,7 @@ cd TODAIT_AOS
 | 저장된 코스 화면 | `SavedCoursesScreen` | 코스 저장 성공 후 / 하단 탭 [저장된 코스] | 지니/황지희 |
 | 코스 상세 정보 화면 | `CourseDetailScreen` | 저장된 코스 카드 탭 / 홈 인기 코스 카드 탭 | 지니/황지희 |
 | 마이페이지 화면 | `MyPageScreen` | 하단 탭 [마이페이지] | 지니/황지희 |
+| 로딩 / 에러 / 빈 상태 공통 컴포넌트 | `LoadingIndicator` / `ErrorContent` / `EmptyContent` | 전 화면 공통 (네트워크 로딩·에러·빈 상태 표시) | 지니/황지희 |
 
 ---
 

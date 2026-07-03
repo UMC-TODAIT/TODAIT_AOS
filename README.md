@@ -80,7 +80,7 @@ app/src/main/java/com/umc/todait
 ### 요구 환경
 - Android Studio **Ladybug 이상**
 - JDK **17**
-- minSdk **26** / targetSdk **35**
+- minSdk **26** / targetSdk **36**
 
 ### 실행
 ```bash

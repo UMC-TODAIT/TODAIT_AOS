@@ -34,8 +34,8 @@
 | 네트워크 | Retrofit2 · OkHttp3(Logging Interceptor) · Gson |
 | 네비게이션 | Navigation Compose |
 | 이미지 | Coil |
-| 지도 | Naver Map SDK (Compose) — *키 발급 후 연동 예정* |
-| 인증 | Kakao Login SDK — *키 발급 후 연동 예정* |
+| 지도 | Naver Map SDK (Compose) |
+| 인증 | Kakao Login SDK |
 | 협업 | GitHub Flow · Issue/PR 템플릿 · 코드 리뷰 |
 
 ---

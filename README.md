@@ -16,7 +16,7 @@
 | --- | --- | --- |
 | 티아/강서윤 | [@CreamMatcha](https://github.com/CreamMatcha) | 기준 장소 설정, 코스 구성하기, 지도(핀·도보 경로) 연동, 코스 저장 |
 | 무즈/김규리 | [@kyureekimm](https://github.com/kyureekimm) | 로그인/회원가입, 홈,취향 설정(분위기·음식)  |
-| 지니/황지희 | [@jihui0523](https://github.com/jihui0523) | 저장된 코스/상세, 마이페이지 |
+| 지니/황지희 | [@jihui0523](https://github.com/jihui0523) | 저장된 코스/상세, 마이페이지, 로딩/에러/빈 상태 공통 컴포넌트 |
 
 > 공통: API 연동은 각자 담당 화면 기준, 디자인 시스템·공통 컴포넌트는 PR 리뷰로 함께 관리합니다.
 

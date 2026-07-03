@@ -7,7 +7,8 @@ package com.umc.todait.navigation
 sealed class Screen(val route: String) {
     // Auth (무즈/김규리)
     data object Login : Screen("login")
-    data object TermsAgreement : Screen("terms_agreement")     // 카카오 로그인 최초 가입 시
+    data object Signup : Screen("signup")                      // 카카오 로그인 최초 가입 시
+    data object TermsAgreement : Screen("terms_agreement")     // 회원가입 화면 [다음]
     data object SignupComplete : Screen("signup_complete")
 
     // Home (무즈/김규리)

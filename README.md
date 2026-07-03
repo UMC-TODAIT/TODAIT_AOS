@@ -26,7 +26,7 @@
 
 | 구분 | 내용 |
 | --- | --- |
-| 언어 | Kotlin 2.1 |
+| 언어 | Kotlin 2.2 |
 | UI | Jetpack Compose (Material 3) |
 | 아키텍처 | MVVM + 단방향 데이터 흐름(UiState/UiEvent), 단일 모듈 · feature 패키지 분리 |
 | 비동기 | Coroutines · Flow |
@@ -55,7 +55,7 @@ app/src/main/java/com/umc/todait
 │   ├── theme                   # Color / Typography / Theme (디자인 시스템)
 │   └── component               # 공통 컴포저블 (버튼, 카드, 태그 칩 등)
 └── feature                     # 화면(기능) 단위 패키지
-    ├── auth                    # 로그인, 회원가입 완료
+    ├── auth                    # 로그인, 회원가입, 약관 동의, 회원가입 완료
     ├── home                    # 홈
     ├── course                  # 취향 설정 → 기준 장소 → 코스 구성 → 저장
     ├── saved                   # 저장된 코스, 코스 상세
@@ -78,8 +78,9 @@ app/src/main/java/com/umc/todait
 ## 🚀 빌드 및 실행 방법
 
 ### 요구 환경
-- Android Studio **Ladybug 이상**
+- Android Studio **Otter 3 Feature Drop (2025.2.3) 이상** (AGP 9.1.1 요구 버전)
 - JDK **17**
+- Gradle **9.3.1** (Gradle Wrapper 포함, 별도 설치 불필요)
 - minSdk **26** / targetSdk **36**
 
 ### 실행
@@ -106,7 +107,8 @@ cd TODAIT_AOS
 | 화면 이름 | 스크린 ID | 진입 경로 | 담당자 |
 | --- | --- | --- | --- |
 | 로그인 화면 | `LoginScreen` | 앱 최초 진입 / 세션 만료 시 | 무즈/김규리 |
-| 약관 동의 화면 | `TermsAgreementScreen` | 카카오 로그인 최초 가입 시 | 무즈/김규리 |
+| 회원가입 화면 | `SignupScreen` | 카카오 로그인 최초 가입 시 | 무즈/김규리 |
+| 약관 동의 화면 | `TermsAgreementScreen` | 회원가입 화면 [다음] | 무즈/김규리 |
 | 회원가입 완료 화면 | `SignupCompleteScreen` | 약관 동의 완료 시 | 무즈/김규리 |
 | 홈 화면 | `HomeScreen` | 로그인 완료 후 / 하단 탭 [홈] | 무즈/김규리 |
 | 분위기 선택 화면 | `MoodSelectScreen` | 홈 [코스 생성] 버튼 / 하단 탭 [코스 생성] | 무즈/김규리 |
@@ -126,8 +128,9 @@ cd TODAIT_AOS
 
 ```mermaid
 flowchart TD
-    Login[로그인 화면] -->|최초 가입| Terms[약관 동의 화면]
+    Login[로그인 화면] -->|최초 가입| Signup[회원가입 화면]
     Login -->|기존 회원| Home[홈 화면]
+    Signup -->|정보 입력 · 다음| Terms[약관 동의 화면]
     Terms -->|필수 약관 동의| SignupComplete[회원가입 완료 화면]
     SignupComplete -->|일정 시간 경과| Home
 
@@ -155,7 +158,7 @@ flowchart TD
 **텍스트 요약 (기본 플로우)**
 
 ```
-로그인 → (최초 가입 시 약관 동의 → 회원가입 완료) → 홈
+로그인 → (최초 가입 시 회원가입 → 약관 동의 → 회원가입 완료) → 홈
 → 코스 생성 → 분위기 선택(2개↑) → 음식 선택(1개↑)
 → 기준 장소 설정 → 기준 장소 확인 모달(확인)
 → 코스 구성하기(카테고리별 추천 + 지도 핀/도보 경로)

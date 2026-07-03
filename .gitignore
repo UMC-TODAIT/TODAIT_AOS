@@ -4,6 +4,8 @@
 /.idea
 .DS_Store
 /build
+# 모듈 빌드 산출물 (루트 /build 외에 각 모듈 build 디렉터리도 제외)
+build/
 /captures
 .externalNativeBuild
 .cxx

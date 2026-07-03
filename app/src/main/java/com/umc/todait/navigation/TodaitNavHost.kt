@@ -61,6 +61,8 @@ fun TodaitApp() {
         ) {
             // ---------- Auth ----------
             composable(Screen.Login.route) { PlaceholderScreen("로그인") }
+            composable(Screen.Signup.route) { PlaceholderScreen("회원가입") }
+            composable(Screen.TermsAgreement.route) { PlaceholderScreen("약관 동의") }
             composable(Screen.SignupComplete.route) { PlaceholderScreen("회원가입 완료") }
 
             // ---------- Home ----------

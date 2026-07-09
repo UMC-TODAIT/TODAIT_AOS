@@ -1,5 +1,7 @@
 package com.umc.todait.di
 
+import com.umc.todait.feature.course.data.service.PlaceService
+import com.umc.todait.feature.course.data.service.RecommendationService
 import com.umc.todait.feature.course.data.service.SearchService
 import dagger.Module
 import dagger.Provides
@@ -23,4 +25,14 @@ object CourseModule {
     @Singleton
     fun provideSearchService(retrofit: Retrofit): SearchService =
         retrofit.create(SearchService::class.java)
+
+    @Provides
+    @Singleton
+    fun providePlaceService(retrofit: Retrofit): PlaceService =
+        retrofit.create(PlaceService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideRecommendationService(retrofit: Retrofit): RecommendationService =
+        retrofit.create(RecommendationService::class.java)
 }

@@ -79,6 +79,34 @@
 - 매직 넘버 금지 — 의미 있는 상수로 추출.
 - 사용하지 않는 import/코드는 머지 전 제거.
 
+### 4.1 Drawable 리소스
+
+Android `res/drawable`은 **하위 폴더를 만들 수 없습니다(flat 구조).** feature별 폴더 분류 대신 **파일명 접두사로 그룹핑**합니다.
+
+**폴더 (밀도 한정자만 사용)**
+
+| 종류 | 위치 |
+| --- | --- |
+| 벡터 (`VectorDrawable`, `.xml`) | `drawable/` |
+| 래스터 (png/jpg) | `drawable-nodpi/` |
+| 런처 아이콘 전용 | `mipmap-*` |
+
+**파일명**: `<타입>_<도메인>_<설명>` — 전부 snake_case (소문자·숫자·`_`만)
+
+| 타입 접두사 | 용도 | 예시 |
+| --- | --- | --- |
+| `ic_` | 아이콘 (벡터 우선) | `ic_place_pin` |
+| `img_` | 사진 / 일러스트 / 장식 | `img_course_empty` |
+| `bg_` | 배경 / 그라데이션 | `bg_home_gradient` |
+| `shape_` | shape drawable (버튼·카드 배경) | `shape_button_primary` |
+| `selector_` | 상태 selector | `selector_tab_icon` |
+| `divider_` | 구분선 | `divider_list` |
+
+- **도메인** = feature 이름 (`place`, `course`, `login`, `home`, `saved`, `mypage`). 2개 이상 화면에서 공통으로 쓰면 `common`.
+- **브랜드 자산**은 도메인 대신 `todait` 사용: `ic_todait_logo`, `ic_todait_wordmark`.
+- 같은 성격의 여러 개는 접미사 숫자로: `ic_place_deco_1`, `_2`, `_3`.
+- 기존 파일(`ic_google.jpg`, `ic_kakao.png`)은 **소급 강제 아님**. 팀 합의 시 `ic_login_google` / `ic_login_kakao`로 일괄 rename(참조 코드 동반 수정).
+
 ## 5. 패키지 구조 규칙
 
 ```

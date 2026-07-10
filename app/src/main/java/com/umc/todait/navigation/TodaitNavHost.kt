@@ -16,6 +16,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.umc.todait.feature.mypage.MyPageScreen
 import com.umc.todait.feature.mypage.NoticeScreen
+import com.umc.todait.feature.auth.login.LoginScreen
 import com.umc.todait.ui.component.PlaceholderScreen
 
 /**
@@ -62,7 +63,14 @@ fun TodaitApp() {
             modifier = Modifier.padding(innerPadding),
         ) {
             // ---------- Auth ----------
-            composable(Screen.Login.route) { PlaceholderScreen("로그인") }
+            composable(Screen.Login.route) {
+                LoginScreen(
+                    // TODO: 소셜 로그인 SDK 연동 이슈에서 실제 로그인 처리로 교체
+                    onKakaoLoginClick = {},
+                    onGoogleLoginClick = {},
+                    onEmailLoginClick = { navController.navigate(Screen.Signup.route) },
+                )
+            }
             composable(Screen.Signup.route) { PlaceholderScreen("회원가입") }
             composable(Screen.TermsAgreement.route) { PlaceholderScreen("약관 동의") }
             composable(Screen.SignupComplete.route) { PlaceholderScreen("회원가입 완료") }

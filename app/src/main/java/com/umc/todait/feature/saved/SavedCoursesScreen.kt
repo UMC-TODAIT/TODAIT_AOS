@@ -28,6 +28,7 @@ import com.umc.todait.R
 import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.lazy.LazyColumn
 
 
@@ -70,7 +71,6 @@ fun SavedCoursesScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
             }
-
 
             LazyColumn(
                 modifier = Modifier
@@ -145,7 +145,8 @@ fun SavedCoursesScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(190.dp)
-                .align(Alignment.BottomCenter),
+                .align(Alignment.BottomCenter)
+                .offset(y = 80.dp),
             contentScale = ContentScale.FillBounds
         )
     }

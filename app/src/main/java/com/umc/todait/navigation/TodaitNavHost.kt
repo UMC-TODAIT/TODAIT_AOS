@@ -17,6 +17,7 @@ import androidx.navigation.compose.rememberNavController
 import com.umc.todait.feature.mypage.MyPageScreen
 import com.umc.todait.feature.mypage.NoticeScreen
 import com.umc.todait.feature.auth.login.LoginScreen
+import com.umc.todait.feature.course.base_place.BasePlaceScreen
 import com.umc.todait.ui.component.PlaceholderScreen
 
 /**
@@ -81,7 +82,13 @@ fun TodaitApp() {
             // ---------- Course 생성 플로우 ----------
             composable(Screen.MoodSelect.route) { PlaceholderScreen("분위기 선택") }
             composable(Screen.FoodSelect.route) { PlaceholderScreen("음식 선택") }
-            composable(Screen.BasePlace.route) { PlaceholderScreen("기준 장소 설정") }
+            composable(Screen.BasePlace.route) {
+                BasePlaceScreen(
+                    onNavigateToCompose = {
+                        navController.navigate(Screen.CourseCompose.route)
+                    },
+                )
+            }
             composable(Screen.CourseCompose.route) { PlaceholderScreen("코스 구성하기") }
             composable(Screen.SelectedPlaces.route) { PlaceholderScreen("선택한 장소") }
             composable(Screen.CourseSave.route) { PlaceholderScreen("코스 저장") }

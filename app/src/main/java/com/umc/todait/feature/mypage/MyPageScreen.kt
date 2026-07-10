@@ -2,6 +2,7 @@ package com.umc.todait.feature.mypage
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,11 +17,23 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.umc.todait.R
+import androidx.compose.runtime.*
+import com.umc.todait.ui.component.CommonDialog
+
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
+fun MyPageScreenPreview() {
+    MyPageScreen(
+        navController = rememberNavController()
+    )
+}
+@Composable
 fun MyPageScreen(
+    navController: NavController,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -29,6 +42,9 @@ fun MyPageScreen(
             .background(Color(0xFFFDFBF3))
             .padding(horizontal = 20.dp)
     ) {
+        var showLogoutDialog by remember {
+            mutableStateOf(false)
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -65,7 +81,31 @@ fun MyPageScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        SettingsCard()
+        SettingsCard(
+            onNoticeClick = {
+                navController.navigate("notice")
+            },
+            onLogoutClick = {
+                showLogoutDialog = true
+            }
+        )
+
+        if (showLogoutDialog) {
+            CommonDialog(
+                title = "로그아웃",
+                message = "로그아웃하시겠습니까?",
+                confirmText = "확인",
+                onConfirm = {
+                    showLogoutDialog = false
+
+                    // TODO 로그아웃 API 호출
+                    // TODO 로그인 화면 이동
+                },
+                onDismiss = {
+                    showLogoutDialog = false
+                }
+            )
+        }
     }
 }
 
@@ -78,12 +118,10 @@ fun ProfileCard() {
             containerColor = Color(0xFFFFEBEB)
         )
     ) {
-
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-
             Box(
                 modifier = Modifier
                     .size(64.dp)
@@ -93,7 +131,6 @@ fun ProfileCard() {
                     ),
                 contentAlignment = Alignment.Center
             ) {
-
                 Image(
                     painter = painterResource(R.drawable.ic_group_1171275966),
                     contentDescription = null,
@@ -124,7 +161,10 @@ fun ProfileCard() {
 }
 
 @Composable
-fun SettingsCard() {
+fun SettingsCard(
+    onNoticeClick: () -> Unit,
+    onLogoutClick: () -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -136,32 +176,13 @@ fun SettingsCard() {
             SettingItem(
                 icon = {
                     Icon(
-                        painter = painterResource(R.drawable.ic_group_1171275965),
-                        contentDescription = null,
-                        tint = Color.Unspecified
-                    )
-                },
-                title = "알림 설정"
-            )
-
-            Image(
-                painter = painterResource(R.drawable.ic_line_78),
-                contentDescription = null,
-                modifier = Modifier
-                    .padding(horizontal = 18.dp)
-                    .fillMaxWidth()
-                    .height(1.dp)
-            )
-
-            SettingItem(
-                icon = {
-                    Icon(
                         painter = painterResource(R.drawable.ic_component_9),
                         contentDescription = null,
                         tint = Color.Unspecified
                     )
                 },
-                title = "공지사항 및 고객센터"
+                title = "공지사항 및 고객센터",
+                onClick = onNoticeClick
             )
 
             Image(
@@ -181,22 +202,23 @@ fun SettingsCard() {
                         tint = Color.Unspecified
                     )
                 },
-                title = "로그아웃"
+                title = "로그아웃",
+                onClick = onLogoutClick
             )
         }
     }
 }
 
-
 @Composable
 fun SettingItem(
     icon: @Composable () -> Unit,
-    title: String
+    title: String,
+    onClick: () -> Unit
 ) {
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onClick() }
             .padding(horizontal = 28.dp, vertical = 18.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

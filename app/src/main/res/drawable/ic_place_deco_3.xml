@@ -1,0 +1,11 @@
+<!-- 장소 카드 우측 하단 장식(별형). Figma: 기준장소설정 카드 Union(스파클) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="63dp"
+    android:height="63dp"
+    android:viewportWidth="63"
+    android:viewportHeight="63">
+    <path
+        android:pathData="M31.6299 11.7598L40.3262 0.0761719L41.1758 15.3975L54.5566 8.57227L48.6309 22.7773L62.7168 24.8906L50.626 32.5771L62.0723 44.9033L45.6953 43.0811L49.9131 58.9297L36.3047 49.4199L31.502 62.7168L26.79 49.6748L13.5459 58.9297L17.7207 43.2373L2.75 44.9033L13.4131 33.4189L0 24.8906L14.085 22.7773L8.16016 8.57227L21.9297 15.5967L22.3994 0L31.6299 11.7598Z"
+        android:fillColor="#FCF4DB"
+        android:fillAlpha="0.7" />
+</vector>

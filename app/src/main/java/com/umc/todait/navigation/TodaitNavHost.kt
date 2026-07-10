@@ -87,6 +87,7 @@ fun TodaitApp() {
                     onNavigateToCompose = {
                         navController.navigate(Screen.CourseCompose.route)
                     },
+                    onBack = { navController.popBackStack() },
                 )
             }
             composable(Screen.CourseCompose.route) { PlaceholderScreen("코스 구성하기") }

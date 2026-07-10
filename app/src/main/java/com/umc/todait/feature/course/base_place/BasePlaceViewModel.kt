@@ -92,7 +92,7 @@ class BasePlaceViewModel @Inject constructor(
                         val places = result.data.places.map { it.toUiModel() }
                         state.copy(
                             listState = if (places.isEmpty()) {
-                                PlaceListState.Empty(emptySearchMessage(keyword))
+                                PlaceListState.Empty(EMPTY_SEARCH_MESSAGE)
                             } else {
                                 PlaceListState.Success(places)
                             },
@@ -151,9 +151,8 @@ class BasePlaceViewModel @Inject constructor(
         private const val ERROR_UNSUPPORTED_AREA = "현재는 홍대, 연남, 성수 지역만 코스 생성을 지원해요."
         private const val ERROR_NO_COORDINATE = "장소 정보를 불러올 수 없습니다. 다른 장소를 선택해주세요."
         private const val EMPTY_NEARBY_MESSAGE = "지금 추천할 수 있는 주변 핫플이 없어요."
-
-        private fun emptySearchMessage(keyword: String): String =
-            "'$keyword'에 대한 검색 결과가 없어요."
+        // 검색 결과 없음(와이어프레임: 검색 결과 없음 화면). 디자인상 검색어를 포함하지 않는 일반 문구.
+        private const val EMPTY_SEARCH_MESSAGE = "검색 결과가 없어요"
     }
 }
 

@@ -13,6 +13,8 @@
     <string name="base_place_title">기준 장소 설정</string>
     <string name="base_place_search_hint">원하는 장소를 검색해보세요</string>
     <string name="base_place_section_nearby">지금 내 주변 핫플</string>
+    <string name="base_place_section_search">검색 결과</string>
+    <string name="base_place_empty_search_desc">검색어를 다시 확인해주세요.</string>
     <string name="base_place_confirm_title">기준 장소를 \'%1$s\'으로 시작할까요?</string>
     <string name="base_place_confirm_desc">\'%1$s\'을 중심으로 코스가 구성돼요.</string>
     <string name="base_place_confirm_positive">확인</string>

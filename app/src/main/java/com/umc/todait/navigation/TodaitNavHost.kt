@@ -14,8 +14,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.umc.todait.feature.mypage.MyPageScreen
-import com.umc.todait.feature.mypage.NoticeScreen
 import com.umc.todait.ui.component.PlaceholderScreen
 
 /**
@@ -83,13 +81,7 @@ fun TodaitApp() {
             composable(Screen.CourseDetail.route) { PlaceholderScreen("코스 상세 정보") }
 
             // ---------- MyPage ----------
-            composable(Screen.MyPage.route) {
-                MyPageScreen(navController = navController)
-            }
-
-            composable(Screen.Notice.route) {
-                NoticeScreen(navController = navController)
-            }
+            composable(Screen.MyPage.route) { PlaceholderScreen("마이페이지") }
         }
     }
 }

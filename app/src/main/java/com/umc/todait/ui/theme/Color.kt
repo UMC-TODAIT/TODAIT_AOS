@@ -19,12 +19,13 @@ val Gray900 = Color(0xFF191919)
 val Gray700 = Color(0xFF464646)
 val Gray500 = Color(0xFF8A8A8A)
 val Gray300 = Color(0xFFD6D6D6)
+val Gray200 = Color(0xFFC7C7C7)
 val Gray100 = Color(0xFFF4F4F4)
 val White = Color(0xFFFFFFFF)
 
 // Semantic
-val Error = Color(0xFFF04438)
-val Success = Color(0xFF12B76A)
+val Error = Color(0xFFF74141)
+val Success = Color(0xFF62AC5E)
 val Background = White
 val Surface = White
 val OnPrimary = White
@@ -36,3 +37,10 @@ val KakaoBrown = Color(0xFF191919)
 // 배경 그라디언트 (Figma: linear-gradient(180deg, #FFFAF7 0%, #FFEDED 100%))
 val BgGradientTop = Color(0xFFFFFAF7)
 val BgGradientBottom = Color(0xFFFFEDED)
+
+// 회원가입 폼 전용 (Figma 지정값)
+val Pink400 = Color(0xFFFFBDBC)             // 가입완료 버튼 활성화 (Figma: PINK-400)
+val VerifyPink = Color(0xFFF4A7A5)          // 인증번호 발송/재전송/확인(활성) 버튼
+val DisabledButtonGray = Color(0xFFEEEEEE)  // 가입완료 버튼 비활성화
+val DisabledConfirmGray = Gray200           // 확인 버튼 비활성화
+val SignupBackground = Color(0xFFFDFBF3)    // 회원가입 화면 배경 (그라디언트 아님, 단색)

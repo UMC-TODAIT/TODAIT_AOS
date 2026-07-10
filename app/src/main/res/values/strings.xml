@@ -4,8 +4,36 @@
     <!-- Login -->
     <string name="login_logo_content_description">Todait</string>
     <string name="login_tagline">완벽한 데이트 코스 설계</string>
-    <string name=
-        "login_kakao_button">카카오톡으로 계속하기</string>
+    <string name="login_kakao_button">카카오톡으로 계속하기</string>
     <string name="login_google_button">구글로 계속하기</string>
     <string name="login_email_button">이메일로 계속하기</string>
+
+    <!-- Signup -->
+    <string name="signup_title">계정 생성</string>
+    <string name="signup_heading">이메일 인증 및\n비밀번호 설정</string>
+    <string name="signup_subtitle">안전한 계정 생성을 위해 필요합니다.</string>
+    <string name="signup_back_content_description">뒤로가기</string>
+    <string name="signup_name_label">이름</string>
+    <string name="signup_name_placeholder">이름을 입력해주세요</string>
+    <string name="signup_email_label">이메일 주소</string>
+    <string name="signup_email_placeholder">이메일을 입력해주세요.</string>
+    <string name="signup_email_invalid_message">올바른 이메일 형식이 아닙니다.</string>
+    <string name="signup_send_code_button">인증번호 발송</string>
+    <string name="signup_resend_code_button">재전송</string>
+    <string name="signup_code_label">인증번호 6자리</string>
+    <string name="signup_code_refresh_content_description">인증번호 재전송</string>
+    <string name="signup_code_placeholder">인증번호를 입력해주세요</string>
+    <string name="signup_confirm_code_button">확인</string>
+    <string name="signup_code_verified_message">인증이 완료되었습니다.</string>
+    <string name="signup_code_expired_message">인증시간이 초과하였습니다.</string>
+    <string name="signup_password_label">비밀번호</string>
+    <string name="signup_password_placeholder">영문, 숫자, 특수문자 조합 8자 이상</string>
+    <string name="signup_password_valid_message">안전한 비밀번호입니다.</string>
+    <string name="signup_password_invalid_message">안전하지 않은 비밀번호입니다.</string>
+    <string name="signup_password_confirm_label">비밀번호 확인</string>
+    <string name="signup_password_confirm_placeholder">비밀번호를 다시 입력해주세요</string>
+    <string name="signup_password_match_message">비밀번호가 일치합니다.</string>
+    <string name="signup_password_mismatch_message">비밀번호가 일치하지않습니다.</string>
+    <string name="signup_complete_button">가입 완료</string>
+    <string name="signup_password_visibility_toggle_content_description">비밀번호 표시 전환</string>
 </resources>

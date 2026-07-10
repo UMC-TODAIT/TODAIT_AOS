@@ -15,6 +15,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.umc.todait.feature.auth.login.LoginScreen
+import com.umc.todait.feature.auth.signup.SignupScreen
 import com.umc.todait.ui.component.PlaceholderScreen
 
 /**
@@ -69,7 +70,12 @@ fun TodaitApp() {
                     onEmailLoginClick = { navController.navigate(Screen.Signup.route) },
                 )
             }
-            composable(Screen.Signup.route) { PlaceholderScreen("회원가입") }
+            composable(Screen.Signup.route) {
+                SignupScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onSignupComplete = { navController.navigate(Screen.TermsAgreement.route) },
+                )
+            }
             composable(Screen.TermsAgreement.route) { PlaceholderScreen("약관 동의") }
             composable(Screen.SignupComplete.route) { PlaceholderScreen("회원가입 완료") }
 

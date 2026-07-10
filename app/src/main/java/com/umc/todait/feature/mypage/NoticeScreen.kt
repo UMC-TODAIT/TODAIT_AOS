@@ -52,7 +52,7 @@ fun NoticeScreen(
         ) {
 
             Image(
-                painter = painterResource(R.drawable.ic_back),
+                painter = painterResource(R.drawable.shape_button_back),
                 contentDescription = "뒤로가기",
                 modifier = Modifier
                     .size(40.dp)
@@ -74,7 +74,7 @@ fun NoticeScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Image(
-            painter = painterResource(R.drawable.ic_line_74),
+            painter = painterResource(R.drawable.divider_my_page_1),
             contentDescription = null,
             modifier = Modifier.fillMaxWidth()
         )

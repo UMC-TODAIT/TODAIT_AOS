@@ -15,6 +15,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.umc.todait.ui.component.PlaceholderScreen
+import com.umc.todait.feature.mypage.MyPageScreen
+import com.umc.todait.feature.mypage.NoticeScreen
+import com.umc.todait.feature.saved.SavedCoursesScreen
 
 /**
  * 앱 루트 컴포저블: 하단 탭바 + NavHost.
@@ -56,7 +59,7 @@ fun TodaitApp() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Login.route,
+            startDestination = Screen.MyPage.route, // Login으로 되돌려 놓으세요
             modifier = Modifier.padding(innerPadding),
         ) {
             // ---------- Auth ----------
@@ -77,11 +80,18 @@ fun TodaitApp() {
             composable(Screen.CourseSave.route) { PlaceholderScreen("코스 저장") }
 
             // ---------- Saved ----------
-            composable(Screen.SavedCourses.route) { PlaceholderScreen("저장된 코스") }
+            composable(Screen.SavedCourses.route) {
+                SavedCoursesScreen()
+            }
             composable(Screen.CourseDetail.route) { PlaceholderScreen("코스 상세 정보") }
 
             // ---------- MyPage ----------
-            composable(Screen.MyPage.route) { PlaceholderScreen("마이페이지") }
+            composable(Screen.MyPage.route) {
+                MyPageScreen(navController)
+            }
+            composable(Screen.Notice.route) {
+                NoticeScreen(navController)
+            }
         }
     }
 }

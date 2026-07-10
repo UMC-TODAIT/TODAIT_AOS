@@ -23,7 +23,6 @@ import com.umc.todait.R
 import androidx.compose.runtime.*
 import com.umc.todait.ui.component.CommonDialog
 
-
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun MyPageScreenPreview() {
@@ -60,7 +59,7 @@ fun MyPageScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Image(
-            painter = painterResource(R.drawable.ic_line_74),
+            painter = painterResource(R.drawable.divider_my_page_1),
             contentDescription = null,
             modifier = Modifier.fillMaxWidth()
         )
@@ -132,7 +131,7 @@ fun ProfileCard() {
                 contentAlignment = Alignment.Center
             ) {
                 Image(
-                    painter = painterResource(R.drawable.ic_group_1171275966),
+                    painter = painterResource(R.drawable.ic_my_page_profile),
                     contentDescription = null,
                     modifier = Modifier.size(36.dp)
                 )
@@ -176,7 +175,7 @@ fun SettingsCard(
             SettingItem(
                 icon = {
                     Icon(
-                        painter = painterResource(R.drawable.ic_component_9),
+                        painter = painterResource(R.drawable.ic_my_page_notice),
                         contentDescription = null,
                         tint = Color.Unspecified
                     )
@@ -186,7 +185,7 @@ fun SettingsCard(
             )
 
             Image(
-                painter = painterResource(R.drawable.ic_line_78),
+                painter = painterResource(R.drawable.divider_my_page_2),
                 contentDescription = null,
                 modifier = Modifier
                     .padding(horizontal = 18.dp)
@@ -197,7 +196,7 @@ fun SettingsCard(
             SettingItem(
                 icon = {
                     Icon(
-                        painter = painterResource(R.drawable.ic_component_10),
+                        painter = painterResource(R.drawable.ic_my_page_logout),
                         contentDescription = null,
                         tint = Color.Unspecified
                     )
@@ -239,7 +238,7 @@ fun SettingItem(
 
         if (title != "로그아웃") {
             Icon(
-                painter = painterResource(R.drawable.ic_polygon_17),
+                painter = painterResource(R.drawable.ic_my_page_arrow),
                 contentDescription = null,
                 tint = Color.Unspecified
             )

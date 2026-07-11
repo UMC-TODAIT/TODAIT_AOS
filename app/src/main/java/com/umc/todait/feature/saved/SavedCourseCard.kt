@@ -28,7 +28,7 @@ import com.umc.todait.R
 
 @Composable
 fun SavedCourseCard(
-    course: CourseUiModel
+    course: CourseUiModel,
 ) {
     Card(
         modifier = Modifier

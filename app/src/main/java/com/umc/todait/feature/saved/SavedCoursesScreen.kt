@@ -30,9 +30,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.lazy.LazyColumn
-
+import com.umc.todait.ui.theme.Cream
 
 @Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun SavedCoursesScreenPreview() {
+    SavedCoursesScreen()
+}
 @Composable
 fun SavedCoursesScreen(
     modifier: Modifier = Modifier
@@ -40,7 +44,7 @@ fun SavedCoursesScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFFDFBF3))
+            .background(Cream)
     ) {
 
         Column(
@@ -93,7 +97,9 @@ fun SavedCoursesScreen(
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         items(recentCourses) { course ->
-                            SavedCourseCard(course)
+                            SavedCourseCard(
+                                course = course
+                            )
                         }
                     }
 
@@ -109,8 +115,10 @@ fun SavedCoursesScreen(
                     LazyRow(
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        items(popularCourses) { course ->
-                            SavedCourseCard(course)
+                        items(recentCourses) { course ->
+                            SavedCourseCard(
+                                course = course
+                            )
                         }
                     }
 

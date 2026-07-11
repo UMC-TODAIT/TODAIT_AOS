@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.umc.todait.R
+import com.umc.todait.ui.theme.Cream
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
@@ -41,7 +42,7 @@ fun NoticeScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFFDFBF3))
+            .background(Cream)
             .padding(horizontal = 20.dp)
     ) {
 

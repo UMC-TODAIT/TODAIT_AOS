@@ -22,6 +22,7 @@ import androidx.navigation.compose.rememberNavController
 import com.umc.todait.R
 import androidx.compose.runtime.*
 import com.umc.todait.ui.component.CommonDialog
+import com.umc.todait.ui.theme.Cream
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
@@ -38,7 +39,7 @@ fun MyPageScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFFDFBF3))
+            .background(Cream)
             .padding(horizontal = 20.dp)
     ) {
         var showLogoutDialog by remember {
@@ -245,3 +246,4 @@ fun SettingItem(
         }
     }
 }
+

@@ -18,6 +18,7 @@ import com.umc.todait.feature.mypage.MyPageScreen
 import com.umc.todait.feature.mypage.NoticeScreen
 import com.umc.todait.feature.auth.login.LoginScreen
 import com.umc.todait.feature.course.base_place.BasePlaceScreen
+import com.umc.todait.feature.saved.SavedCoursesScreen
 import com.umc.todait.ui.component.PlaceholderScreen
 
 /**
@@ -95,7 +96,9 @@ fun TodaitApp() {
             composable(Screen.CourseSave.route) { PlaceholderScreen("코스 저장") }
 
             // ---------- Saved ----------
-            composable(Screen.SavedCourses.route) { PlaceholderScreen("저장된 코스") }
+            composable(Screen.SavedCourses.route) {
+                SavedCoursesScreen()
+            }
             composable(Screen.CourseDetail.route) { PlaceholderScreen("코스 상세 정보") }
 
             // ---------- MyPage ----------

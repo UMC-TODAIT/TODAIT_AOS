@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.umc.todait.R
+import com.umc.todait.ui.theme.Cream
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
@@ -41,7 +42,7 @@ fun NoticeScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFFDFBF3))
+            .background(Cream)
             .padding(horizontal = 20.dp)
     ) {
 
@@ -52,7 +53,7 @@ fun NoticeScreen(
         ) {
 
             Image(
-                painter = painterResource(R.drawable.ic_back),
+                painter = painterResource(R.drawable.shape_button_back),
                 contentDescription = "뒤로가기",
                 modifier = Modifier
                     .size(40.dp)
@@ -74,7 +75,7 @@ fun NoticeScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Image(
-            painter = painterResource(R.drawable.ic_line_74),
+            painter = painterResource(R.drawable.divider_my_page_1),
             contentDescription = null,
             modifier = Modifier.fillMaxWidth()
         )

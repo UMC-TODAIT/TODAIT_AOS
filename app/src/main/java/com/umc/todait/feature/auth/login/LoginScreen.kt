@@ -52,7 +52,7 @@ fun LoginScreen(
     onEmailLoginClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(
+    Column(
         modifier = modifier
             .fillMaxSize()
             .background(
@@ -61,32 +61,26 @@ fun LoginScreen(
                 ),
             )
             .padding(horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Column(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(top = AuthLogoTopOffset),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            TodaitLogoMark()
-            Spacer(Modifier.height(20.dp))
-            Image(
-                painter = painterResource(R.drawable.ic_todait_wordmark),
-                contentDescription = stringResource(R.string.login_logo_content_description),
-                modifier = Modifier.height(32.dp),
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = stringResource(R.string.login_tagline),
-                style = MaterialTheme.typography.bodyMedium,
-                color = Gray900,
-            )
-        }
+        Spacer(Modifier.height(AuthLogoTopOffset))
+        TodaitLogoMark()
+        Spacer(Modifier.height(20.dp))
+        Image(
+            painter = painterResource(R.drawable.ic_todait_wordmark),
+            contentDescription = stringResource(R.string.login_logo_content_description),
+            modifier = Modifier.height(32.dp),
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = stringResource(R.string.login_tagline),
+            style = MaterialTheme.typography.bodyMedium,
+            color = Gray900,
+        )
+
+        Spacer(Modifier.height(100.dp))
 
         Column(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 220.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {

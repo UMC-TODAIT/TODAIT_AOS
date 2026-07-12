@@ -13,7 +13,7 @@ import com.umc.todait.R
  * 화면마다 하단 버튼/입력칸 높이가 달라도 로고 시작 위치가 항상 같도록, 이 값을 기준으로
  * `Box` + `Alignment.TopCenter`로 배치한다(하단 콘텐츠 높이와 무관하게 고정).
  */
-val AuthLogoTopOffset = 160.dp
+val AuthLogoTopOffset = 140.dp
 
 /**
  * 투데잇 로고 마크(핀/하트 모양). 로그인/이메일 로그인 등 인증 화면에서 공용으로 쓴다.

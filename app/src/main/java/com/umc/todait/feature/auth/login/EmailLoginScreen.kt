@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -72,37 +71,30 @@ fun EmailLoginScreen(
 
     val isLoginEnabled = email.isNotBlank() && password.isNotBlank()
 
-    Box(
+    Column(
         modifier = modifier
             .fillMaxSize()
             .background(Brush.verticalGradient(listOf(BgGradientTop, BgGradientBottom)))
             .padding(horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Column(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(top = AuthLogoTopOffset),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            TodaitLogoMark()
-            Spacer(Modifier.height(20.dp))
-            Text(
-                text = stringResource(R.string.email_login_heading),
-                style = TextStyle(
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 28.sp,
-                    lineHeight = 26.sp,
-                    letterSpacing = (-0.02).em,
-                ),
-                color = LoginHeadingPink,
-            )
-        }
+        Spacer(Modifier.height(AuthLogoTopOffset))
+        TodaitLogoMark()
+        Spacer(Modifier.height(20.dp))
+        Text(
+            text = stringResource(R.string.email_login_heading),
+            style = TextStyle(
+                fontWeight = FontWeight.Normal,
+                fontSize = 28.sp,
+                lineHeight = 26.sp,
+                letterSpacing = (-0.02).em,
+            ),
+            color = LoginHeadingPink,
+        )
+
+        Spacer(Modifier.height(70.dp))
 
         Column(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .navigationBarsPadding()
-                .padding(bottom = 220.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             OutlinedTextField(

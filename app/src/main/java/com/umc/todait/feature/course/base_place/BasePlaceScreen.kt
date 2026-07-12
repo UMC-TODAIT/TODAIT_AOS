@@ -1,5 +1,9 @@
 package com.umc.todait.feature.course.base_place
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -35,8 +39,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -52,6 +60,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.core.content.ContextCompat
 import coil.compose.AsyncImage
 import com.umc.todait.R
 import com.umc.todait.core.network.UiError
@@ -69,11 +78,20 @@ import com.umc.todait.ui.theme.PlaceCardGradientStart
 import com.umc.todait.ui.theme.TodaitTheme
 import com.umc.todait.ui.theme.White
 
+// "지금 내 주변 핫플" 추천에 현재 위치를 싣기 위해 요청하는 위치 권한.
+private val locationPermissions = arrayOf(
+    Manifest.permission.ACCESS_FINE_LOCATION,
+    Manifest.permission.ACCESS_COARSE_LOCATION,
+)
+
 /**
  * 기준 장소 설정 화면(와이어프레임 1.1).
  *
  * 상단 헤더(뒤로가기/타이틀/확인) + 검색창 + "지금 내 주변 핫플" 추천/검색 결과 목록으로 구성되며,
  * 장소 카드 탭 시 확인 모달(1.2)을 띄운다.
+ *
+ * 진입 시 위치 권한을 확인/요청하고, 결과를 ViewModel 에 알려 추천 조회를 시작한다.
+ * (위·경도는 명세상 선택 파라미터라 권한 거부 시에도 위치 없이 조회한다.)
  */
 @Composable
 fun BasePlaceScreen(
@@ -83,6 +101,32 @@ fun BasePlaceScreen(
     viewModel: BasePlaceViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    // 프로세스 재생성 후에도 시스템 권한 팝업을 다시 띄우지 않도록 rememberSaveable 로 보관.
+    var permissionRequested by rememberSaveable { mutableStateOf(false) }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions(),
+    ) { grants ->
+        // 정밀/대략 중 하나만 허용돼도 위치 조회를 시도한다.
+        viewModel.onLocationPermissionResult(granted = grants.values.any { it })
+    }
+
+    LaunchedEffect(Unit) {
+        val alreadyGranted = locationPermissions.any { permission ->
+            ContextCompat.checkSelfPermission(context, permission) ==
+                PackageManager.PERMISSION_GRANTED
+        }
+        when {
+            alreadyGranted -> viewModel.onLocationPermissionResult(granted = true)
+            !permissionRequested -> {
+                permissionRequested = true
+                permissionLauncher.launch(locationPermissions)
+            }
+            // 이미 요청했는데 미허용 상태(프로세스 재생성 등) → 위치 없이 진행.
+            else -> viewModel.onLocationPermissionResult(granted = false)
+        }
+    }
 
     LaunchedEffect(viewModel) {
         viewModel.effect.collect { effect ->

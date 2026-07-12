@@ -87,6 +87,10 @@ dependencies {
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
 
+    // Location (현재 위치 1회 조회)
+    implementation(libs.play.services.location)
+    implementation(libs.kotlinx.coroutines.play.services)
+
     // Image
     implementation(libs.coil.compose)
 

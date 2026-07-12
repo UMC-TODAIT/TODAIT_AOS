@@ -67,7 +67,7 @@ fun EmailLoginScreen(
 ) {
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
-    var passwordVisible by rememberSaveable { mutableStateOf(false) }
+    var isPasswordVisible by rememberSaveable { mutableStateOf(false) }
     var isLoginError by rememberSaveable { mutableStateOf(false) }
 
     val isLoginEnabled = email.isNotBlank() && password.isNotBlank()
@@ -128,11 +128,11 @@ fun EmailLoginScreen(
                 placeholder = { Text(stringResource(R.string.email_login_password_placeholder)) },
                 singleLine = true,
                 shape = CircleShape,
-                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
-                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
                         Icon(
-                            imageVector = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                            imageVector = if (isPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
                             contentDescription = stringResource(R.string.signup_password_visibility_toggle_content_description),
                             tint = Gray500,
                         )

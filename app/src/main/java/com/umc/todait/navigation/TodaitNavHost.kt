@@ -61,7 +61,7 @@ fun TodaitApp() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.MyPage.route,//Login으로 되돌리세요
+            startDestination = Screen.Login.route,
             modifier = Modifier.padding(innerPadding),
         ) {
             // ---------- Auth ----------

@@ -73,19 +73,19 @@ class AuthInterceptor @Inject constructor(
     }
 
     /**
-     * peekBody로 스트림을 소비하지 않고 body를 미리 들여다봐서 토큰 문제(AUTH401/AUTH403)인지 판단한다.
+     * peekBody로 스트림을 소비하지 않고 body를 미리 들여다봐서 accessToken 만료(AUTH401)인지 판단한다.
      * 혹시 나중에 서버가 진짜 HTTP 401을 내려주게 바뀌어도 대비해 response.code도 같이 확인한다.
      *
-     * ⚠️ AUTH403은 "만료된 accessToken"(GET /api/members/me 명세)과 "권한 없음"(다른 API들) 둘 다에
-     * 쓰이는 것으로 보여 경계가 애매함 — 백엔드 확인 전까지는 안전하게 둘 다 재발급 트리거로 취급한다
-     * (권한 없음인데 재발급해도 재시도 결과가 똑같이 실패라 실질적 부작용은 적음).
+     * 전역 공통 규약(global 도메인 명세) 기준:
+     * - AUTH401 = 인증 필요(헤더 없음 또는 만료/무효 토큰) → 재발급 트리거
+     * - AUTH403 = 권한 없음(로그인은 됐고 남의 리소스 접근) → 재발급해도 소용없으므로 트리거하지 않음
      */
     private fun isAuthExpiredResponse(response: Response): Boolean {
-        if (response.code == 401 || response.code == 403) return true
+        if (response.code == 401) return true
         return runCatching {
             val json = response.peekBody(PEEK_BODY_MAX_BYTES).string()
             val parsed = gson.fromJson(json, BaseResponse::class.java)
-            !parsed.isSuccess && (parsed.code == "AUTH401" || parsed.code == "AUTH403")
+            !parsed.isSuccess && parsed.code == "AUTH401"
         }.getOrDefault(false)
     }
 

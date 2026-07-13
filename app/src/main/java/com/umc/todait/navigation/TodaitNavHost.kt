@@ -18,11 +18,14 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.umc.todait.feature.mypage.MyPageScreen
 import com.umc.todait.feature.mypage.NoticeScreen
+import com.umc.todait.feature.auth.login.EmailLoginScreen
 import com.umc.todait.feature.auth.login.LoginScreen
+import com.umc.todait.feature.auth.signup.SignupScreen
 import com.umc.todait.feature.course.base_place.BasePlaceScreen
 import com.umc.todait.feature.course.place_detail.InteriorPhotosScreen
 import com.umc.todait.feature.course.place_detail.MenuFullScreen
 import com.umc.todait.feature.course.place_detail.PlaceDetailScreen
+import com.umc.todait.feature.saved.SavedCoursesScreen
 import com.umc.todait.ui.component.PlaceholderScreen
 
 /**
@@ -74,10 +77,20 @@ fun TodaitApp() {
                     // TODO: 소셜 로그인 SDK 연동 이슈에서 실제 로그인 처리로 교체
                     onKakaoLoginClick = {},
                     onGoogleLoginClick = {},
-                    onEmailLoginClick = { navController.navigate(Screen.Signup.route) },
+                    onEmailLoginClick = { navController.navigate(Screen.EmailLogin.route) },
                 )
             }
-            composable(Screen.Signup.route) { PlaceholderScreen("회원가입") }
+            composable(Screen.EmailLogin.route) {
+                EmailLoginScreen(
+                    onSignupClick = { navController.navigate(Screen.Signup.route) },
+                )
+            }
+            composable(Screen.Signup.route) {
+                SignupScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onSignupComplete = { navController.navigate(Screen.TermsAgreement.route) },
+                )
+            }
             composable(Screen.TermsAgreement.route) { PlaceholderScreen("약관 동의") }
             composable(Screen.SignupComplete.route) { PlaceholderScreen("회원가입 완료") }
 
@@ -140,7 +153,9 @@ fun TodaitApp() {
             composable(Screen.CourseSave.route) { PlaceholderScreen("코스 저장") }
 
             // ---------- Saved ----------
-            composable(Screen.SavedCourses.route) { PlaceholderScreen("저장된 코스") }
+            composable(Screen.SavedCourses.route) {
+                SavedCoursesScreen()
+            }
             composable(Screen.CourseDetail.route) { PlaceholderScreen("코스 상세 정보") }
 
             // ---------- MyPage ----------

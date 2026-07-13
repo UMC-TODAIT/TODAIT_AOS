@@ -1,12 +1,7 @@
 package com.umc.todait.feature.course.base_place
 
-import android.Manifest
-import android.content.pm.PackageManager
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -40,12 +35,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -61,7 +52,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.core.content.ContextCompat
 import coil.compose.AsyncImage
 import com.umc.todait.R
 import com.umc.todait.core.network.UiError
@@ -74,28 +64,16 @@ import com.umc.todait.ui.theme.Gray600
 import com.umc.todait.ui.theme.Gray900
 import com.umc.todait.ui.theme.Pink100
 import com.umc.todait.ui.theme.Pink700
-import com.umc.todait.ui.theme.Primary
 import com.umc.todait.ui.theme.PlaceCardGradientEnd
 import com.umc.todait.ui.theme.PlaceCardGradientStart
 import com.umc.todait.ui.theme.TodaitTheme
 import com.umc.todait.ui.theme.White
 
-// "지금 내 주변 핫플" 추천에 현재 위치를 싣기 위해 요청하는 위치 권한.
-private val locationPermissions = arrayOf(
-    Manifest.permission.ACCESS_FINE_LOCATION,
-    Manifest.permission.ACCESS_COARSE_LOCATION,
-)
-
 /**
  * 기준 장소 설정 화면(와이어프레임 1.1).
  *
- * 상단 헤더(뒤로가기/타이틀/확인) + 검색창 + "지금 내 주변 핫플" 추천/검색 결과 목록으로 구성된다.
- * - 카드 본문 탭 → 장소 상세 화면([onNavigateToDetail]) 진입.
- * - 카드 우측 상단 선택 버튼 → 기준 장소 단일 선택.
- * - 헤더 확인(체크) 버튼 → 선택 장소로 확인 모달(1.2) 노출 → [확인] 시 코스 구성하기로 이동.
- *
- * 진입 시 위치 권한을 확인/요청하고, 결과를 ViewModel 에 알려 추천 조회를 시작한다.
- * (위·경도는 명세상 선택 파라미터라 권한 거부 시에도 위치 없이 조회한다.)
+ * 상단 헤더(뒤로가기/타이틀/확인) + 검색창 + "지금 내 주변 핫플" 추천/검색 결과 목록으로 구성되며,
+ * 장소 카드 탭 시 확인 모달(1.2)을 띄운다.
  */
 @Composable
 fun BasePlaceScreen(
@@ -106,32 +84,6 @@ fun BasePlaceScreen(
     viewModel: BasePlaceViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val context = LocalContext.current
-
-    // 프로세스 재생성 후에도 시스템 권한 팝업을 다시 띄우지 않도록 rememberSaveable 로 보관.
-    var permissionRequested by rememberSaveable { mutableStateOf(false) }
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions(),
-    ) { grants ->
-        // 정밀/대략 중 하나만 허용돼도 위치 조회를 시도한다.
-        viewModel.onLocationPermissionResult(granted = grants.values.any { it })
-    }
-
-    LaunchedEffect(Unit) {
-        val alreadyGranted = locationPermissions.any { permission ->
-            ContextCompat.checkSelfPermission(context, permission) ==
-                PackageManager.PERMISSION_GRANTED
-        }
-        when {
-            alreadyGranted -> viewModel.onLocationPermissionResult(granted = true)
-            !permissionRequested -> {
-                permissionRequested = true
-                permissionLauncher.launch(locationPermissions)
-            }
-            // 이미 요청했는데 미허용 상태(프로세스 재생성 등) → 위치 없이 진행.
-            else -> viewModel.onLocationPermissionResult(granted = false)
-        }
-    }
 
     LaunchedEffect(viewModel) {
         viewModel.effect.collect { effect ->
@@ -147,9 +99,8 @@ fun BasePlaceScreen(
         onSearchQueryChange = viewModel::onSearchQueryChange,
         onSearch = viewModel::onSearch,
         onClearSearch = viewModel::onClearSearch,
+        // 카드 탭 → 장소 상세 화면 진입 (기획 문서 기준). main의 확인 모달(pendingPlace)은 다른 진입점에서 확정.
         onPlaceClick = { place -> onNavigateToDetail(place.placeId) },
-        onSelectPlace = viewModel::onSelectPlace,
-        onConfirmClick = viewModel::onConfirmClick,
         onRetry = viewModel::loadNearbyHotPlaces,
         modifier = modifier,
     )
@@ -172,8 +123,6 @@ private fun BasePlaceContent(
     onSearch: () -> Unit,
     onClearSearch: () -> Unit,
     onPlaceClick: (PlaceUiModel) -> Unit,
-    onSelectPlace: (PlaceUiModel) -> Unit,
-    onConfirmClick: () -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -185,8 +134,8 @@ private fun BasePlaceContent(
         BasePlaceTopBar(
             title = stringResource(R.string.base_place_title),
             onBack = onBack,
-            onConfirm = onConfirmClick,
-            confirmEnabled = state.canConfirm,
+            // TODO: 상단 '확인' 버튼 동작 확정 필요. 현재 선택/확정 플로우는 카드 탭 → 확인 모달로 처리한다.
+            onConfirm = {},
         )
 
         Column(modifier = Modifier.padding(horizontal = 20.dp)) {
@@ -229,9 +178,7 @@ private fun BasePlaceContent(
 
                     is PlaceListState.Success -> PlaceList(
                         places = listState.places,
-                        selectedPlaceId = state.selectedPlace?.placeId,
                         onPlaceClick = onPlaceClick,
-                        onSelectPlace = onSelectPlace,
                     )
                 }
             }
@@ -241,14 +188,12 @@ private fun BasePlaceContent(
 
 /**
  * 상단 헤더(Pink100 배경). 좌측 뒤로가기, 가운데 타이틀, 우측 확인 버튼.
- * 확인 버튼은 기준 장소가 선택돼야([confirmEnabled]) 활성화된다.
  */
 @Composable
 private fun BasePlaceTopBar(
     title: String,
     onBack: () -> Unit,
     onConfirm: () -> Unit,
-    confirmEnabled: Boolean,
 ) {
     Box(
         modifier = Modifier
@@ -273,7 +218,6 @@ private fun BasePlaceTopBar(
             imageVector = Icons.Filled.Check,
             contentDescription = "확인",
             onClick = onConfirm,
-            enabled = confirmEnabled,
         )
     }
 }
@@ -284,14 +228,13 @@ private fun CircleIconButton(
     contentDescription: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true,
 ) {
     Box(
         modifier = modifier
             .size(40.dp)
             .clip(CircleShape)
-            .background(if (enabled) Gray600 else Gray200)
-            .clickable(enabled = enabled, onClick = onClick),
+            .background(Gray600)
+            .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
@@ -380,9 +323,7 @@ private val placeDecorations = listOf(
 @Composable
 private fun PlaceList(
     places: List<PlaceUiModel>,
-    selectedPlaceId: Long?,
     onPlaceClick: (PlaceUiModel) -> Unit,
-    onSelectPlace: (PlaceUiModel) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -393,9 +334,7 @@ private fun PlaceList(
             PlaceCard(
                 place = place,
                 decorationRes = placeDecorations[index % placeDecorations.size],
-                selected = place.placeId == selectedPlaceId,
                 onClick = { onPlaceClick(place) },
-                onSelect = { onSelectPlace(place) },
             )
         }
     }
@@ -405,35 +344,22 @@ private fun PlaceList(
  * 장소 카드. 좌측 장소 이미지 위에 우측으로 이어지는 그라데이션 패널을 얹고,
  * 그 위에 장소명·주소·근접 배지를 흰색 텍스트로 표시한다.
  * 명세 정책상 별점/평점/점수는 표시하지 않는다.
- *
- * 카드 본문 탭([onClick]) → 장소 상세 화면 진입.
- * 우측 상단 선택 버튼([onSelect]) → 기준 장소 단일 선택. [selected] 면 테두리로 강조한다.
  */
 @Composable
 private fun PlaceCard(
     place: PlaceUiModel,
     decorationRes: Int,
-    selected: Boolean,
     onClick: () -> Unit,
-    onSelect: () -> Unit,
 ) {
     // 디자인: bg-gradient-to-b (수직, 상단 → 하단)
     val gradient = Brush.verticalGradient(
         colors = listOf(PlaceCardGradientStart, PlaceCardGradientEnd),
     )
-    val cardShape = RoundedCornerShape(12.dp)
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(110.dp)
-            .clip(cardShape)
-            .then(
-                if (selected) {
-                    Modifier.border(2.dp, Primary, cardShape)
-                } else {
-                    Modifier
-                }
-            )
+            .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick),
     ) {
         // 좌측: 장소 이미지 (약 1/3)
@@ -468,13 +394,14 @@ private fun PlaceCard(
                     .padding(end = 10.dp, bottom = 8.dp)
                     .size(60.dp),
             )
-            // 우측 상단 기준 장소 선택 버튼
-            PlaceSelectButton(
-                selected = selected,
-                onSelect = onSelect,
+            // 우측 상단 장식 도트
+            Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(10.dp),
+                    .padding(12.dp)
+                    .size(8.dp)
+                    .clip(CircleShape)
+                    .background(White.copy(alpha = 0.85f)),
             )
             Column(
                 modifier = Modifier
@@ -499,38 +426,6 @@ private fun PlaceCard(
                 Spacer(Modifier.weight(1f))
                 ProximityBadge(text = place.reasonText?.takeIf { it.isNotBlank() } ?: place.category)
             }
-        }
-    }
-}
-
-/**
- * 카드 우측 상단 기준 장소 선택 버튼.
- *
- * TODO(디자인): 디자이너 작업 중인 선택 버튼 시안 확정 시 교체. 현재는 임시 원형 체크 버튼.
- * 미선택: 반투명 흰 원 + 테두리, 선택: Primary 채움 + 흰 체크.
- */
-@Composable
-private fun PlaceSelectButton(
-    selected: Boolean,
-    onSelect: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier
-            .size(24.dp)
-            .clip(CircleShape)
-            .background(if (selected) Primary else White.copy(alpha = 0.35f))
-            .border(1.5.dp, White, CircleShape)
-            .clickable(onClick = onSelect),
-        contentAlignment = Alignment.Center,
-    ) {
-        if (selected) {
-            Icon(
-                imageVector = Icons.Filled.Check,
-                contentDescription = "기준 장소로 선택됨",
-                tint = White,
-                modifier = Modifier.size(16.dp),
-            )
         }
     }
 }
@@ -630,8 +525,6 @@ private fun BasePlaceContentSuccessPreview() {
             onSearch = {},
             onClearSearch = {},
             onPlaceClick = {},
-            onSelectPlace = {},
-            onConfirmClick = {},
             onRetry = {},
         )
     }
@@ -651,8 +544,6 @@ private fun BasePlaceContentEmptyPreview() {
             onSearch = {},
             onClearSearch = {},
             onPlaceClick = {},
-            onSelectPlace = {},
-            onConfirmClick = {},
             onRetry = {},
         )
     }

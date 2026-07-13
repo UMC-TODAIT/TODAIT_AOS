@@ -2,8 +2,6 @@ package com.umc.todait.feature.course.base_place
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.umc.todait.core.location.Coordinate
-import com.umc.todait.core.location.LocationProvider
 import com.umc.todait.core.network.ApiResult
 import com.umc.todait.core.network.toUiError
 import com.umc.todait.feature.course.data.repository.RecommendationRepository
@@ -21,18 +19,14 @@ import javax.inject.Inject
 /**
  * 기준 장소 설정 화면(와이어프레임 1.1) + 확인 모달(1.2)의 상태를 관리한다.
  *
- * - 진입 시 화면의 위치 권한 플로우가 끝나면([onLocationPermissionResult])
- *   현재 위치를 확보한 뒤 "지금 내 주변 핫플" 추천 목록을 불러온다.
+ * - 진입 시 "지금 내 주변 핫플" 추천 목록을 불러온다.
  * - 검색어 입력 후 검색 시 장소명 검색 결과를 보여준다.
- * - 카드 우측 상단 선택 버튼 → 기준 장소 단일 선택([onSelectPlace]).
- * - 헤더 확인(체크) 버튼([onConfirmClick]) → 확인 모달 → [확인] 시 지원 지역 검증 후 코스 구성하기로 이동.
- *   (카드 본문 탭은 이 ViewModel 이 아니라 화면에서 장소 상세 화면 진입으로 처리한다.)
+ * - 장소 카드 탭 → 확인 모달 → [확인] 시 지원 지역 검증 후 코스 구성하기로 이동.
  */
 @HiltViewModel
 class BasePlaceViewModel @Inject constructor(
     private val searchRepository: SearchRepository,
     private val recommendationRepository: RecommendationRepository,
-    private val locationProvider: LocationProvider,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(BasePlaceUiState())
@@ -41,36 +35,18 @@ class BasePlaceViewModel @Inject constructor(
     private val _effect = Channel<BasePlaceEffect>(Channel.BUFFERED)
     val effect = _effect.receiveAsFlow()
 
-    // 요청 시점 사용자 위치. 권한 거부/조회 실패 시 null 로 두고 위·경도 없이 조회한다.
-    private var currentLocation: Coordinate? = null
-
-    // 최초 로드가 이미 시작됐는지. 화면 재구성(회전 등)으로 권한 콜백이 다시 와도 중복 로드하지 않는다.
-    private var initialLoadStarted = false
-
-    /**
-     * 화면의 위치 권한 요청 플로우가 끝나면 호출된다.
-     * 허용 시 현재 위치를 1회 조회해 보관하고, 거부 시 위치 없이 추천 목록을 불러온다.
-     */
-    fun onLocationPermissionResult(granted: Boolean) {
-        if (initialLoadStarted) return
-        initialLoadStarted = true
-        viewModelScope.launch {
-            if (granted) {
-                currentLocation = locationProvider.getCurrentLocation()
-            }
-            loadNearbyHotPlaces()
-        }
+    init {
+        loadNearbyHotPlaces()
     }
 
-    /** "지금 내 주변 핫플" 추천 목록 조회. 확보해 둔 현재 위치가 있으면 함께 전달한다. */
+    /** "지금 내 주변 핫플" 추천 목록 조회. */
     fun loadNearbyHotPlaces() {
         _uiState.update { it.copy(listState = PlaceListState.Loading) }
         viewModelScope.launch {
             // TODO(BE 죠): 추천 type 값·기준 장소/코스 draft 파라미터 확정 필요.
+            //  위치 권한 플로우 제외 범위라 위·경도는 전달하지 않고 기본 지원 지역 기준으로 조회한다.
             val result = recommendationRepository.getRecommendedPlaces(
                 type = RECOMMENDATION_TYPE_NEARBY,
-                latitude = currentLocation?.latitude,
-                longitude = currentLocation?.longitude,
             )
             _uiState.update { state ->
                 when (result) {
@@ -130,21 +106,9 @@ class BasePlaceViewModel @Inject constructor(
         }
     }
 
-    /**
-     * 카드 우측 상단 선택 버튼 → 기준 장소 단일 선택.
-     * 이미 선택된 장소를 다시 누르면 선택을 해제한다.
-     */
-    fun onSelectPlace(place: PlaceUiModel) {
-        _uiState.update { state ->
-            val next = if (state.selectedPlace?.placeId == place.placeId) null else place
-            state.copy(selectedPlace = next)
-        }
-    }
-
-    /** 헤더 확인(체크) 버튼 → 선택된 장소로 확인 모달 노출. 선택이 없으면 무시. */
-    fun onConfirmClick() {
-        val selected = _uiState.value.selectedPlace ?: return
-        _uiState.update { it.copy(pendingPlace = selected, confirmError = null) }
+    /** 장소 카드 탭 → 확인 모달 노출. */
+    fun onPlaceClick(place: PlaceUiModel) {
+        _uiState.update { it.copy(pendingPlace = place, confirmError = null) }
     }
 
     /** 확인 모달 [취소] 또는 dismiss. */

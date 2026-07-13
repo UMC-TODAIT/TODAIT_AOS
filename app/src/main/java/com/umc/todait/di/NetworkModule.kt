@@ -1,6 +1,7 @@
 package com.umc.todait.di
 
 import com.umc.todait.BuildConfig
+import com.umc.todait.core.network.AuthInterceptor
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -27,14 +28,16 @@ object NetworkModule {
             }
         }
 
-    // TODO: 로그인 구현 후 인증 토큰을 붙이는 AuthInterceptor 추가
-
     @Provides
     @Singleton
-    fun provideOkHttpClient(logging: HttpLoggingInterceptor): OkHttpClient =
+    fun provideOkHttpClient(
+        authInterceptor: AuthInterceptor,
+        logging: HttpLoggingInterceptor,
+    ): OkHttpClient =
         OkHttpClient.Builder()
             .connectTimeout(10, TimeUnit.SECONDS)
             .readTimeout(10, TimeUnit.SECONDS)
+            .addInterceptor(authInterceptor)
             .addInterceptor(logging)
             .build()
 

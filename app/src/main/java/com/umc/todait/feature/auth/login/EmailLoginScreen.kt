@@ -21,10 +21,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,6 +38,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.todait.R
 import com.umc.todait.ui.component.AuthLogoTopOffset
 import com.umc.todait.ui.component.TodaitLogoMark
@@ -57,20 +57,47 @@ import com.umc.todait.ui.theme.TodaitTheme
 import com.umc.todait.ui.theme.White
 
 /**
- * 이메일 로그인 화면. 실제 로그인 API 연동 전까지는 버튼 클릭 시 에러 상태만 로컬로 목업한다.
+ * 이메일 로그인 화면(라우트 진입점). ViewModel의 상태/효과를 구독해 실제 로그인 API와 연동한다.
+ * 로그인 성공 시 NavigateToHome 효과를 받아 홈으로 이동한다.
  */
 @Composable
 fun EmailLoginScreen(
     onSignupClick: () -> Unit,
+    onNavigateToHome: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: EmailLoginViewModel = hiltViewModel(),
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(viewModel) {
+        viewModel.effect.collect { effect ->
+            when (effect) {
+                EmailLoginEffect.NavigateToHome -> onNavigateToHome()
+            }
+        }
+    }
+
+    EmailLoginContent(
+        uiState = uiState,
+        onEmailChange = viewModel::onEmailChange,
+        onPasswordChange = viewModel::onPasswordChange,
+        onTogglePasswordVisibility = viewModel::onTogglePasswordVisibility,
+        onLoginClick = viewModel::onLoginClick,
+        onSignupClick = onSignupClick,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun EmailLoginContent(
+    uiState: EmailLoginUiState,
+    onEmailChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onTogglePasswordVisibility: () -> Unit,
+    onLoginClick: () -> Unit,
+    onSignupClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var email by rememberSaveable { mutableStateOf("") }
-    var password by rememberSaveable { mutableStateOf("") }
-    var isPasswordVisible by rememberSaveable { mutableStateOf(false) }
-    var isLoginError by rememberSaveable { mutableStateOf(false) }
-
-    val isLoginEnabled = email.isNotBlank() && password.isNotBlank()
-
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -98,11 +125,8 @@ fun EmailLoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             OutlinedTextField(
-                value = email,
-                onValueChange = {
-                    email = it
-                    isLoginError = false
-                },
+                value = uiState.email,
+                onValueChange = onEmailChange,
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text(stringResource(R.string.email_login_email_placeholder)) },
                 singleLine = true,
@@ -111,20 +135,17 @@ fun EmailLoginScreen(
             )
             Spacer(Modifier.height(12.dp))
             OutlinedTextField(
-                value = password,
-                onValueChange = {
-                    password = it
-                    isLoginError = false
-                },
+                value = uiState.password,
+                onValueChange = onPasswordChange,
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text(stringResource(R.string.email_login_password_placeholder)) },
                 singleLine = true,
                 shape = CircleShape,
-                visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                visualTransformation = if (uiState.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
-                    IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
+                    IconButton(onClick = onTogglePasswordVisibility) {
                         Icon(
-                            imageVector = if (isPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                            imageVector = if (uiState.isPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
                             contentDescription = stringResource(R.string.signup_password_visibility_toggle_content_description),
                             tint = Gray500,
                         )
@@ -133,10 +154,14 @@ fun EmailLoginScreen(
                 colors = emailLoginTextFieldColors(),
             )
 
-            if (isLoginError) {
+            uiState.error?.let { error ->
+                val errorText = when (error) {
+                    LoginError.InvalidCredentials -> stringResource(R.string.email_login_error_message)
+                    is LoginError.General -> error.message
+                }
                 Spacer(Modifier.height(12.dp))
                 Text(
-                    text = stringResource(R.string.email_login_error_message),
+                    text = errorText,
                     style = MaterialTheme.typography.bodySmall,
                     color = Error,
                     modifier = Modifier
@@ -153,17 +178,14 @@ fun EmailLoginScreen(
                     .fillMaxWidth()
                     .height(56.dp)
                     .clip(CircleShape)
-                    .background(if (isLoginEnabled) Pink400 else DisabledButtonGray)
-                    .clickable(enabled = isLoginEnabled) {
-                        // TODO: 실제 로그인 API 연동 전까지의 로컬 목업 — 항상 에러로 표시
-                        isLoginError = true
-                    },
+                    .background(if (uiState.isLoginEnabled) Pink400 else DisabledButtonGray)
+                    .clickable(enabled = uiState.isLoginEnabled, onClick = onLoginClick),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = stringResource(R.string.email_login_button),
                     style = MaterialTheme.typography.labelLarge,
-                    color = if (isLoginEnabled) White else Gray500,
+                    color = if (uiState.isLoginEnabled) White else Gray500,
                 )
             }
             Spacer(Modifier.height(12.dp))
@@ -193,8 +215,53 @@ private fun emailLoginTextFieldColors() = OutlinedTextFieldDefaults.colors(
 
 @Preview(showBackground = true)
 @Composable
-private fun EmailLoginScreenPreview() {
+private fun EmailLoginContentPreview() {
     TodaitTheme {
-        EmailLoginScreen(onSignupClick = {})
+        EmailLoginContent(
+            uiState = EmailLoginUiState(email = "todait@umc.com", password = "password"),
+            onEmailChange = {},
+            onPasswordChange = {},
+            onTogglePasswordVisibility = {},
+            onLoginClick = {},
+            onSignupClick = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "인증 실패")
+@Composable
+private fun EmailLoginContentInvalidCredentialsPreview() {
+    TodaitTheme {
+        EmailLoginContent(
+            uiState = EmailLoginUiState(
+                email = "todait@umc.com",
+                password = "wrongpassword",
+                error = LoginError.InvalidCredentials,
+            ),
+            onEmailChange = {},
+            onPasswordChange = {},
+            onTogglePasswordVisibility = {},
+            onLoginClick = {},
+            onSignupClick = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "네트워크 오류")
+@Composable
+private fun EmailLoginContentNetworkErrorPreview() {
+    TodaitTheme {
+        EmailLoginContent(
+            uiState = EmailLoginUiState(
+                email = "todait@umc.com",
+                password = "test1234",
+                error = LoginError.General("연결 상태를 확인해주세요."),
+            ),
+            onEmailChange = {},
+            onPasswordChange = {},
+            onTogglePasswordVisibility = {},
+            onLoginClick = {},
+            onSignupClick = {},
+        )
     }
 }

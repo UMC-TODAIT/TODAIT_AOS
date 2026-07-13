@@ -8,13 +8,18 @@ import com.umc.todait.feature.course.data.dto.RecommendedPlaceDto
  *
  * 화면 명세(와이어프레임 1.1)에 따라 검색어가 비어 있으면 "지금 내 주변 핫플" 추천 목록을,
  * 검색어가 있으면 검색 결과 목록을 [listState] 로 표현한다.
- * [pendingPlace] 가 non-null 이면 기준 장소 확인 모달(1.2)이 노출된다.
+ *
+ * 선택 플로우: 카드 우측 상단 선택 버튼으로 기준 장소를 [selectedPlace] 에 단일 선택하고,
+ * 상단 헤더 체크 버튼을 눌러 [pendingPlace] 로 옮겨 확인 모달(1.2)을 띄운다.
+ * (카드 본문 탭은 선택이 아니라 장소 상세 화면 진입이다.)
  */
 data class BasePlaceUiState(
     val searchQuery: String = "",
     // 현재 지역 표시(예: 마포구). 위치 권한 플로우는 이번 범위에서 제외라 기본 null(미표시).
     val currentAreaName: String? = null,
     val listState: PlaceListState = PlaceListState.Loading,
+    // 기준 장소로 선택된 장소(단일 선택). null 이면 선택 없음 → 헤더 확인 버튼 비활성.
+    val selectedPlace: PlaceUiModel? = null,
     // 확인 모달 대상 장소. null 이면 모달을 닫는다.
     val pendingPlace: PlaceUiModel? = null,
     // 확인 모달 안에서 노출할 예외 안내 문구(지원 지역 외/좌표 없음 등).
@@ -22,6 +27,9 @@ data class BasePlaceUiState(
 ) {
     /** 검색어가 없으면 추천 섹션, 있으면 검색 결과 섹션. */
     val isSearching: Boolean get() = searchQuery.isNotBlank()
+
+    /** 헤더 확인(체크) 버튼 활성 여부. 선택된 장소가 있어야 확정할 수 있다. */
+    val canConfirm: Boolean get() = selectedPlace != null
 }
 
 /** 장소 목록 영역의 상태. 추천/검색 결과가 공통으로 사용한다. */

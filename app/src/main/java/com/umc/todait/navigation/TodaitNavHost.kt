@@ -10,14 +10,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.umc.todait.feature.mypage.MyPageScreen
 import com.umc.todait.feature.mypage.NoticeScreen
 import com.umc.todait.feature.auth.login.LoginScreen
 import com.umc.todait.feature.course.base_place.BasePlaceScreen
+import com.umc.todait.feature.course.place_detail.InteriorPhotosScreen
+import com.umc.todait.feature.course.place_detail.MenuFullScreen
+import com.umc.todait.feature.course.place_detail.PlaceDetailScreen
 import com.umc.todait.ui.component.PlaceholderScreen
 
 /**
@@ -87,6 +92,46 @@ fun TodaitApp() {
                     onNavigateToCompose = {
                         navController.navigate(Screen.CourseCompose.route)
                     },
+                    onNavigateToDetail = { placeId ->
+                        navController.navigate(Screen.PlaceDetail.createRoute(placeId))
+                    },
+                    onBack = { navController.popBackStack() },
+                )
+            }
+            composable(
+                route = Screen.PlaceDetail.route,
+                arguments = listOf(
+                    navArgument(Screen.PlaceDetail.ARG_PLACE_ID) { type = NavType.LongType },
+                ),
+            ) { backStackEntry ->
+                val placeId = backStackEntry.arguments?.getLong(Screen.PlaceDetail.ARG_PLACE_ID) ?: 0L
+                PlaceDetailScreen(
+                    onBack = { navController.popBackStack() },
+                    onSeeAllPhotos = {
+                        navController.navigate(Screen.InteriorPhotos.createRoute(placeId))
+                    },
+                    onSeeAllMenu = {
+                        navController.navigate(Screen.MenuFull.createRoute(placeId))
+                    },
+                )
+            }
+            composable(
+                route = Screen.InteriorPhotos.route,
+                arguments = listOf(
+                    navArgument(Screen.InteriorPhotos.ARG_PLACE_ID) { type = NavType.LongType },
+                ),
+            ) {
+                InteriorPhotosScreen(
+                    onBack = { navController.popBackStack() },
+                )
+            }
+            composable(
+                route = Screen.MenuFull.route,
+                arguments = listOf(
+                    navArgument(Screen.MenuFull.ARG_PLACE_ID) { type = NavType.LongType },
+                ),
+            ) {
+                MenuFullScreen(
                     onBack = { navController.popBackStack() },
                 )
             }

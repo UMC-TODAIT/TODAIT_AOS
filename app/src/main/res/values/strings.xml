@@ -19,4 +19,10 @@
     <string name="base_place_confirm_desc">\'%1$s\'을 중심으로 코스가 구성돼요.</string>
     <string name="base_place_confirm_positive">확인</string>
     <string name="base_place_confirm_negative">취소</string>
+
+    <!-- Place detail (장소 상세) -->
+    <string name="place_detail_section_menu">메뉴</string>
+    <string name="place_detail_section_photos">내부 사진</string>
+    <string name="place_detail_see_all">전체보기</string>
+    <string name="place_detail_no_images">등록된 사진이 없어요</string>
 </resources>

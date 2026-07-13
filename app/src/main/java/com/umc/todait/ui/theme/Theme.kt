@@ -1,8 +1,10 @@
 package com.umc.todait.ui.theme
 
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 
 private val LightColorScheme = lightColorScheme(
     primary = Primary,
@@ -27,6 +29,11 @@ fun TodaitTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = LightColorScheme,
         typography = TodaitTypography,
-        content = content,
-    )
+    ) {
+        // style 을 지정하지 않은 Text 도 전역 폰트(SUIT)를 상속하도록 기본 TextStyle 에 폰트를 주입한다.
+        CompositionLocalProvider(
+            LocalTextStyle provides LocalTextStyle.current.copy(fontFamily = Suit),
+            content = content,
+        )
+    }
 }

@@ -28,8 +28,16 @@ val White = Color(0xFFFFFFFF)
 val Cream = Color(0xFFFDFBF3)               // 화면 배경(웜 아이보리)
 val Pink100 = Color(0xFFFFE0DF)             // 상단 헤더 배경
 val Pink700 = Color(0xFFF4A7A5)             // 장소 카드 근접 배지 텍스트
-val PlaceCardGradientStart = Color(0xFFEABCD2) // 장소 카드 우측 그라데이션 시작(소프트 핑크)
-val PlaceCardGradientEnd = Color(0xFFD6B27F)   // 장소 카드 우측 그라데이션 끝(웜 탠)
+val PlaceCardGradientStart = Color(0xFFEABCD2) // 장소 카드 위쪽 그라데이션 시작(소프트 핑크)
+val PlaceCardGradientEnd = Color(0xFFD6B27F)   // 장소 카드 아래쪽 그라데이션 끝(웜 탠)
+
+// 장소 상세(장소카드클릭_기본 / 내부사진전체보기) 화면 — Figma 디자인 시스템 토큰(정확 매칭)
+val Gray800 = Color(0xFF222222)             // 장소명·섹션 제목 텍스트 (#222)
+val Gray450 = Color(0xFF8E8E8E)             // '전체보기' 텍스트 (Gray-500)
+val Gray400 = Color(0xFFA3A3A3)             // 주소·보조 텍스트 (Gray-400)
+val Pink800 = Color(0xFFF09F9D)             // 추천 이유·해시태그 칩 텍스트 (Pink-800)
+val OpenGreen = Color(0xFF62AC5E)           // '영업중' 상태 텍스트
+val DividerLine = Color(0xFFEEEEEE)         // 섹션 구분선 (Gray-100)
 
 // Semantic
 val Error = Color(0xFFF04438)

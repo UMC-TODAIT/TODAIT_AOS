@@ -24,7 +24,9 @@ import javax.inject.Inject
  * - 진입 시 화면의 위치 권한 플로우가 끝나면([onLocationPermissionResult])
  *   현재 위치를 확보한 뒤 "지금 내 주변 핫플" 추천 목록을 불러온다.
  * - 검색어 입력 후 검색 시 장소명 검색 결과를 보여준다.
- * - 장소 카드 탭 → 확인 모달 → [확인] 시 지원 지역 검증 후 코스 구성하기로 이동.
+ * - 카드 우측 상단 선택 버튼 → 기준 장소 단일 선택([onSelectPlace]).
+ * - 헤더 확인(체크) 버튼([onConfirmClick]) → 확인 모달 → [확인] 시 지원 지역 검증 후 코스 구성하기로 이동.
+ *   (카드 본문 탭은 이 ViewModel 이 아니라 화면에서 장소 상세 화면 진입으로 처리한다.)
  */
 @HiltViewModel
 class BasePlaceViewModel @Inject constructor(
@@ -128,9 +130,21 @@ class BasePlaceViewModel @Inject constructor(
         }
     }
 
-    /** 장소 카드 탭 → 확인 모달 노출. */
-    fun onPlaceClick(place: PlaceUiModel) {
-        _uiState.update { it.copy(pendingPlace = place, confirmError = null) }
+    /**
+     * 카드 우측 상단 선택 버튼 → 기준 장소 단일 선택.
+     * 이미 선택된 장소를 다시 누르면 선택을 해제한다.
+     */
+    fun onSelectPlace(place: PlaceUiModel) {
+        _uiState.update { state ->
+            val next = if (state.selectedPlace?.placeId == place.placeId) null else place
+            state.copy(selectedPlace = next)
+        }
+    }
+
+    /** 헤더 확인(체크) 버튼 → 선택된 장소로 확인 모달 노출. 선택이 없으면 무시. */
+    fun onConfirmClick() {
+        val selected = _uiState.value.selectedPlace ?: return
+        _uiState.update { it.copy(pendingPlace = selected, confirmError = null) }
     }
 
     /** 확인 모달 [취소] 또는 dismiss. */

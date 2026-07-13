@@ -114,7 +114,8 @@ cd TODAIT_AOS
 | 분위기 선택 화면 | `MoodSelectScreen` | 홈 [코스 생성] 버튼 / 하단 탭 [코스 생성] | 무즈/김규리 |
 | 음식 선택 화면 | `FoodSelectScreen` | 분위기 2개 이상 선택 → [다음] | 무즈/김규리 |
 | 기준 장소 설정 화면 | `BasePlaceScreen` | 음식 1개 이상 선택 → [다음] | 티아/강서윤 |
-| 기준 장소 확인 모달 | `BasePlaceConfirmDialog` | 기준 장소 설정 화면에서 장소 카드 탭 | 티아/강서윤 |
+| 장소 상세 화면 | `PlaceDetailScreen` | 기준 장소 설정 화면에서 장소 카드 탭 | 티아/강서윤 |
+| 기준 장소 확인 모달 | `BasePlaceConfirmDialog` | 기준 장소 설정 화면에서 장소 선택 후 [확인] | 티아/강서윤 |
 | 코스 구성하기 화면 | `CourseComposeScreen` | 기준 장소 확인 모달 [확인] | 티아/강서윤 |
 | 선택한 장소 화면 | `SelectedPlacesScreen` | 코스 구성하기 [선택 완료] (기준 장소 포함 2개 이상) | 티아/강서윤 |
 | 코스 저장 화면 | `CourseSaveScreen` | 선택한 장소 [완료] | 티아/강서윤 |
@@ -140,7 +141,9 @@ flowchart TD
 
     Mood -->|분위기 2개 이상 + 다음| Food[음식 선택 화면]
     Food -->|음식 1개 이상 + 다음| BasePlace[기준 장소 설정 화면]
-    BasePlace -->|장소 카드 탭| Confirm{기준 장소 확인 모달}
+    BasePlace -->|장소 카드 탭| PlaceDetail[장소 상세 화면]
+    PlaceDetail -->|뒤로| BasePlace
+    BasePlace -->|장소 선택 + 확인| Confirm{기준 장소 확인 모달}
     Confirm -->|확인| Compose[코스 구성하기 화면]
     Confirm -->|취소| BasePlace
     Compose -->|선택 완료 · 2개 이상| Selected[선택한 장소 화면]
@@ -161,7 +164,7 @@ flowchart TD
 ```
 로그인 → (최초 가입 시 회원가입 → 약관 동의 → 회원가입 완료) → 홈
 → 코스 생성 → 분위기 선택(2개↑) → 음식 선택(1개↑)
-→ 기준 장소 설정 → 기준 장소 확인 모달(확인)
+→ 기준 장소 설정 (장소 카드 탭 → 장소 상세) → 장소 선택 → 기준 장소 확인 모달(확인)
 → 코스 구성하기(카테고리별 추천 + 지도 핀/도보 경로)
 → 선택한 장소(순서 드래그 수정) → 코스 저장(이름/메모/태그)
 → 저장된 코스 → 코스 상세 정보

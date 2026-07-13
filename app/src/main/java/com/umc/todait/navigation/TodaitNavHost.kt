@@ -78,6 +78,12 @@ fun TodaitApp() {
             composable(Screen.EmailLogin.route) {
                 EmailLoginScreen(
                     onSignupClick = { navController.navigate(Screen.Signup.route) },
+                    onNavigateToHome = {
+                        navController.navigate(Screen.Home.route) {
+                            // 로그인 성공 후 인증 플로우(Login 포함)를 백스택에서 제거
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                        }
+                    },
                 )
             }
             composable(Screen.Signup.route) {

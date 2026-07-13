@@ -91,6 +91,9 @@ dependencies {
     // Image
     implementation(libs.coil.compose)
 
+    // Local storage
+    implementation(libs.androidx.datastore.preferences)
+
     // Test
     testImplementation(libs.junit)
 }

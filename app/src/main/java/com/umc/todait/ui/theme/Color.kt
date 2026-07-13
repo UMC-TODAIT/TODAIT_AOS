@@ -48,8 +48,10 @@ val KakaoBrown = Color(0xFF191919)
 val BgGradientTop = Color(0xFFFFFAF7)
 val BgGradientBottom = Color(0xFFFFEDED)
 
-// 회원가입 폼 전용 (Figma 지정값)
-val Pink400 = Color(0xFFFFBDBC)             // 가입완료 버튼 활성화 (Figma: PINK-400)
+// 인증 화면(로그인/회원가입) 전용 (Figma 지정값)
+val Pink400 = Color(0xFFFFBDBC)             // 로그인/가입완료 버튼 활성화 (Figma: PINK-400)
+val Pink800 = Color(0xFFF09F9D)             // 회원가입/이메일 로그인 링크 텍스트 (Figma: PINK-800)
+val LoginHeadingPink = Color(0xFFED9896)    // 이메일 로그인 화면 "LOG IN" 타이틀 텍스트
 val VerifyPink = Color(0xFFF4A7A5)          // 인증번호 발송/재전송/확인(활성) 버튼
 val DisabledButtonGray = Color(0xFFEEEEEE)  // 가입완료 버튼 비활성화
 val DisabledConfirmGray = Gray200           // 확인 버튼 비활성화

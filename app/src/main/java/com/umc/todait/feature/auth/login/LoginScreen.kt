@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,15 +25,19 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.umc.todait.R
+import com.umc.todait.ui.component.AuthLogoTopOffset
+import com.umc.todait.ui.component.TodaitLogoMark
 import com.umc.todait.ui.theme.BgGradientBottom
 import com.umc.todait.ui.theme.BgGradientTop
 import com.umc.todait.ui.theme.Gray300
 import com.umc.todait.ui.theme.Gray900
 import com.umc.todait.ui.theme.KakaoBrown
 import com.umc.todait.ui.theme.KakaoYellow
+import com.umc.todait.ui.theme.Pink800
 import com.umc.todait.ui.theme.TodaitTheme
 import com.umc.todait.ui.theme.White
 
@@ -60,28 +63,25 @@ fun LoginScreen(
             .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Column(
-            modifier = Modifier.weight(1f),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            TodaitLogoMark()
-            Spacer(Modifier.height(20.dp))
-            Image(
-                painter = painterResource(R.drawable.ic_todait_wordmark),
-                contentDescription = stringResource(R.string.login_logo_content_description),
-                modifier = Modifier.height(32.dp),
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = stringResource(R.string.login_tagline),
-                style = MaterialTheme.typography.bodyMedium,
-                color = Gray900,
-            )
-        }
+        Spacer(Modifier.height(AuthLogoTopOffset))
+        TodaitLogoMark()
+        Spacer(Modifier.height(20.dp))
+        Image(
+            painter = painterResource(R.drawable.ic_todait_wordmark),
+            contentDescription = stringResource(R.string.login_logo_content_description),
+            modifier = Modifier.height(32.dp),
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = stringResource(R.string.login_tagline),
+            style = MaterialTheme.typography.bodyMedium,
+            color = Gray900,
+        )
+
+        Spacer(Modifier.height(100.dp))
 
         Column(
-            modifier = Modifier.padding(bottom = 150.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             SocialLoginButton(
@@ -105,25 +105,17 @@ fun LoginScreen(
                     )
                 },
             )
-            SocialLoginButton(
+            Text(
                 text = stringResource(R.string.login_email_button),
-                containerColor = White,
-                contentColor = Gray900,
-                borderColor = Gray300,
-                onClick = onEmailLoginClick,
-                icon = { LetterBadge(letter = "@") },
+                style = MaterialTheme.typography.bodyMedium,
+                color = Pink800,
+                textDecoration = TextDecoration.Underline,
+                modifier = Modifier
+                    .padding(top = 4.dp)
+                    .clickable(onClick = onEmailLoginClick),
             )
         }
     }
-}
-
-@Composable
-private fun TodaitLogoMark() {
-    Image(
-        painter = painterResource(R.drawable.ic_todait_logo),
-        contentDescription = null,
-        modifier = Modifier.size(width = 139.dp, height = 120.dp),
-    )
 }
 
 @Composable
@@ -135,7 +127,7 @@ private fun SocialLoginButton(
     icon: @Composable () -> Unit,
     borderColor: Color? = null,
 ) {
-    val shape = RoundedCornerShape(16.dp)
+    val shape = CircleShape
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -167,20 +159,6 @@ private fun KakaoIcon() {
         contentDescription = null,
         modifier = Modifier.size(20.dp),
     )
-}
-
-@Composable
-private fun LetterBadge(letter: String) {
-    // TODO: 구글/이메일 공식 아이콘 리소스로 교체
-    Box(
-        modifier = Modifier
-            .size(20.dp)
-            .clip(CircleShape)
-            .background(Gray300),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(text = letter, style = MaterialTheme.typography.bodySmall, color = Gray900)
-    }
 }
 
 @Preview(showBackground = true)

@@ -6,8 +6,15 @@
     <string name="login_tagline">완벽한 데이트 코스 설계</string>
     <string name="login_kakao_button">카카오톡으로 계속하기</string>
     <string name="login_google_button">구글로 계속하기</string>
-    <string name="login_email_button">이메일로 계속하기</string>
+    <string name="login_email_button">이메일로 로그인 / 회원가입</string>
 
+    <!-- Email Login -->
+    <string name="email_login_heading">LOG IN</string>
+    <string name="email_login_email_placeholder">이메일</string>
+    <string name="email_login_password_placeholder">비밀번호</string>
+    <string name="email_login_button">로그인</string>
+    <string name="email_login_error_message">아이디 또는 비밀번호가 맞지 않습니다. 다시 확인해주세요.</string>
+    <string name="email_login_signup_link">회원가입</string>
 
     <!-- Signup -->
     <string name="signup_title">계정 생성</string>

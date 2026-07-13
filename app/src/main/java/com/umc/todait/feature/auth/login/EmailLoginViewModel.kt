@@ -3,6 +3,8 @@ package com.umc.todait.feature.auth.login
 import androidx.lifecycle.viewModelScope
 import com.umc.todait.core.base.BaseViewModel
 import com.umc.todait.core.datastore.TokenDataStore
+import com.umc.todait.core.network.ApiResult
+import com.umc.todait.core.network.toUiError
 import com.umc.todait.feature.auth.data.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -32,11 +34,11 @@ class EmailLoginViewModel @Inject constructor(
     val effect = _effect.receiveAsFlow()
 
     fun onEmailChange(value: String) {
-        _uiState.update { it.copy(email = value, isLoginError = false) }
+        _uiState.update { it.copy(email = value, error = null) }
     }
 
     fun onPasswordChange(value: String) {
-        _uiState.update { it.copy(password = value, isLoginError = false) }
+        _uiState.update { it.copy(password = value, error = null) }
     }
 
     fun onTogglePasswordVisibility() {
@@ -47,19 +49,21 @@ class EmailLoginViewModel @Inject constructor(
         val state = _uiState.value
         if (!state.isLoginEnabled) return
 
-        _uiState.update { it.copy(isLoading = true, isLoginError = false) }
-        launchApi(
-            apiCall = { authRepository.login(email = state.email, password = state.password) },
-            onError = {
-                _uiState.update { it.copy(isLoading = false, isLoginError = true) }
-            },
-            onSuccess = { result ->
-                viewModelScope.launch {
-                    tokenDataStore.saveTokens(result.accessToken, result.refreshToken)
+        _uiState.update { it.copy(isLoading = true, error = null) }
+        viewModelScope.launch {
+            when (val result = authRepository.login(email = state.email, password = state.password)) {
+                is ApiResult.Success -> {
+                    tokenDataStore.saveTokens(result.data.accessToken, result.data.refreshToken)
                     _uiState.update { it.copy(isLoading = false) }
                     _effect.send(EmailLoginEffect.NavigateToHome)
                 }
-            },
-        )
+                // 서버 인증 실패(AUTH400 등) → 잘못된 이메일/비밀번호 안내
+                is ApiResult.Failure.ServerError ->
+                    _uiState.update { it.copy(isLoading = false, error = LoginError.InvalidCredentials) }
+                // 네트워크/알 수 없는 오류 → 공통 에러 정책 문구
+                is ApiResult.Failure ->
+                    _uiState.update { it.copy(isLoading = false, error = LoginError.General(result.toUiError().message)) }
+            }
+        }
     }
 }

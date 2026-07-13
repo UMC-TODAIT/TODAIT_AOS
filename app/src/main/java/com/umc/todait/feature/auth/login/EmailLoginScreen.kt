@@ -154,10 +154,14 @@ private fun EmailLoginContent(
                 colors = emailLoginTextFieldColors(),
             )
 
-            if (uiState.isLoginError) {
+            uiState.error?.let { error ->
+                val errorText = when (error) {
+                    LoginError.InvalidCredentials -> stringResource(R.string.email_login_error_message)
+                    is LoginError.General -> error.message
+                }
                 Spacer(Modifier.height(12.dp))
                 Text(
-                    text = stringResource(R.string.email_login_error_message),
+                    text = errorText,
                     style = MaterialTheme.typography.bodySmall,
                     color = Error,
                     modifier = Modifier
@@ -224,15 +228,34 @@ private fun EmailLoginContentPreview() {
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, name = "인증 실패")
 @Composable
-private fun EmailLoginContentErrorPreview() {
+private fun EmailLoginContentInvalidCredentialsPreview() {
     TodaitTheme {
         EmailLoginContent(
             uiState = EmailLoginUiState(
                 email = "todait@umc.com",
                 password = "wrongpassword",
-                isLoginError = true,
+                error = LoginError.InvalidCredentials,
+            ),
+            onEmailChange = {},
+            onPasswordChange = {},
+            onTogglePasswordVisibility = {},
+            onLoginClick = {},
+            onSignupClick = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "네트워크 오류")
+@Composable
+private fun EmailLoginContentNetworkErrorPreview() {
+    TodaitTheme {
+        EmailLoginContent(
+            uiState = EmailLoginUiState(
+                email = "todait@umc.com",
+                password = "test1234",
+                error = LoginError.General("연결 상태를 확인해주세요."),
             ),
             onEmailChange = {},
             onPasswordChange = {},

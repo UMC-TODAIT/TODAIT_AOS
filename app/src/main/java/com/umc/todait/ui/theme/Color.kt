@@ -39,6 +39,10 @@ val Gray400 = Color(0xFFA3A3A3)             // 주소·보조 텍스트 (Gray-40
 val OpenGreen = Color(0xFF62AC5E)           // '영업중' 상태 텍스트
 val DividerLine = Color(0xFFEEEEEE)         // 섹션 구분선 (Gray-100)
 
+// 기준 장소 시스템 알럿 / 선택 상태 — Figma 디자인 시스템 토큰
+val Gray50 = Color(0xFFF5F5F5)              // 알럿 '취소' 버튼 배경 (Gray-50)
+val Green700 = Color(0xFF819158)            // 선택된 기준 장소 카드 테두리 (Green-700)
+
 // Semantic
 val Error = Color(0xFFF04438)
 val Success = Color(0xFF12B76A)

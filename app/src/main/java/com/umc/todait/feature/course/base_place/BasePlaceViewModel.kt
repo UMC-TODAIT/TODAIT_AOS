@@ -21,7 +21,8 @@ import javax.inject.Inject
  *
  * - 진입 시 "지금 내 주변 핫플" 추천 목록을 불러온다.
  * - 검색어 입력 후 검색 시 장소명 검색 결과를 보여준다.
- * - 장소 카드 탭 → 확인 모달 → [확인] 시 지원 지역 검증 후 코스 구성하기로 이동.
+ * - 카드 우상단 '+' 로 기준 장소를 선택하고, 헤더 체크 → 확정 알럿 → [확인] 시
+ *   지원 지역 검증 후 코스 구성하기로 이동. (카드 본문 탭은 장소 상세로 진입 — 화면 레이어에서 처리)
  */
 @HiltViewModel
 class BasePlaceViewModel @Inject constructor(
@@ -106,22 +107,42 @@ class BasePlaceViewModel @Inject constructor(
         }
     }
 
-    /** 장소 카드 탭 → 확인 모달 노출. */
-    fun onPlaceClick(place: PlaceUiModel) {
-        _uiState.update { it.copy(pendingPlace = place, confirmError = null) }
-    }
-
-    /** 확인 모달 [취소] 또는 dismiss. */
-    fun onDismissConfirm() {
-        _uiState.update { it.copy(pendingPlace = null, confirmError = null) }
+    /** 카드 우상단 '+' → 기준 장소 선택/해제(토글). 단일 선택. */
+    fun onSelectPlace(place: PlaceUiModel) {
+        _uiState.update { state ->
+            val next = if (state.selectedPlace?.placeId == place.placeId) null else place
+            state.copy(selectedPlace = next)
+        }
     }
 
     /**
-     * 확인 모달 [확인]. 지원 지역/좌표를 검증하고 통과하면 코스 구성하기로 이동한다.
+     * 헤더 체크(확정) 버튼.
+     * - 선택된 장소가 없으면 시스템알럿1(선택 요청)을 띄운다.
+     * - 있으면 시스템알럿2(확정 확인)를 띄운다.
+     */
+    fun onConfirmClick() {
+        _uiState.update { state ->
+            val selected = state.selectedPlace
+            val alert = if (selected == null) {
+                BasePlaceAlert.SelectRequired
+            } else {
+                BasePlaceAlert.Confirm(selected)
+            }
+            state.copy(alert = alert, confirmError = null)
+        }
+    }
+
+    /** 알럿 [취소] 또는 dismiss. */
+    fun onDismissAlert() {
+        _uiState.update { it.copy(alert = null, confirmError = null) }
+    }
+
+    /**
+     * 확정 알럿 [확인]. 지원 지역/좌표를 검증하고 통과하면 코스 구성하기로 이동한다.
      * (임시 코스 세션 저장·기준 장소 주변 추천 조회는 세션 API 연동 시 처리 — 아래 TODO)
      */
     fun onConfirmSelection() {
-        val place = _uiState.value.pendingPlace ?: return
+        val place = _uiState.value.selectedPlace ?: return
         when {
             !place.hasCoordinate() ->
                 _uiState.update { it.copy(confirmError = ERROR_NO_COORDINATE) }
@@ -132,7 +153,7 @@ class BasePlaceViewModel @Inject constructor(
 
             else -> {
                 // TODO(BE 죠): 기준 장소(위도/경도/카테고리/지역)를 임시 코스 세션에 저장 후 이동.
-                _uiState.update { it.copy(pendingPlace = null, confirmError = null) }
+                _uiState.update { it.copy(alert = null, confirmError = null) }
                 viewModelScope.launch { _effect.send(BasePlaceEffect.NavigateToCompose) }
             }
         }

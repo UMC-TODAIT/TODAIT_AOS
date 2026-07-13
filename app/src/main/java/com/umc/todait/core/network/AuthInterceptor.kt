@@ -3,7 +3,6 @@ package com.umc.todait.core.network
 import com.google.gson.Gson
 import com.umc.todait.BuildConfig
 import com.umc.todait.core.datastore.TokenDataStore
-import com.umc.todait.feature.auth.data.dto.TokenRefreshRequestDto
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
@@ -92,7 +91,8 @@ class AuthInterceptor @Inject constructor(
 
     private fun tryRefreshAccessToken(): String? = runCatching {
         val refreshToken = runBlocking { tokenDataStore.getRefreshToken() } ?: return null
-        val body = gson.toJson(TokenRefreshRequestDto(refreshToken = refreshToken))
+        // core는 feature에 의존하지 않으므로(§5) feature의 요청 DTO를 쓰지 않고 JSON을 직접 만든다.
+        val body = gson.toJson(mapOf("refreshToken" to refreshToken))
             .toRequestBody("application/json".toMediaType())
         val request = Request.Builder()
             .url(BuildConfig.BASE_URL + "api/auth/token/refresh")

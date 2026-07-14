@@ -19,6 +19,18 @@ sealed class Screen(val route: String) {
     data object MoodSelect : Screen("course/mood")            // 무즈/김규리
     data object FoodSelect : Screen("course/food")            // 무즈/김규리
     data object BasePlace : Screen("course/base_place")       // 티아/강서윤
+    data object PlaceDetail : Screen("course/place/{placeId}") { // 티아/강서윤 — 장소 카드 탭
+        const val ARG_PLACE_ID = "placeId"
+        fun createRoute(placeId: Long) = "course/place/$placeId"
+    }
+    data object InteriorPhotos : Screen("course/place/{placeId}/photos") { // 티아/강서윤 — 내부 사진 전체보기
+        const val ARG_PLACE_ID = "placeId"
+        fun createRoute(placeId: Long) = "course/place/$placeId/photos"
+    }
+    data object MenuFull : Screen("course/place/{placeId}/menus") { // 티아/강서윤 — 메뉴 전체보기
+        const val ARG_PLACE_ID = "placeId"
+        fun createRoute(placeId: Long) = "course/place/$placeId/menus"
+    }
     data object CourseCompose : Screen("course/compose")      // 티아/강서윤
     data object SelectedPlaces : Screen("course/selected")    // 티아/강서윤
     data object CourseSave : Screen("course/save")            // 티아/강서윤

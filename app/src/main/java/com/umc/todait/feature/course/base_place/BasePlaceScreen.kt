@@ -2,6 +2,7 @@ package com.umc.todait.feature.course.base_place
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -58,6 +59,7 @@ import com.umc.todait.core.network.UiError
 import com.umc.todait.ui.component.ErrorContent
 import com.umc.todait.ui.component.LoadingIndicator
 import com.umc.todait.ui.theme.Cream
+import com.umc.todait.ui.theme.Green700
 import com.umc.todait.ui.theme.Gray200
 import com.umc.todait.ui.theme.Gray500
 import com.umc.todait.ui.theme.Gray600
@@ -78,6 +80,7 @@ import com.umc.todait.ui.theme.White
 @Composable
 fun BasePlaceScreen(
     onNavigateToCompose: () -> Unit,
+    onNavigateToDetail: (Long) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: BasePlaceViewModel = hiltViewModel(),
@@ -92,24 +95,41 @@ fun BasePlaceScreen(
         }
     }
 
-    BasePlaceContent(
-        state = uiState,
-        onBack = onBack,
-        onSearchQueryChange = viewModel::onSearchQueryChange,
-        onSearch = viewModel::onSearch,
-        onClearSearch = viewModel::onClearSearch,
-        onPlaceClick = viewModel::onPlaceClick,
-        onRetry = viewModel::loadNearbyHotPlaces,
-        modifier = modifier,
-    )
-
-    uiState.pendingPlace?.let { place ->
-        BasePlaceConfirmDialog(
-            placeName = place.name,
-            errorMessage = uiState.confirmError,
-            onConfirm = viewModel::onConfirmSelection,
-            onDismiss = viewModel::onDismissConfirm,
+    Box(modifier = modifier.fillMaxSize()) {
+        BasePlaceContent(
+            state = uiState,
+            onBack = onBack,
+            onSearchQueryChange = viewModel::onSearchQueryChange,
+            onSearch = viewModel::onSearch,
+            onClearSearch = viewModel::onClearSearch,
+            // 카드 본문 탭 → 장소 상세 화면 진입 (기획 문서 기준).
+            onPlaceClick = { place -> onNavigateToDetail(place.placeId) },
+            // 카드 우상단 '+' → 기준 장소 선택.
+            onSelectPlace = viewModel::onSelectPlace,
+            // 헤더 체크 → 확정 알럿.
+            onConfirmClick = viewModel::onConfirmClick,
+            onRetry = viewModel::loadNearbyHotPlaces,
         )
+
+        // 시스템 알럿(딤 배경 + 커스텀 다이얼로그) 오버레이.
+        when (val alert = uiState.alert) {
+            is BasePlaceAlert.SelectRequired -> BasePlaceSystemAlert(
+                title = stringResource(R.string.base_place_select_required_title),
+                description = stringResource(R.string.base_place_select_required_desc),
+                onConfirm = viewModel::onDismissAlert,
+                onCancel = viewModel::onDismissAlert,
+            )
+
+            is BasePlaceAlert.Confirm -> BasePlaceSystemAlert(
+                title = stringResource(R.string.base_place_confirm_title, alert.place.name),
+                description = stringResource(R.string.base_place_confirm_desc, alert.place.name),
+                errorMessage = uiState.confirmError,
+                onConfirm = viewModel::onConfirmSelection,
+                onCancel = viewModel::onDismissAlert,
+            )
+
+            null -> Unit
+        }
     }
 }
 
@@ -121,6 +141,8 @@ private fun BasePlaceContent(
     onSearch: () -> Unit,
     onClearSearch: () -> Unit,
     onPlaceClick: (PlaceUiModel) -> Unit,
+    onSelectPlace: (PlaceUiModel) -> Unit,
+    onConfirmClick: () -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -132,8 +154,8 @@ private fun BasePlaceContent(
         BasePlaceTopBar(
             title = stringResource(R.string.base_place_title),
             onBack = onBack,
-            // TODO: 상단 '확인' 버튼 동작 확정 필요. 현재 선택/확정 플로우는 카드 탭 → 확인 모달로 처리한다.
-            onConfirm = {},
+            // 헤더 체크 → 확정(선택 여부에 따라 시스템알럿1/2).
+            onConfirm = onConfirmClick,
         )
 
         Column(modifier = Modifier.padding(horizontal = 20.dp)) {
@@ -176,7 +198,9 @@ private fun BasePlaceContent(
 
                     is PlaceListState.Success -> PlaceList(
                         places = listState.places,
+                        selectedPlaceId = state.selectedPlace?.placeId,
                         onPlaceClick = onPlaceClick,
+                        onSelectPlace = onSelectPlace,
                     )
                 }
             }
@@ -321,7 +345,9 @@ private val placeDecorations = listOf(
 @Composable
 private fun PlaceList(
     places: List<PlaceUiModel>,
+    selectedPlaceId: Long?,
     onPlaceClick: (PlaceUiModel) -> Unit,
+    onSelectPlace: (PlaceUiModel) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -332,7 +358,9 @@ private fun PlaceList(
             PlaceCard(
                 place = place,
                 decorationRes = placeDecorations[index % placeDecorations.size],
+                isSelected = place.placeId == selectedPlaceId,
                 onClick = { onPlaceClick(place) },
+                onSelect = { onSelectPlace(place) },
             )
         }
     }
@@ -347,7 +375,9 @@ private fun PlaceList(
 private fun PlaceCard(
     place: PlaceUiModel,
     decorationRes: Int,
+    isSelected: Boolean,
     onClick: () -> Unit,
+    onSelect: () -> Unit,
 ) {
     // 디자인: bg-gradient-to-b (수직, 상단 → 하단)
     val gradient = Brush.verticalGradient(
@@ -358,6 +388,14 @@ private fun PlaceCard(
             .fillMaxWidth()
             .height(110.dp)
             .clip(RoundedCornerShape(12.dp))
+            // 선택 시 초록 테두리(Figma: Green-700).
+            .then(
+                if (isSelected) {
+                    Modifier.border(1.dp, Green700, RoundedCornerShape(12.dp))
+                } else {
+                    Modifier
+                },
+            )
             .clickable(onClick = onClick),
     ) {
         // 좌측: 장소 이미지 (약 1/3)
@@ -392,15 +430,23 @@ private fun PlaceCard(
                     .padding(end = 10.dp, bottom = 8.dp)
                     .size(60.dp),
             )
-            // 우측 상단 장식 도트
+            // 우측 상단 '+' 선택 버튼 (Figma: 기준 장소 선택). 탭 시 초록 테두리로 선택 표시.
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(12.dp)
-                    .size(8.dp)
+                    .padding(top = 4.dp, end = 10.dp)
+                    .size(24.dp)
                     .clip(CircleShape)
-                    .background(White.copy(alpha = 0.85f)),
-            )
+                    .clickable(onClick = onSelect),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "+",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = White,
+                )
+            }
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -517,12 +563,17 @@ private val previewPlaces = listOf(
 private fun BasePlaceContentSuccessPreview() {
     TodaitTheme {
         BasePlaceContent(
-            state = BasePlaceUiState(listState = PlaceListState.Success(previewPlaces)),
+            state = BasePlaceUiState(
+                listState = PlaceListState.Success(previewPlaces),
+                selectedPlace = previewPlaces[1],
+            ),
             onBack = {},
             onSearchQueryChange = {},
             onSearch = {},
             onClearSearch = {},
             onPlaceClick = {},
+            onSelectPlace = {},
+            onConfirmClick = {},
             onRetry = {},
         )
     }
@@ -542,6 +593,8 @@ private fun BasePlaceContentEmptyPreview() {
             onSearch = {},
             onClearSearch = {},
             onPlaceClick = {},
+            onSelectPlace = {},
+            onConfirmClick = {},
             onRetry = {},
         )
     }

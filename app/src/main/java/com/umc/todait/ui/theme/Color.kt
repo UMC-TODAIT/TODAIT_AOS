@@ -20,9 +20,7 @@ val Gray700 = Color(0xFF464646)
 val Gray600 = Color(0xFF737373)      // 헤더 아이콘 버튼(원형) 배경
 val Gray500 = Color(0xFF8A8A8A)
 val Gray300 = Color(0xFFD6D6D6)
-
 val Gray200 = Color(0xFFC7C7C7)      // 검색창 placeholder
-
 val Gray100 = Color(0xFFF4F4F4)
 val White = Color(0xFFFFFFFF)
 
@@ -32,6 +30,18 @@ val Pink100 = Color(0xFFFFE0DF)             // 상단 헤더 배경
 val Pink700 = Color(0xFFF4A7A5)             // 장소 카드 근접 배지 텍스트
 val PlaceCardGradientStart = Color(0xFFEABCD2) // 장소 카드 우측 그라데이션 시작(소프트 핑크)
 val PlaceCardGradientEnd = Color(0xFFD6B27F)   // 장소 카드 우측 그라데이션 끝(웜 탠)
+
+// 장소 상세(장소카드클릭_기본 / 내부사진전체보기) 화면 — Figma 디자인 시스템 토큰(정확 매칭)
+// Pink800(#F09F9D, 칩 텍스트)은 인증 화면 섹션에 동일 값으로 이미 선언돼 있어 재사용한다.
+val Gray800 = Color(0xFF222222)             // 장소명·섹션 제목 텍스트 (#222)
+val Gray450 = Color(0xFF8E8E8E)             // '전체보기' 텍스트 (Gray-500)
+val Gray400 = Color(0xFFA3A3A3)             // 주소·보조 텍스트 (Gray-400)
+val OpenGreen = Color(0xFF62AC5E)           // '영업중' 상태 텍스트
+val DividerLine = Color(0xFFEEEEEE)         // 섹션 구분선 (Gray-100)
+
+// 기준 장소 시스템 알럿 / 선택 상태 — Figma 디자인 시스템 토큰
+val Gray50 = Color(0xFFF5F5F5)              // 알럿 '취소' 버튼 배경 (Gray-50)
+val Green700 = Color(0xFF819158)            // 선택된 기준 장소 카드 테두리 (Green-700)
 
 // Semantic
 val Error = Color(0xFFF04438)

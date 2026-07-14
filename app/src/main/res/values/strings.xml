@@ -55,5 +55,14 @@
     <string name="base_place_confirm_desc">\'%1$s\'을 중심으로 코스가 구성돼요.</string>
     <string name="base_place_confirm_positive">확인</string>
     <string name="base_place_confirm_negative">취소</string>
+    <!-- 기준 장소 미선택 상태에서 확정(체크) 시 (시스템알럿1) -->
+    <string name="base_place_select_required_title">기준장소를 선택해주세요.</string>
+    <string name="base_place_select_required_desc">기준 장소를 설정한 후 코스를 구성할 수 있어요.</string>
+    <string name="base_place_select_content_description">기준 장소로 선택</string>
 
+    <!-- Place detail (장소 상세) -->
+    <string name="place_detail_section_menu">메뉴</string>
+    <string name="place_detail_section_photos">내부 사진</string>
+    <string name="place_detail_see_all">전체보기</string>
+    <string name="place_detail_no_images">등록된 사진이 없어요</string>
 </resources>

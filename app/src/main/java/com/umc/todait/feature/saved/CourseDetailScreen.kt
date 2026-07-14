@@ -149,7 +149,7 @@ private fun DetailHeader(
                 .height(40.dp)
         ) {
             Image(
-                painter = painterResource(R.drawable.shape_button_back),
+                painter = painterResource(R.drawable.ic_back_button),
                 contentDescription = null,
                 modifier = Modifier
                     .size(40.dp)

@@ -44,7 +44,7 @@ enum class CourseCategory(val label: String) {
  * 종류는 "분위기 태그 조회"(GET /api/mood-tags) 명세의 6종(mood_tag)과 일치시킨다.
  * [code] = mood_tag.code, [label] = mood_tag.name.
  * 그라데이션 색은 Figma "취향설정" 화면 기준으로 6종 전부 확정(색상 토큰은 Color.kt 참고).
- * 우측 하단 아이콘도 6종 각각 전용 에셋(ic_icon_*)으로 매칭한다.
+ * 우측 하단 아이콘도 6종 각각 전용 에셋(ic_mood_*)으로 매칭한다.
  *
  * [PlaceUiModel.moodTags] 의 분위기 태그(code 또는 name)로 결정한다([fromTags]). 추천 API 응답에는
  * 분위기 태그가 없어(matchedMoodCount 만 존재) 태그가 비어 있을 때는 화면에서 fallback 을 부여한다.

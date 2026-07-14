@@ -76,7 +76,7 @@ fun SavedCoursesScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Image(
-                    painter = painterResource(R.drawable.divider_my_page_1),
+                    painter = painterResource(R.drawable.divider_line),
                     contentDescription = null,
                     modifier = Modifier.fillMaxWidth()
                 )

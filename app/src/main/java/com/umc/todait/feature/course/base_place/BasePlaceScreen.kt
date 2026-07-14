@@ -337,9 +337,9 @@ private fun SearchBar(
 
 // 카드 우측 하단 파스텔 장식(3종)을 순서대로 순환 적용한다. (Figma 목업의 장식 실루엣)
 private val placeDecorations = listOf(
-    R.drawable.ic_place_deco_1,
-    R.drawable.ic_place_deco_2,
-    R.drawable.ic_place_deco_3,
+    R.drawable.ic_place_deco_cloud,
+    R.drawable.ic_place_deco_bead,
+    R.drawable.ic_place_deco_sparkle,
 )
 
 @Composable

@@ -63,7 +63,7 @@ fun MyPageScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Image(
-            painter = painterResource(R.drawable.divider_my_page_1),
+            painter = painterResource(R.drawable.divider_line),
             contentDescription = null,
             modifier = Modifier.fillMaxWidth()
         )
@@ -189,7 +189,7 @@ fun SettingsCard(
             )
 
             Image(
-                painter = painterResource(R.drawable.divider_my_page_2),
+                painter = painterResource(R.drawable.divider_my_page),
                 contentDescription = null,
                 modifier = Modifier
                     .padding(horizontal = 18.dp)

@@ -69,7 +69,7 @@ import sh.calvin.reorderable.rememberReorderableLazyListState
  * - 담은 장소는 ≡ 핸들을 잡아 드래그하면 순서가 바뀐다([CourseComposeViewModel.onMovePlace], sh.calvin.reorderable).
  * - 헤더 ✓ → 코스 저장([onNavigateToSave]).
  *
- * ⚠️ 기준 장소 배지 아이콘은 임시(ic_place_deco_1) — 실제 todait 로고 마크로 교체 예정.
+ * ⚠️ 기준 장소 배지 아이콘은 임시(ic_place_deco_cloud) — 실제 todait 로고 마크로 교체 예정.
  */
 @Composable
 fun SelectedPlacesScreen(
@@ -286,7 +286,7 @@ private fun SelectedPlaceRow(
         ) {
             if (isBase) {
                 Image(
-                    painter = painterResource(id = R.drawable.ic_place_deco_1),
+                    painter = painterResource(id = R.drawable.ic_place_deco_cloud),
                     contentDescription = "기준 장소",
                     modifier = Modifier.size(18.dp),
                 )

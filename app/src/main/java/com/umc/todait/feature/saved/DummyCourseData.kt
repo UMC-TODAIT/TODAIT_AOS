@@ -6,7 +6,7 @@ val recentCourses = listOf(
     CourseUiModel(
         id=1,
         backgroundImage = R.drawable.bg_saved_courses_romantic,
-        topImage = R.drawable.ic_icon_romantic,
+        topImage = R.drawable.ic_mood_romantic,
         title = "연희동 데이트 코스",
         date = "2026.07.08",
         moodTag = R.drawable.ic_tag_romantic,
@@ -16,7 +16,7 @@ val recentCourses = listOf(
     CourseUiModel(
         id=2,
         backgroundImage = R.drawable.bg_saved_courses_calm,
-        topImage = R.drawable.ic_icon_calm,
+        topImage = R.drawable.ic_mood_calm,
         title = "힐링하고 싶은 날",
         date = "2026.07.07",
         moodTag = R.drawable.ic_tag_romantic,

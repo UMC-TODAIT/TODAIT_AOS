@@ -337,14 +337,14 @@ private fun CourseMood.gradientColors(): List<Color> = when (this) {
     CourseMood.CALM -> listOf(CourseCalmGradientStart, CourseCalmGradientEnd)
 }
 
-/** 분위기별 우측 하단 아이콘(장식). 6종 각각의 전용 아이콘(ic_icon_*, 분위기별 색/모양)을 쓴다. */
+/** 분위기별 우측 하단 아이콘(장식). 6종 각각의 전용 아이콘(ic_mood_*, 분위기별 색/모양)을 쓴다. */
 private fun CourseMood.decorationRes(): Int = when (this) {
-    CourseMood.HIP -> R.drawable.ic_icon_hip
-    CourseMood.QUIET -> R.drawable.ic_icon_slient
-    CourseMood.ACTIVE -> R.drawable.ic_icon_lively
-    CourseMood.ROMANTIC -> R.drawable.ic_icon_romantic
-    CourseMood.MODERN -> R.drawable.ic_icon_modern
-    CourseMood.CALM -> R.drawable.ic_icon_calm
+    CourseMood.HIP -> R.drawable.ic_mood_hip
+    CourseMood.QUIET -> R.drawable.ic_mood_quiet
+    CourseMood.ACTIVE -> R.drawable.ic_mood_active
+    CourseMood.ROMANTIC -> R.drawable.ic_mood_romantic
+    CourseMood.MODERN -> R.drawable.ic_mood_modern
+    CourseMood.CALM -> R.drawable.ic_mood_calm
 }
 
 /**

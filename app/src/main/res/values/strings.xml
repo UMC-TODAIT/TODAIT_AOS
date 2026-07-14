@@ -62,6 +62,18 @@
     <string name="social_nickname_rule_changeable">나중에 프로필에서 변경할 수 있습니다.</string>
     <string name="social_nickname_start_button">시작하기</string>
 
+    <!-- Terms agreement (약관 동의) -->
+    <string name="terms_agreement_title">약관 동의</string>
+    <string name="terms_agreement_back_content_description">뒤로가기</string>
+    <string name="terms_agreement_heading">반가워요!\n이용약관에 동의해주세요</string>
+    <string name="terms_agreement_subtitle">서비스 이용을 위해 필요한 약관입니다.</string>
+    <string name="terms_agreement_all_agree">전체 동의하기</string>
+    <string name="terms_agreement_tag_required">(필수)</string>
+    <string name="terms_agreement_tag_optional">(선택)</string>
+    <string name="terms_agreement_next_button">다음</string>
+    <string name="terms_agreement_check_content_description">동의</string>
+    <string name="terms_agreement_detail_content_description">약관 상세 보기</string>
+
     <!-- Base place (기준 장소 설정) -->
     <string name="base_place_title">기준 장소 설정</string>
     <string name="base_place_search_hint">원하는 장소를 검색해보세요</string>

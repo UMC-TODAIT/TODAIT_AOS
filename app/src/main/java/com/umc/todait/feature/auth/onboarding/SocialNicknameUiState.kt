@@ -43,6 +43,12 @@ data class SocialNicknameUiState(
 
 /** 화면 밖으로 나가는 일회성 효과(네비게이션 등). */
 sealed interface SocialNicknameEffect {
-    /** 닉네임 확정 후 약관 동의 화면으로 이동. */
-    data class NavigateToTerms(val nickname: String) : SocialNicknameEffect
+    /**
+     * 닉네임 확정 후 회원가입 완료 화면으로 이동.
+     * 약관 동의는 이 화면 진입 전(TermsAgreementScreen)에서 이미 끝난 상태다.
+     *
+     * TODO: 실제 온보딩 API(PATCH /api/members/me/onboarding) 연동 시
+     *  nickname + 약관 동의 화면에서 넘어온 termAgreements를 함께 실어 호출해야 한다.
+     */
+    data object NavigateToComplete : SocialNicknameEffect
 }

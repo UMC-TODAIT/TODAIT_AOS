@@ -8,12 +8,19 @@ sealed class Screen(val route: String) {
     // Auth (무즈/김규리)
     data object Login : Screen("login")
     data object EmailLogin : Screen("email_login")             // 첫화면 "이메일로 로그인/회원가입" 클릭 시
-    data object Signup : Screen("signup")                      // 카카오 로그인 최초 가입 시
-    data object SocialNickname : Screen("onboarding/nickname/{provider}") { // 소셜 간편가입 닉네임 설정
+    data object TermsAgreement : Screen("terms_agreement/{flow}") { // 로그인 화면(카카오/구글) 또는 이메일 로그인 화면(회원가입) 진입 시
+        const val ARG_FLOW = "flow"                            // "email" | "kakao" | "google"
+        fun createRoute(flow: String) = "terms_agreement/$flow"
+    }
+    data object TermDetail : Screen("terms_agreement/detail/{termId}") { // 약관 동의 화면에서 필수 약관 항목(화살표) 탭 시
+        const val ARG_TERM_ID = "termId"
+        fun createRoute(termId: Long) = "terms_agreement/detail/$termId"
+    }
+    data object Signup : Screen("signup")                      // 약관 동의 완료(이메일 플로우)
+    data object SocialNickname : Screen("onboarding/nickname/{provider}") { // 약관 동의 완료(소셜 플로우)
         const val ARG_PROVIDER = "provider"                    // "kakao" | "google"
         fun createRoute(provider: String) = "onboarding/nickname/$provider"
     }
-    data object TermsAgreement : Screen("terms_agreement")     // 회원가입 화면 [다음]
     data object SignupComplete : Screen("signup_complete")
 
     // Home (무즈/김규리)

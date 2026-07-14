@@ -64,12 +64,13 @@ import com.umc.todait.ui.theme.White
 
 /**
  * 소셜 간편가입 닉네임 설정 화면(라우트 진입점). ViewModel의 상태/효과를 구독한다.
- * 닉네임 확정(시작하기) 시 NavigateToTerms 효과를 받아 약관 동의 화면으로 이동한다.
+ * 닉네임 확정(시작하기) 시 NavigateToComplete 효과를 받아 회원가입 완료 화면으로 이동한다.
+ * (약관 동의는 이 화면에 오기 전 TermsAgreementScreen에서 이미 끝낸 상태)
  */
 @Composable
 fun SocialNicknameScreen(
     onBackClick: () -> Unit,
-    onNavigateToTerms: (String) -> Unit,
+    onNavigateToComplete: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SocialNicknameViewModel = hiltViewModel(),
 ) {
@@ -78,7 +79,7 @@ fun SocialNicknameScreen(
     LaunchedEffect(viewModel) {
         viewModel.effect.collect { effect ->
             when (effect) {
-                is SocialNicknameEffect.NavigateToTerms -> onNavigateToTerms(effect.nickname)
+                SocialNicknameEffect.NavigateToComplete -> onNavigateToComplete()
             }
         }
     }

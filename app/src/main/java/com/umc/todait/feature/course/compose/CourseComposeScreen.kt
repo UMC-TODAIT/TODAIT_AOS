@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -27,7 +26,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -77,49 +75,40 @@ import com.umc.todait.ui.theme.Gray200
 import com.umc.todait.ui.theme.Gray500
 import com.umc.todait.ui.theme.Gray600
 import com.umc.todait.ui.theme.Gray800
-import com.umc.todait.ui.theme.Gray900
 import com.umc.todait.ui.theme.Green700
-import com.umc.todait.ui.theme.Pink100
 import com.umc.todait.ui.theme.Pink600
 import com.umc.todait.ui.theme.Pink800
 import com.umc.todait.ui.theme.TodaitTheme
 import com.umc.todait.ui.theme.White
 
 /**
- * 코스 구성하기 화면(#26, 와이어프레임 "코스구성하기_수정버전").
+ * 코스 구성하기 - 장소카드 선택 화면(#26, 와이어프레임 "코스구성하기(카페)_기본/선택").
  *
- * 헤더(뒤로/타이틀/✓확정) + 스크롤 본문[지도 + 카테고리 탭 + 추천 목록 + 선택한 장소]으로 구성된다.
- * 추천 카드 '+' 로 코스에 담고, 담긴 장소는 하단 "선택한 장소" 섹션에서 순서를 수정한다.
+ * 헤더(뒤로/타이틀/✓) + 스크롤 본문[지도 + 카테고리 탭 + 추천 카드]로 구성된다.
+ * 추천 카드 '+' 로 코스에 담고, 헤더 ✓(담은 장소 ≥1일 때 활성) → **선택한 장소 화면**([SelectedPlacesScreen])으로 이동한다.
+ * 선택 상태는 상위 그래프 스코프 [CourseComposeViewModel] 을 통해 다음 화면과 공유된다.
  *
- * ⚠️ 뼈대 단계: 지도는 placeholder(별도 "지도 연동" 작업), 드래그 순서 변경 제스처는 TODO.
+ * ⚠️ 지도는 카카오맵 v2, 드래그 순서 변경은 다음 화면에서 처리(제스처는 TODO).
  */
 @Composable
 fun CourseComposeScreen(
     onNavigateToDetail: (Long) -> Unit,
-    onNavigateNext: () -> Unit,
+    onNavigateToSelected: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: CourseComposeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(viewModel) {
-        viewModel.effect.collect { effect ->
-            when (effect) {
-                CourseComposeEffect.NavigateNext -> onNavigateNext()
-            }
-        }
-    }
-
     Box(modifier = modifier.fillMaxSize()) {
         CourseComposeContent(
             state = uiState,
             onBack = onBack,
-            onConfirm = viewModel::onConfirm,
+            // ✓ 는 canConfirm(담은 장소 ≥1)일 때만 활성 → 선택한 장소 화면으로 이동.
+            onConfirm = onNavigateToSelected,
             onSelectCategory = viewModel::onSelectCategory,
             onPlaceClick = { place -> onNavigateToDetail(place.placeId) },
             onAddPlace = viewModel::onAddPlace,
-            onRemovePlace = viewModel::onRemovePlace,
             onRetry = viewModel::loadRecommendations,
         )
 
@@ -144,7 +133,6 @@ private fun CourseComposeContent(
     onSelectCategory: (CourseCategory) -> Unit,
     onPlaceClick: (PlaceUiModel) -> Unit,
     onAddPlace: (PlaceUiModel) -> Unit,
-    onRemovePlace: (PlaceUiModel) -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
     // 상단 지도 슬롯. 기본은 실제 카카오맵이며, @Preview 에서는 렌더 불가한 MapView 대신 placeholder 를 주입한다.
@@ -224,25 +212,7 @@ private fun CourseComposeContent(
                         )
                     }
             }
-
-            // 선택한 장소(드래그 정렬) 섹션.
-            if (state.selectedPlaces.isNotEmpty()) {
-                item {
-                    SelectedPlacesHeader(
-                        count = state.selectedPlaces.size,
-                        modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 24.dp, bottom = 8.dp),
-                    )
-                }
-                items(state.selectedPlaces, key = { "selected_${it.placeId}" }) { place ->
-                    val order = state.selectedPlaces.indexOf(place) + 1
-                    SelectedPlaceRow(
-                        place = place,
-                        order = order,
-                        onRemove = { onRemovePlace(place) },
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
-                    )
-                }
-            }
+            // 선택한 장소(드래그 정렬)는 다음 화면 [SelectedPlacesScreen] 에서 처리한다.
         }
     }
 }
@@ -367,13 +337,14 @@ private fun CourseMood.gradientColors(): List<Color> = when (this) {
     CourseMood.CALM -> listOf(CourseCalmGradientStart, CourseCalmGradientEnd)
 }
 
-/**
- * 분위기별 우측 하단 배경 장식. 로맨틱=꽃, 모던한=각진 실루엣은 Figma 확정 에셋이며,
- * 나머지 4종은 Figma 장식 확정 전 두 에셋을 임시 재사용한다(TODO).
- */
+/** 분위기별 우측 하단 아이콘(장식). 6종 각각의 전용 아이콘(ic_icon_*, 분위기별 색/모양)을 쓴다. */
 private fun CourseMood.decorationRes(): Int = when (this) {
-    CourseMood.ROMANTIC, CourseMood.HIP, CourseMood.CALM -> R.drawable.ic_course_deco_romantic
-    CourseMood.MODERN, CourseMood.QUIET, CourseMood.ACTIVE -> R.drawable.ic_course_deco_modern
+    CourseMood.HIP -> R.drawable.ic_icon_hip
+    CourseMood.QUIET -> R.drawable.ic_icon_slient
+    CourseMood.ACTIVE -> R.drawable.ic_icon_lively
+    CourseMood.ROMANTIC -> R.drawable.ic_icon_romantic
+    CourseMood.MODERN -> R.drawable.ic_icon_modern
+    CourseMood.CALM -> R.drawable.ic_icon_calm
 }
 
 /**
@@ -515,84 +486,6 @@ private fun ProximityBadge(text: String) {
 }
 
 @Composable
-private fun SelectedPlacesHeader(
-    count: Int,
-    modifier: Modifier = Modifier,
-) {
-    Column(modifier = modifier) {
-        Text(
-            text = stringResource(R.string.course_compose_selected_section, count),
-            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold),
-            color = Gray900,
-        )
-        Spacer(Modifier.height(4.dp))
-        Text(
-            text = stringResource(R.string.course_compose_selected_desc),
-            style = MaterialTheme.typography.bodySmall,
-            color = Gray600,
-        )
-    }
-}
-
-@Composable
-private fun SelectedPlaceRow(
-    place: PlaceUiModel,
-    order: Int,
-    onRemove: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(Pink100)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        // 드래그 핸들. 실제 reorder 제스처는 TODO. (core 아이콘 세트의 Menu 로 ≡ 표현)
-        Icon(
-            imageVector = Icons.Filled.Menu,
-            contentDescription = "순서 변경 핸들",
-            tint = Gray500,
-            modifier = Modifier.size(20.dp),
-        )
-        Spacer(Modifier.size(12.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = place.name,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = Gray900,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = place.address,
-                style = MaterialTheme.typography.bodySmall,
-                color = Gray600,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-        Spacer(Modifier.size(12.dp))
-        // 순서 배지(지도 핀 번호와 대응). 길게 눌러 빼기(임시: 탭으로 제거).
-        Box(
-            modifier = Modifier
-                .size(28.dp)
-                .clip(CircleShape)
-                .background(White)
-                .clickable(onClick = onRemove),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = order.toString(),
-                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
-                color = Gray900,
-            )
-        }
-    }
-}
-
-@Composable
 private fun StatusBox(content: @Composable () -> Unit) {
     Box(
         modifier = Modifier
@@ -646,7 +539,6 @@ private fun CourseComposeContentPreview() {
             onSelectCategory = {},
             onPlaceClick = {},
             onAddPlace = {},
-            onRemovePlace = {},
             onRetry = {},
             mapContent = { PreviewMapPlaceholder(it) },
         )
@@ -667,7 +559,6 @@ private fun CourseComposeContentEmptySelectionPreview() {
             onSelectCategory = {},
             onPlaceClick = {},
             onAddPlace = {},
-            onRemovePlace = {},
             onRetry = {},
             mapContent = { PreviewMapPlaceholder(it) },
         )

@@ -8,20 +8,19 @@ import com.umc.todait.feature.course.base_place.PlaceUiModel
 import com.umc.todait.feature.course.base_place.toUiModel
 import com.umc.todait.feature.course.data.repository.RecommendationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * 코스 구성하기 화면(#26)의 상태를 관리한다.
+ * 코스 구성하기 플로우(#26)의 **공유** 상태를 관리한다(선택 화면 + 선택한 장소 화면).
+ * NavHost 의 course/compose 중첩 그래프에 스코프되어 두 화면이 같은 인스턴스를 쓴다.
  *
- * 진입 시 선택된 카테고리(기본 카페) 기준으로 기준 장소 주변 추천 장소를 불러오고,
- * 카드 '+' 로 코스에 담는다. 헤더 ✓ 확정 시 [CourseComposeEffect.NavigateNext] 를 방출한다.
+ * 진입 시 선택된 카테고리(기본 카페) 기준으로 기준 장소 주변 추천 장소를 불러오고, 카드 '+' 로 코스에 담는다.
+ * 화면 전환(✓)은 네비게이션이라 UI(콜백)에서 처리하고, ViewModel 은 순수 상태만 들고 있다.
  *
  * ⚠️ 기준 장소/임시 코스 세션(courseDraftId·basePlaceId)은 세션 API 연동 시 채운다. (아래 TODO)
  */
@@ -32,9 +31,6 @@ class CourseComposeViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(CourseComposeUiState())
     val uiState: StateFlow<CourseComposeUiState> = _uiState.asStateFlow()
-
-    private val _effect = Channel<CourseComposeEffect>(Channel.BUFFERED)
-    val effect = _effect.receiveAsFlow()
 
     init {
         loadRecommendations()
@@ -110,13 +106,6 @@ class CourseComposeViewModel @Inject constructor(
 
     fun onDismissAlert() {
         _uiState.update { it.copy(alert = null) }
-    }
-
-    /** 헤더 ✓ 확정 → 다음 단계로 이동. 담은 장소가 있을 때만 동작. */
-    fun onConfirm() {
-        if (!_uiState.value.canConfirm) return
-        // TODO(BE 죠): 구성한 코스(담은 장소 순서)를 임시 코스 세션에 저장 후 이동.
-        viewModelScope.launch { _effect.send(CourseComposeEffect.NavigateNext) }
     }
 
     companion object {

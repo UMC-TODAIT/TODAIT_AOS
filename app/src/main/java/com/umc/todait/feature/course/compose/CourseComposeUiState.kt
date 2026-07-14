@@ -3,16 +3,18 @@ package com.umc.todait.feature.course.compose
 import com.umc.todait.feature.course.base_place.PlaceUiModel
 
 /**
- * 코스 구성하기 화면(#26, 와이어프레임 "코스구성하기_수정버전")의 UI 상태.
+ * 코스 구성하기 플로우(#26, 와이어프레임 "코스구성하기_수정버전")의 공유 UI 상태.
  *
- * 한 화면 스크롤 구성: [상단 지도] + [카테고리 탭] + [추천 장소 목록] + [선택한 장소(드래그 정렬)].
+ * **두 화면이 이 상태를 공유한다**(NavHost 의 course/compose 중첩 그래프에 스코프된 ViewModel):
+ * 1) [CourseComposeScreen] (장소카드 선택): [상단 지도] + [카테고리 탭] + [추천 카드('+' 담기)]. 헤더 ✓ → 2)로 이동.
+ * 2) [com.umc.todait.feature.course.compose.SelectedPlacesScreen] (선택한 장소): [지도] + "선택한 장소(N)" 드래그 순서 조정. 헤더 ✓ → 코스 저장.
+ *
  * - 기준 장소([basePlace], #11에서 확정)를 출발점으로, 카테고리별 추천 장소를 [recommendState] 로 노출.
- * - 카드 '+' 로 코스에 담고([selectedPlaces], 담은 순서 = 코스 순서), 드래그로 순서를 수정한다.
+ * - 카드 '+' 로 코스에 담고([selectedPlaces], 담은 순서 = 코스 순서), 2) 화면에서 드래그로 순서를 수정한다.
  * - 이미 담긴 장소를 다시 담으면 [alert] 로 중복 안내.
- * - 헤더 ✓(확정) → 다음 단계로 이동.
  *
  * ⚠️ 지도는 카카오맵 v2([CourseMap])로 연동돼 있다(런타임 키/렌더 확인은 별도).
- * 드래그 순서 변경/카테고리별 추천 필터/임시 코스 세션 연동은 TODO 로 남겨 후속 확장한다.
+ * 드래그 순서 변경 제스처/카테고리별 추천 필터/임시 코스 세션 연동은 TODO 로 남겨 후속 확장한다.
  */
 data class CourseComposeUiState(
     // 기준 장소(코스 출발점). 임시 코스 세션 API 연동 전이라 현재는 null 가능.
@@ -42,7 +44,7 @@ enum class CourseCategory(val label: String) {
  * 종류는 "분위기 태그 조회"(GET /api/mood-tags) 명세의 6종(mood_tag)과 일치시킨다.
  * [code] = mood_tag.code, [label] = mood_tag.name.
  * 그라데이션 색은 Figma "취향설정" 화면 기준으로 6종 전부 확정(색상 토큰은 Color.kt 참고).
- * ⚠️ 우측 하단 장식(꽃/각진)만 로맨틱·모던한 2종 Figma 에셋이 확정이고 나머지 4종은 임시 재사용이다(TODO).
+ * 우측 하단 아이콘도 6종 각각 전용 에셋(ic_icon_*)으로 매칭한다.
  *
  * [PlaceUiModel.moodTags] 의 분위기 태그(code 또는 name)로 결정한다([fromTags]). 추천 API 응답에는
  * 분위기 태그가 없어(matchedMoodCount 만 존재) 태그가 비어 있을 때는 화면에서 fallback 을 부여한다.
@@ -78,10 +80,4 @@ sealed interface RecommendListState {
 sealed interface CourseComposeAlert {
     /** 이미 담은 장소를 다시 담으려 할 때(중복선택 알럿). */
     data object Duplicate : CourseComposeAlert
-}
-
-/** 화면 밖으로 나가는 일회성 효과(네비게이션 등). */
-sealed interface CourseComposeEffect {
-    /** 헤더 ✓ 확정 → 다음 단계로 이동. */
-    data object NavigateNext : CourseComposeEffect
 }

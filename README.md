@@ -107,9 +107,9 @@ cd TODAIT_AOS
 | 화면 이름 | 스크린 ID | 진입 경로 | 담당자 |
 | --- | --- | --- | --- |
 | 로그인 화면 | `LoginScreen` | 앱 최초 진입 / 세션 만료 시 | 무즈/김규리 |
-| 회원가입 화면 | `SignupScreen` | 카카오 로그인 최초 가입 시 | 무즈/김규리 |
-| 약관 동의 화면 | `TermsAgreementScreen` | 회원가입 화면 [다음] | 무즈/김규리 |
-| 회원가입 완료 화면 | `SignupCompleteScreen` | 약관 동의 완료 시 | 무즈/김규리 |
+| 약관 동의 화면 | `TermsAgreementScreen` | 로그인 화면(카카오/구글) / 이메일 로그인 화면 [회원가입] | 무즈/김규리 |
+| 회원가입 화면 | `SignupScreen` | 약관 동의 완료(이메일) | 무즈/김규리 |
+| 회원가입 완료 화면 | `SignupCompleteScreen` | 회원가입/닉네임 설정 완료 시 | 무즈/김규리 |
 | 홈 화면 | `HomeScreen` | 로그인 완료 후 / 하단 탭 [홈] | 무즈/김규리 |
 | 분위기 선택 화면 | `MoodSelectScreen` | 홈 [코스 생성] 버튼 / 하단 탭 [코스 생성] | 무즈/김규리 |
 | 음식 선택 화면 | `FoodSelectScreen` | 분위기 2개 이상 선택 → [다음] | 무즈/김규리 |
@@ -130,10 +130,14 @@ cd TODAIT_AOS
 
 ```mermaid
 flowchart TD
-    Login[로그인 화면] -->|최초 가입| Signup[회원가입 화면]
-    Login -->|기존 회원| Home[홈 화면]
-    Signup -->|정보 입력 · 다음| Terms[약관 동의 화면]
-    Terms -->|필수 약관 동의| SignupComplete[회원가입 완료 화면]
+    Login[로그인 화면] -->|카카오/구글 최초 가입| Terms[약관 동의 화면]
+    Login -->|기존 회원 · 이메일로 로그인/회원가입| EmailLogin[이메일 로그인 화면]
+    EmailLogin -->|기존 회원| Home[홈 화면]
+    EmailLogin -->|회원가입| Terms
+    Terms -->|필수 약관 동의 · email| Signup[회원가입 화면]
+    Terms -->|필수 약관 동의 · kakao/google| SocialNickname[닉네임 설정 화면]
+    Signup -->|가입 완료| SignupComplete[회원가입 완료 화면]
+    SocialNickname -->|시작하기| SignupComplete
     SignupComplete -->|일정 시간 경과| Home
 
     Home -->|코스 생성| Mood[분위기 선택 화면]
@@ -162,7 +166,7 @@ flowchart TD
 **텍스트 요약 (기본 플로우)**
 
 ```
-로그인 → (최초 가입 시 회원가입 → 약관 동의 → 회원가입 완료) → 홈
+로그인 → (최초 가입 시 약관 동의 → 회원가입/닉네임 설정 → 회원가입 완료) → 홈
 → 코스 생성 → 분위기 선택(2개↑) → 음식 선택(1개↑)
 → 기준 장소 설정 (장소 카드 탭 → 장소 상세) → 장소 선택 → 기준 장소 확인 모달(확인)
 → 코스 구성하기(카테고리별 추천 + 지도 핀/도보 경로)

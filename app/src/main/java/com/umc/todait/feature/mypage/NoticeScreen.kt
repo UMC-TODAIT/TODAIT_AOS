@@ -15,7 +15,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -25,6 +24,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.umc.todait.R
 import com.umc.todait.ui.theme.Cream
+import com.umc.todait.ui.theme.Gray800
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
@@ -68,7 +68,7 @@ fun NoticeScreen(
                 modifier = Modifier.align(Alignment.Center),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Medium,
-                color = Color(0xFF222222)
+                color = Gray800
             )
         }
 

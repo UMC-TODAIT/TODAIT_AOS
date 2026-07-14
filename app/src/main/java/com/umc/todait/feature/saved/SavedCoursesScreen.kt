@@ -30,15 +30,24 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.umc.todait.navigation.Screen
 import com.umc.todait.ui.theme.Cream
+import com.umc.todait.ui.theme.Gray800
+import com.umc.todait.ui.theme.TermsText
+
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun SavedCoursesScreenPreview() {
-    SavedCoursesScreen()
+    SavedCoursesScreen(
+        navController = rememberNavController()
+    )
 }
 @Composable
 fun SavedCoursesScreen(
+    navController: NavController,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -46,16 +55,13 @@ fun SavedCoursesScreen(
             .fillMaxSize()
             .background(Cream)
     ) {
-
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-
             Column(
                 modifier = Modifier
                     .padding(horizontal = 20.dp)
             ) {
-
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Text(
@@ -81,9 +87,7 @@ fun SavedCoursesScreen(
                     .fillMaxSize()
                     .padding(horizontal = 20.dp)
             ) {
-
                 item {
-
                     Spacer(modifier = Modifier.height(24.dp))
 
                     CourseSection(
@@ -98,7 +102,12 @@ fun SavedCoursesScreen(
                     ) {
                         items(recentCourses) { course ->
                             SavedCourseCard(
-                                course = course
+                                course = course,
+                                onClick = {
+                                    navController.navigate(
+                                        Screen.CourseDetail.createRoute(course.id)
+                                    )
+                                }
                             )
                         }
                     }
@@ -117,7 +126,12 @@ fun SavedCoursesScreen(
                     ) {
                         items(recentCourses) { course ->
                             SavedCourseCard(
-                                course = course
+                                course = course,
+                                onClick = {
+                                    navController.navigate(
+                                        Screen.CourseDetail.createRoute(course.id)
+                                    )
+                                }
                             )
                         }
                     }
@@ -136,7 +150,7 @@ fun SavedCoursesScreen(
 
                     Text(
                         text = "이용약관",
-                        color = Color(0xFFB3B3B3),
+                        color = TermsText,
                         fontSize = 12.sp,
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center
@@ -168,7 +182,6 @@ fun CourseSection(
     Row(
         verticalAlignment = Alignment.CenterVertically
     ) {
-
         Image(
             painterResource(R.drawable.ic_saved_courses_fire),
             contentDescription = null,
@@ -181,7 +194,7 @@ fun CourseSection(
             text = title,
             fontSize = 17.sp,
             fontWeight = FontWeight.SemiBold,
-            color = Color(0xFF222222)
+            color = Gray800
         )
     }
 

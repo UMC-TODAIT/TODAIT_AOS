@@ -68,3 +68,12 @@ val VerifyPink = Color(0xFFF4A7A5)          // 인증번호 발송/재전송/확
 val DisabledButtonGray = Color(0xFFEEEEEE)  // 가입완료 버튼 비활성화
 val DisabledConfirmGray = Gray200           // 확인 버튼 비활성화
 val SignupBackground = Color(0xFFFDFBF3)    // 회원가입 화면 배경 (그라디언트 아님, 단색)
+
+// 마이페이지
+val ProfileCardBackground = Color(0xFFFFEBEB) // 마이페이지 프로필 카드 배경
+
+//Text
+val PlaceNumber = Color(0xFFF09F9D) // 저장된 코스 상세 장소 카드 번호(1,2,3...) 텍스트
+val TermsText = Color(0xFFB3B3B3) // 이용약관 텍스트
+val TextPlaceholder = Color(0xFFA3A3A3) // 메모/입력창 placeholder 텍스트
+val TextMuted = Color(0xFF888888) // 로그아웃 등 낮은 강조도의 텍스트

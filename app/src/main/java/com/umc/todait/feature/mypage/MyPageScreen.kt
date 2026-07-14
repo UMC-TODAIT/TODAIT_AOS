@@ -23,6 +23,9 @@ import com.umc.todait.R
 import androidx.compose.runtime.*
 import com.umc.todait.ui.component.CommonDialog
 import com.umc.todait.ui.theme.Cream
+import com.umc.todait.ui.theme.Gray800
+import com.umc.todait.ui.theme.ProfileCardBackground
+import com.umc.todait.ui.theme.TermsText
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
@@ -54,7 +57,7 @@ fun MyPageScreen(
             fontSize = 20.sp,
             fontWeight = FontWeight.Medium,
             textAlign = TextAlign.Center,
-            color = Color(0xFF222222)
+            color = Gray800
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -76,7 +79,7 @@ fun MyPageScreen(
             modifier = Modifier.fillMaxWidth(),
             fontWeight = FontWeight.SemiBold,
             fontSize = 17.sp,
-            color = Color(0xFF222222)
+            color = Gray800
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -115,7 +118,7 @@ fun ProfileCard() {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFFFEBEB)
+            containerColor = ProfileCardBackground
         )
     ) {
         Row(
@@ -145,14 +148,14 @@ fun ProfileCard() {
                     text = "투데잇",
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
-                    color = Color(0xFF222222)
+                    color = Gray800
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
                     text = "todait@naver.com",
-                    color = Color(0xFF222222),
+                    color = Gray800,
                     fontSize = 14.sp
                 )
             }
@@ -231,9 +234,9 @@ fun SettingItem(
             text = title,
             modifier = Modifier.weight(1f),
             color = if (title == "로그아웃") {
-                Color(0xFF888888)
+                TermsText
             } else {
-                Color(0xFF222222)
+                Gray800
             }
         )
 

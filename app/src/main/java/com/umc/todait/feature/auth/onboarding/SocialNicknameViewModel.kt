@@ -21,7 +21,8 @@ import javax.inject.Inject
  *
  * 형식 검증(2~12자, 특수문자 불가)은 클라이언트에서 먼저 걸러내고,
  * 통과한 닉네임만 서버(GET /api/members/nickname-availability)로 중복 여부를 확인한다.
- * 실제 온보딩 완료(PATCH /api/members/me/onboarding)는 다음 단계(약관 동의)에서 호출한다.
+ * 약관 동의는 이 화면 진입 전(TermsAgreementScreen)에서 이미 끝났으므로,
+ * 실제 온보딩 완료(PATCH /api/members/me/onboarding) 호출은 이후 API 연동 시 이 화면에서 처리한다.
  */
 @HiltViewModel
 class SocialNicknameViewModel @Inject constructor(
@@ -74,7 +75,7 @@ class SocialNicknameViewModel @Inject constructor(
         val state = _uiState.value
         if (state.status != NicknameStatus.AVAILABLE) return
         viewModelScope.launch {
-            _effect.send(SocialNicknameEffect.NavigateToTerms(state.nickname))
+            _effect.send(SocialNicknameEffect.NavigateToComplete)
         }
     }
 

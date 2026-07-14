@@ -43,6 +43,41 @@ val DividerLine = Color(0xFFEEEEEE)         // 섹션 구분선 (Gray-100)
 val Gray50 = Color(0xFFF5F5F5)              // 알럿 '취소' 버튼 배경 (Gray-50)
 val Green700 = Color(0xFF819158)            // 선택된 기준 장소 카드 테두리 (Green-700)
 
+// 코스 구성하기(코스구성하기(카페)_기본) 화면 — Figma 디자인 시스템 토큰(정확 매칭)
+val Pink600 = Color(0xFFF9AEAC)             // 선택된 카테고리 탭 배경 (Pink-600)
+val CategoryTabTextSelected = Color(0xFF575757) // 선택된 카테고리 탭 텍스트 (Gray-700)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 추천 장소 카드 — 분위기(mood)별 그라데이션 (세로 방향, 위 Start → 아래 End)
+//
+// 분위기 종류는 "분위기 태그 조회"(GET /api/mood-tags) 명세의 6종과 일치. (아래는 sortOrder 순)
+// HEX는 Figma "취향설정" 화면(node 534-12985)에서 추출한 확정값(6종 전부 확정).
+// ─────────────────────────────────────────────────────────────────────────────
+
+// 힙한(HIP)
+val CourseHipGradientStart = Color(0xFFACC5D1)
+val CourseHipGradientEnd = Color(0xFFBEB2D6)
+
+// 조용한(QUIET)
+val CourseQuietGradientStart = Color(0xFFC3D2B6)
+val CourseQuietGradientEnd = Color(0xFFE0D9BC)
+
+// 활발한(ACTIVE)
+val CourseActiveGradientStart = Color(0xFFEEC0B6)
+val CourseActiveGradientEnd = Color(0xFFEED1B7)
+
+// 로맨틱(ROMANTIC)
+val CourseRomanticGradientStart = Color(0xFFECBBC1)
+val CourseRomanticGradientEnd = Color(0xFFDEC4DD)
+
+// 모던한(MODERN)
+val CourseModernGradientStart = Color(0xFFBFE1DE)
+val CourseModernGradientEnd = Color(0xFF7CA2BA)
+
+// 차분한(CALM)
+val CourseCalmGradientStart = Color(0xFFB8DCC4)
+val CourseCalmGradientEnd = Color(0xFF99C6CE)
+
 // Semantic
 val Error = Color(0xFFF04438)
 val Success = Color(0xFF12B76A)

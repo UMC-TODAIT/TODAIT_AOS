@@ -27,6 +27,7 @@ import com.umc.todait.feature.auth.terms.TermDetailScreen
 import com.umc.todait.feature.auth.terms.TermsAgreementScreen
 import com.umc.todait.feature.auth.terms.TermsFlow
 import com.umc.todait.feature.course.base_place.BasePlaceScreen
+import com.umc.todait.feature.course.compose.CourseComposeScreen
 import com.umc.todait.feature.course.place_detail.InteriorPhotosScreen
 import com.umc.todait.feature.course.place_detail.MenuFullScreen
 import com.umc.todait.feature.course.place_detail.PlaceDetailScreen
@@ -212,7 +213,18 @@ fun TodaitApp() {
                     onBack = { navController.popBackStack() },
                 )
             }
-            composable(Screen.CourseCompose.route) { PlaceholderScreen("코스 구성하기") }
+            composable(Screen.CourseCompose.route) {
+                CourseComposeScreen(
+                    onNavigateToDetail = { placeId ->
+                        navController.navigate(Screen.PlaceDetail.createRoute(placeId))
+                    },
+                    // TODO(#26 후속): 다음 단계(선택한 장소/코스 저장) 화면 확정 시 라우트 연결.
+                    onNavigateNext = {
+                        navController.navigate(Screen.SelectedPlaces.route)
+                    },
+                    onBack = { navController.popBackStack() },
+                )
+            }
             composable(Screen.SelectedPlaces.route) { PlaceholderScreen("선택한 장소") }
             composable(Screen.CourseSave.route) { PlaceholderScreen("코스 저장") }
 

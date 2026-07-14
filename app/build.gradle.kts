@@ -29,10 +29,13 @@ android {
             "String", "BASE_URL",
             localProperties.getProperty("BASE_URL") ?: "\"https://api.todait.example.com/\""
         )
-        manifestPlaceholders["NAVER_MAP_CLIENT_ID"] =
-            localProperties.getProperty("NAVER_MAP_CLIENT_ID") ?: ""
         manifestPlaceholders["KAKAO_NATIVE_APP_KEY"] =
             localProperties.getProperty("KAKAO_NATIVE_APP_KEY") ?: ""
+        // KakaoMapSdk.init(context, key) 용. 로그인과 동일한 네이티브 앱 키를 코드에서 참조한다.
+        buildConfigField(
+            "String", "KAKAO_NATIVE_APP_KEY",
+            "\"${localProperties.getProperty("KAKAO_NATIVE_APP_KEY") ?: ""}\""
+        )
     }
 
     buildTypes {
@@ -91,6 +94,9 @@ dependencies {
     // Location (현재 위치 1회 조회)
     implementation(libs.play.services.location)
     implementation(libs.kotlinx.coroutines.play.services)
+
+    // Map (Kakao Map SDK v2)
+    implementation(libs.kakao.map)
 
     // Image
     implementation(libs.coil.compose)

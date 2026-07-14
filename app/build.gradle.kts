@@ -98,6 +98,9 @@ dependencies {
     // Map (Kakao Map SDK v2)
     implementation(libs.kakao.map)
 
+    // Drag & drop 순서 변경 (선택한 장소 리스트)
+    implementation(libs.reorderable)
+
     // Image
     implementation(libs.coil.compose)
 

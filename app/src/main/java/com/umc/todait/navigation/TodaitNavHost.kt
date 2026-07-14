@@ -27,6 +27,7 @@ import com.umc.todait.feature.course.place_detail.PlaceDetailScreen
 import com.umc.todait.feature.saved.CourseDetailScreen
 import com.umc.todait.feature.saved.SavedCoursesScreen
 import com.umc.todait.ui.component.PlaceholderScreen
+import com.umc.todait.ui.component.TopBar
 
 /**
  * 앱 루트 컴포저블: 하단 탭바 + NavHost.
@@ -43,6 +44,9 @@ fun TodaitApp() {
     val showBottomBar = currentRoute in bottomBarRoutes
 
     Scaffold(
+        topBar = {
+            TopBar()
+        },
         bottomBar = {
             if (showBottomBar) {
                 NavigationBar {

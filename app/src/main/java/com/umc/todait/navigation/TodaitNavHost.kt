@@ -20,6 +20,8 @@ import com.umc.todait.feature.mypage.MyPageScreen
 import com.umc.todait.feature.mypage.NoticeScreen
 import com.umc.todait.feature.auth.login.EmailLoginScreen
 import com.umc.todait.feature.auth.login.LoginScreen
+import com.umc.todait.feature.auth.onboarding.SignupProvider
+import com.umc.todait.feature.auth.onboarding.SocialNicknameScreen
 import com.umc.todait.feature.auth.signup.SignupScreen
 import com.umc.todait.feature.course.base_place.BasePlaceScreen
 import com.umc.todait.feature.course.place_detail.InteriorPhotosScreen
@@ -74,9 +76,9 @@ fun TodaitApp() {
             // ---------- Auth ----------
             composable(Screen.Login.route) {
                 LoginScreen(
-                    // TODO: 소셜 로그인 SDK 연동 이슈에서 실제 로그인 처리로 교체
-                    onKakaoLoginClick = {},
-                    onGoogleLoginClick = {},
+                    // TODO: 소셜 로그인 SDK 연동 전까지 임시로 닉네임 설정 화면으로 바로 진입(#22 테스트용)
+                    onKakaoLoginClick = { navController.navigate(Screen.SocialNickname.createRoute(SignupProvider.KAKAO.route)) },
+                    onGoogleLoginClick = { navController.navigate(Screen.SocialNickname.createRoute(SignupProvider.GOOGLE.route)) },
                     onEmailLoginClick = { navController.navigate(Screen.EmailLogin.route) },
                 )
             }
@@ -95,6 +97,20 @@ fun TodaitApp() {
                 SignupScreen(
                     onBackClick = { navController.popBackStack() },
                     onSignupComplete = { navController.navigate(Screen.TermsAgreement.route) },
+                )
+            }
+            composable(
+                route = Screen.SocialNickname.route,
+                arguments = listOf(
+                    navArgument(Screen.SocialNickname.ARG_PROVIDER) { type = NavType.StringType },
+                ),
+            ) {
+                SocialNicknameScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onNavigateToTerms = {
+                        // TODO: 약관 화면 구현 시 닉네임 전달. 현재는 이동만.
+                        navController.navigate(Screen.TermsAgreement.route)
+                    },
                 )
             }
             composable(Screen.TermsAgreement.route) { PlaceholderScreen("약관 동의") }

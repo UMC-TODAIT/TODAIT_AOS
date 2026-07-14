@@ -53,6 +53,8 @@ val OnPrimary = White
 // 소셜 로그인 브랜드 컬러 (앱 브랜드 컬러가 아니라 각 제공자 고정 컬러이므로 별도 토큰으로 분리)
 val KakaoYellow = Color(0xFFFEE500)
 val KakaoBrown = Color(0xFF191919)
+val GoogleBadgeBlue = Color(0xFFCEEAFF)     // 구글 간편가입 뱃지 배경 (Figma)
+val GoogleBadgeText = Color(0xFF000000)     // 구글 간편가입 뱃지 텍스트 (Figma)
 
 // 배경 그라디언트 (Figma: linear-gradient(180deg, #FFFAF7 0%, #FFEDED 100%))
 val BgGradientTop = Color(0xFFFFFAF7)

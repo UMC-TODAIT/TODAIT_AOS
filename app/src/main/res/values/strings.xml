@@ -45,6 +45,23 @@
     <string name="signup_complete_button">가입 완료</string>
     <string name="signup_password_visibility_toggle_content_description">비밀번호 표시 전환</string>
 
+    <!-- Social signup nickname (소셜 간편가입 닉네임 설정) -->
+    <string name="social_nickname_title">닉네임 설정</string>
+    <string name="social_nickname_back_content_description">뒤로가기</string>
+    <string name="social_nickname_profile_content_description">프로필 이미지</string>
+    <string name="social_nickname_badge_kakao">카카오톡으로 간편 가입</string>
+    <string name="social_nickname_badge_google">구글로 간편 가입</string>
+    <string name="social_nickname_heading">Todait에서 사용할\n닉네임을 입력해주세요</string>
+    <string name="social_nickname_subtitle">다른 사용자에게 보여질 이름입니다.</string>
+    <string name="social_nickname_input_placeholder">닉네임 (2자 이상)</string>
+    <string name="social_nickname_check_button">중복 확인</string>
+    <string name="social_nickname_available_message">사용 가능한 닉네임입니다.</string>
+    <string name="social_nickname_unavailable_message">사용 불가능한 닉네임입니다.</string>
+    <string name="social_nickname_rule_length">닉네임은 2~12자 이내로 입력해주세요</string>
+    <string name="social_nickname_rule_special">특수문자는 사용할 수 없습니다</string>
+    <string name="social_nickname_rule_changeable">나중에 프로필에서 변경할 수 있습니다.</string>
+    <string name="social_nickname_start_button">시작하기</string>
+
     <!-- Base place (기준 장소 설정) -->
     <string name="base_place_title">기준 장소 설정</string>
     <string name="base_place_search_hint">원하는 장소를 검색해보세요</string>

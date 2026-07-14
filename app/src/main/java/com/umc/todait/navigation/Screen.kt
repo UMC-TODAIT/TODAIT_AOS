@@ -9,6 +9,10 @@ sealed class Screen(val route: String) {
     data object Login : Screen("login")
     data object EmailLogin : Screen("email_login")             // 첫화면 "이메일로 로그인/회원가입" 클릭 시
     data object Signup : Screen("signup")                      // 카카오 로그인 최초 가입 시
+    data object SocialNickname : Screen("onboarding/nickname/{provider}") { // 소셜 간편가입 닉네임 설정
+        const val ARG_PROVIDER = "provider"                    // "kakao" | "google"
+        fun createRoute(provider: String) = "onboarding/nickname/$provider"
+    }
     data object TermsAgreement : Screen("terms_agreement")     // 회원가입 화면 [다음]
     data object SignupComplete : Screen("signup_complete")
 

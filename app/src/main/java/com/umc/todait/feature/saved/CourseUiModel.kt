@@ -1,6 +1,7 @@
 package com.umc.todait.feature.saved
 
 data class CourseUiModel(
+    val id: Long,
     val backgroundImage: Int,
     val topImage: Int,
     val title: String,

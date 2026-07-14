@@ -29,31 +29,29 @@ import com.umc.todait.R
 @Composable
 fun SavedCourseCard(
     course: CourseUiModel,
+    onClick: () -> Unit
 ) {
     Card(
+        onClick = onClick,
         modifier = Modifier
             .width(200.dp)
             .height(270.dp),
         shape = RoundedCornerShape(12.dp)
     ) {
-
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
-
             Image(
                 painter = painterResource(course.backgroundImage),
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
-
             Column(
                 modifier = Modifier
                     .padding(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
                 Image(
                     painter = painterResource(course.topImage),
                     contentDescription = null,
@@ -107,7 +105,6 @@ fun SavedCourseCard(
                     val visiblePlaces = course.places.take(3)
 
                     visiblePlaces.forEachIndexed { index, place ->
-
                         Text(
                             text = place,
                             color = Color.White,

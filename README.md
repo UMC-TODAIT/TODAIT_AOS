@@ -34,7 +34,7 @@
 | 네트워크 | Retrofit2 · OkHttp3(Logging Interceptor) · Gson |
 | 네비게이션 | Navigation Compose |
 | 이미지 | Coil |
-| 지도 | Naver Map SDK (Compose) |
+| 지도 | Kakao Map SDK v2 (View 기반, AndroidView 로 래핑) |
 | 인증 | Kakao Login SDK |
 | 협업 | GitHub Flow · Issue/PR 템플릿 · 코드 리뷰 |
 
@@ -93,8 +93,7 @@ cd TODAIT_AOS
    ```properties
    sdk.dir=<Android SDK 경로>
    BASE_URL="https://api.todait.example.com/"   # 백엔드 배포 후 교체
-   NAVER_MAP_CLIENT_ID=<발급 키>
-   KAKAO_NATIVE_APP_KEY=<발급 키>
+   KAKAO_NATIVE_APP_KEY=<발급 키>               # 카카오 로그인 + 지도 v2 공용 네이티브 앱 키
    ```
 3. `app` 구성으로 Run ▶ (에뮬레이터 또는 실기기)
 

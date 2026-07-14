@@ -19,9 +19,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        // Naver Map SDK
-        maven("https://repository.map.naver.com/archive/maven")
-        // Kakao SDK
+        // Kakao SDK (로그인 + 지도 v2)
         maven("https://devrepo.kakao.com/nexus/content/groups/public/")
     }
 }

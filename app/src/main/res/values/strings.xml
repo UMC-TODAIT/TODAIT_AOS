@@ -89,6 +89,14 @@
     <string name="base_place_select_required_desc">기준 장소를 설정한 후 코스를 구성할 수 있어요.</string>
     <string name="base_place_select_content_description">기준 장소로 선택</string>
 
+    <!-- Course compose (코스 구성하기) -->
+    <string name="course_compose_title">코스 구성하기</string>
+    <string name="course_compose_selected_section">선택한 장소 (%1$d)</string>
+    <string name="course_compose_selected_desc">드래그해 순서를 수정 할 수 있어요.</string>
+    <!-- 이미 담은 장소를 다시 담으려 할 때 (중복선택 알럿) -->
+    <string name="course_compose_duplicate_title">이미 선택한 장소에요.</string>
+    <string name="course_compose_duplicate_desc">다른 장소를 선택해주세요.</string>
+
     <!-- Place detail (장소 상세) -->
     <string name="place_detail_section_menu">메뉴</string>
     <string name="place_detail_section_photos">내부 사진</string>

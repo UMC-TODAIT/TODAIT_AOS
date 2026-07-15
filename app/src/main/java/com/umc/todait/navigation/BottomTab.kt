@@ -1,11 +1,6 @@
 package com.umc.todait.navigation
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.ui.graphics.vector.ImageVector
+import com.umc.todait.R
 
 /**
  * 하단 탭바: 홈 / 코스 생성 / 저장된 코스 / 마이페이지
@@ -13,10 +8,29 @@ import androidx.compose.ui.graphics.vector.ImageVector
 enum class BottomTab(
     val route: String,
     val label: String,
-    val icon: ImageVector,
+    val iconRes: Int,
 ) {
-    HOME(Screen.Home.route, "홈", Icons.Filled.Home),
-    CREATE(Screen.MoodSelect.route, "코스 생성", Icons.Filled.AddCircle),
-    SAVED(Screen.SavedCourses.route, "저장된 코스", Icons.Filled.FavoriteBorder),
-    MYPAGE(Screen.MyPage.route, "마이페이지", Icons.Filled.Person),
+    HOME(
+        Screen.Home.route,
+        "홈",
+        R.drawable.ic_bottom_home
+    ),
+
+    CREATE(
+        Screen.MoodSelect.route,
+        "코스 생성",
+        R.drawable.ic_bottom_course
+    ),
+
+    SAVED(
+        Screen.SavedCourses.route,
+        "저장된 코스",
+        R.drawable.ic_bottom_saved_course
+    ),
+
+    MYPAGE(
+        Screen.MyPage.route,
+        "마이페이지",
+        R.drawable.ic_bottom_mypage
+    )
 }

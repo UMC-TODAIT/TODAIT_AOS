@@ -95,9 +95,7 @@ fun MyPageScreen(
 
         if (showLogoutDialog) {
             CommonDialog(
-                title = "로그아웃",
-                message = "로그아웃하시겠습니까?",
-                confirmText = "확인",
+                title = "로그아웃하시겠습니까?",
                 onConfirm = {
                     showLogoutDialog = false
 

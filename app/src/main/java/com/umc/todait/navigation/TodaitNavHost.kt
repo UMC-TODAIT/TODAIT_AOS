@@ -32,8 +32,10 @@ import com.umc.todait.feature.course.place_detail.MenuFullScreen
 import com.umc.todait.feature.course.place_detail.PlaceDetailScreen
 import com.umc.todait.feature.saved.CourseDetailScreen
 import com.umc.todait.feature.saved.SavedCoursesScreen
+import com.umc.todait.ui.component.BottomBar
 import com.umc.todait.ui.component.PlaceholderScreen
 import com.umc.todait.ui.component.TopBar
+import com.umc.todait.ui.theme.Cream
 
 /**
  * 앱 루트 컴포저블: 하단 탭바 + NavHost.
@@ -47,38 +49,43 @@ fun TodaitApp() {
 
     // 하단 탭바를 노출할 화면 (플로우 중간 화면에서는 숨김)
     val bottomBarRoutes = BottomTab.entries.map { it.route }.toSet()
-    val showBottomBar = currentRoute in bottomBarRoutes
+    val showBottomBar =
+        currentRoute in bottomBarRoutes || currentRoute?.startsWith("saved/") == true
 
     Scaffold(
+        containerColor = Cream,
         topBar = {
             TopBar()
         },
         bottomBar = {
-            if (showBottomBar) {
-                NavigationBar {
-                    BottomTab.entries.forEach { tab ->
-                        NavigationBarItem(
-                            selected = currentRoute == tab.route,
-                            onClick = {
-                                navController.navigate(tab.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
-                                    }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                            icon = { Icon(tab.icon, contentDescription = tab.label) },
-                            label = { Text(tab.label) },
-                        )
+
+            if(showBottomBar){
+
+                BottomBar(
+                    currentRoute = currentRoute,
+                    onTabClick = { tab ->
+
+                        navController.navigate(tab.route){
+                            popUpTo(
+                                navController.graph.findStartDestination().id
+                            ){
+                                saveState = true
+                            }
+
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+
                     }
-                }
+                )
+
             }
+
         },
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.MyPage.route,//Login으로 되돌리세요
+            startDestination = Screen.Login.route,
             modifier = Modifier.padding(innerPadding),
         ) {
             // ---------- Auth ----------

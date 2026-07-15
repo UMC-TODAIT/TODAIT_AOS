@@ -8,7 +8,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -16,6 +18,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.navigation.navigation
 import com.umc.todait.feature.mypage.MyPageScreen
 import com.umc.todait.feature.mypage.NoticeScreen
 import com.umc.todait.feature.auth.login.EmailLoginScreen
@@ -27,6 +30,9 @@ import com.umc.todait.feature.auth.terms.TermDetailScreen
 import com.umc.todait.feature.auth.terms.TermsAgreementScreen
 import com.umc.todait.feature.auth.terms.TermsFlow
 import com.umc.todait.feature.course.base_place.BasePlaceScreen
+import com.umc.todait.feature.course.compose.CourseComposeScreen
+import com.umc.todait.feature.course.compose.CourseComposeViewModel
+import com.umc.todait.feature.course.compose.SelectedPlacesScreen
 import com.umc.todait.feature.course.place_detail.InteriorPhotosScreen
 import com.umc.todait.feature.course.place_detail.MenuFullScreen
 import com.umc.todait.feature.course.place_detail.PlaceDetailScreen
@@ -36,6 +42,9 @@ import com.umc.todait.ui.component.BottomBar
 import com.umc.todait.ui.component.PlaceholderScreen
 import com.umc.todait.ui.component.TopBar
 import com.umc.todait.ui.theme.Cream
+
+// 코스 구성 플로우 중첩 그래프 라우트. 이 그래프 스코프로 CourseComposeViewModel 을 두 화면이 공유한다.
+private const val COURSE_COMPOSE_GRAPH = "course/compose_graph"
 
 /**
  * 앱 루트 컴포저블: 하단 탭바 + NavHost.
@@ -223,8 +232,36 @@ fun TodaitApp() {
                     onBack = { navController.popBackStack() },
                 )
             }
-            composable(Screen.CourseCompose.route) { PlaceholderScreen("코스 구성하기") }
-            composable(Screen.SelectedPlaces.route) { PlaceholderScreen("선택한 장소") }
+            // 코스 구성 플로우: [장소카드 선택]과 [선택한 장소]가 CourseComposeViewModel(선택 상태)을 공유한다.
+            // 두 화면을 중첩 그래프로 묶고, 그래프 back stack entry 에 스코프된 ViewModel 을 함께 쓴다.
+            navigation(
+                startDestination = Screen.CourseCompose.route,
+                route = COURSE_COMPOSE_GRAPH,
+            ) {
+                composable(Screen.CourseCompose.route) { entry ->
+                    val graphEntry = remember(entry) { navController.getBackStackEntry(COURSE_COMPOSE_GRAPH) }
+                    val viewModel: CourseComposeViewModel = hiltViewModel(graphEntry)
+                    CourseComposeScreen(
+                        viewModel = viewModel,
+                        onNavigateToDetail = { placeId ->
+                            navController.navigate(Screen.PlaceDetail.createRoute(placeId))
+                        },
+                        onNavigateToSelected = {
+                            navController.navigate(Screen.SelectedPlaces.route)
+                        },
+                        onBack = { navController.popBackStack() },
+                    )
+                }
+                composable(Screen.SelectedPlaces.route) { entry ->
+                    val graphEntry = remember(entry) { navController.getBackStackEntry(COURSE_COMPOSE_GRAPH) }
+                    val viewModel: CourseComposeViewModel = hiltViewModel(graphEntry)
+                    SelectedPlacesScreen(
+                        viewModel = viewModel,
+                        onNavigateToSave = { navController.navigate(Screen.CourseSave.route) },
+                        onBack = { navController.popBackStack() },
+                    )
+                }
+            }
             composable(Screen.CourseSave.route) { PlaceholderScreen("코스 저장") }
 
             // ---------- Saved ----------

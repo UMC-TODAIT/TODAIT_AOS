@@ -38,7 +38,7 @@
 | `fix` | 버그 수정 | `fix: 코스 저장 중복 요청 방지` |
 | `refactor` | 리팩토링 | `refactor: safeApiCall 에러 매핑 분리` |
 | `style` | 포맷팅, 세미콜론 등 로직 무관 | `style: ktlint 포맷 적용` |
-| `chore` | 설정/의존성/기타 | `chore: Naver Map SDK 의존성 추가` |
+| `chore` | 설정/의존성/기타 | `chore: Kakao Map SDK 의존성 추가` |
 | `docs` | 문서 | `docs: 컨벤션 문서에 PR 규칙 추가` |
 | `test` | 테스트 코드 | `test: MoodSelectViewModel 단위 테스트 추가` |
 

@@ -14,6 +14,8 @@ okhttp = "4.12.0"
 coroutines = "1.10.1"
 coil = "2.7.0"
 playServicesLocation = "21.3.0"
+kakaoMap = "2.13.1"
+reorderable = "2.4.3"
 datastore = "1.1.1"
 junit = "4.13.2"
 
@@ -53,6 +55,12 @@ kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "ko
 
 # Location (현재 위치 조회 — FusedLocationProviderClient)
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
+
+# Map (Kakao Map SDK v2 — View 기반, AndroidView 로 래핑)
+kakao-map = { group = "com.kakao.maps.open", name = "android", version.ref = "kakaoMap" }
+
+# Drag & drop 순서 변경 (LazyColumn reorder)
+reorderable = { group = "sh.calvin.reorderable", name = "reorderable", version.ref = "reorderable" }
 
 # Image
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }

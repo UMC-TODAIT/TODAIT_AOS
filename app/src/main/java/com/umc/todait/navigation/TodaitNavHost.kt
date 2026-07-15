@@ -1,6 +1,5 @@
 package com.umc.todait.navigation
 
-import android.R.attr.type
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -19,7 +18,14 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.umc.todait.feature.mypage.MyPageScreen
 import com.umc.todait.feature.mypage.NoticeScreen
+import com.umc.todait.feature.auth.login.EmailLoginScreen
 import com.umc.todait.feature.auth.login.LoginScreen
+import com.umc.todait.feature.auth.onboarding.SignupProvider
+import com.umc.todait.feature.auth.onboarding.SocialNicknameScreen
+import com.umc.todait.feature.auth.signup.SignupScreen
+import com.umc.todait.feature.auth.terms.TermDetailScreen
+import com.umc.todait.feature.auth.terms.TermsAgreementScreen
+import com.umc.todait.feature.auth.terms.TermsFlow
 import com.umc.todait.feature.course.base_place.BasePlaceScreen
 import com.umc.todait.feature.course.place_detail.InteriorPhotosScreen
 import com.umc.todait.feature.course.place_detail.MenuFullScreen
@@ -72,20 +78,88 @@ fun TodaitApp() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.MyPage.route,
+            startDestination = Screen.MyPage.route,//Login으로 되돌리세요
             modifier = Modifier.padding(innerPadding),
         ) {
             // ---------- Auth ----------
+            // 플로우: 로그인/이메일 로그인 → 약관 동의 → 회원가입(이메일) / 닉네임 설정(소셜) → 가입 완료
             composable(Screen.Login.route) {
                 LoginScreen(
-                    // TODO: 소셜 로그인 SDK 연동 이슈에서 실제 로그인 처리로 교체
-                    onKakaoLoginClick = {},
-                    onGoogleLoginClick = {},
-                    onEmailLoginClick = { navController.navigate(Screen.Signup.route) },
+                    onKakaoLoginClick = {
+                        navController.navigate(Screen.TermsAgreement.createRoute(TermsFlow.KAKAO.route))
+                    },
+                    onGoogleLoginClick = {
+                        navController.navigate(Screen.TermsAgreement.createRoute(TermsFlow.GOOGLE.route))
+                    },
+                    onEmailLoginClick = { navController.navigate(Screen.EmailLogin.route) },
                 )
             }
-            composable(Screen.Signup.route) { PlaceholderScreen("회원가입") }
-            composable(Screen.TermsAgreement.route) { PlaceholderScreen("약관 동의") }
+            composable(Screen.EmailLogin.route) {
+                EmailLoginScreen(
+                    onSignupClick = {
+                        navController.navigate(Screen.TermsAgreement.createRoute(TermsFlow.EMAIL.route))
+                    },
+                    onNavigateToHome = {
+                        navController.navigate(Screen.Home.route) {
+                            // 로그인 성공 후 인증 플로우(Login 포함)를 백스택에서 제거
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                        }
+                    },
+                )
+            }
+            composable(
+                route = Screen.TermsAgreement.route,
+                arguments = listOf(
+                    navArgument(Screen.TermsAgreement.ARG_FLOW) { type = NavType.StringType },
+                ),
+            ) {
+                TermsAgreementScreen(
+                    onBackClick = { navController.popBackStack() },
+                    // TODO: 회원가입/닉네임 설정 화면에 실제 signup/onboarding API를 붙일 때
+                    //  agreedTerms(TermsAgreementEffect.NavigateNext)도 함께 넘기도록 정리한다.
+                    onNext = { flow ->
+                        when (flow) {
+                            TermsFlow.EMAIL -> navController.navigate(Screen.Signup.route)
+                            TermsFlow.KAKAO ->
+                                navController.navigate(Screen.SocialNickname.createRoute(SignupProvider.KAKAO.route))
+                            TermsFlow.GOOGLE ->
+                                navController.navigate(Screen.SocialNickname.createRoute(SignupProvider.GOOGLE.route))
+                        }
+                    },
+                    onViewDetail = { termId ->
+                        navController.navigate(Screen.TermDetail.createRoute(termId))
+                    },
+                )
+            }
+            composable(
+                route = Screen.TermDetail.route,
+                arguments = listOf(
+                    navArgument(Screen.TermDetail.ARG_TERM_ID) { type = NavType.LongType },
+                ),
+            ) { backStackEntry ->
+                val termId = backStackEntry.arguments?.getLong(Screen.TermDetail.ARG_TERM_ID) ?: 0L
+                TermDetailScreen(
+                    termId = termId,
+                    onBackClick = { navController.popBackStack() },
+                )
+            }
+            composable(Screen.Signup.route) {
+                SignupScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onSignupComplete = { navController.navigate(Screen.SignupComplete.route) },
+                )
+            }
+            composable(
+                route = Screen.SocialNickname.route,
+                arguments = listOf(
+                    navArgument(Screen.SocialNickname.ARG_PROVIDER) { type = NavType.StringType },
+                ),
+            ) {
+                SocialNicknameScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onNavigateToComplete = { navController.navigate(Screen.SignupComplete.route) },
+                )
+            }
             composable(Screen.SignupComplete.route) { PlaceholderScreen("회원가입 완료") }
 
             // ---------- Home ----------

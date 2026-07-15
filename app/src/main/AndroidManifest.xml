@@ -24,10 +24,6 @@
             </intent-filter>
         </activity>
 
-        <!-- Naver Map SDK 연동 시 사용
-        <meta-data
-            android:name="com.naver.maps.map.NCP_KEY_ID"
-            android:value="${NAVER_MAP_CLIENT_ID}" />
-        -->
+        <!-- 카카오맵 v2 는 Application 에서 KakaoMapSdk.init(context, key) 로 초기화한다(Manifest 키 불필요). -->
     </application>
 </manifest>

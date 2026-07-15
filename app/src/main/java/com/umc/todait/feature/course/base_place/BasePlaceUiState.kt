@@ -63,6 +63,9 @@ data class PlaceUiModel(
     val reasonText: String?,
     val latitude: Double,
     val longitude: Double,
+    // 분위기 태그(예: "로맨틱", "모던한"). "검색 결과 목록"에서만 내려오며, 없으면 빈 리스트.
+    // 코스 구성 카드의 분위기별 색상 결정에 쓰인다.
+    val moodTags: List<String> = emptyList(),
 )
 
 /** 검색 결과 DTO → 화면 모델. 검색 결과에는 추천 이유가 없어 [reasonText] 는 null. */
@@ -76,9 +79,13 @@ fun PlaceDto.toUiModel(): PlaceUiModel = PlaceUiModel(
     reasonText = null,
     latitude = latitude,
     longitude = longitude,
+    moodTags = moodTags.orEmpty(),
 )
 
-/** 추천 장소 DTO → 화면 모델. RecommendedPlaceDto 에는 areaName 이 없어 빈 문자열로 둔다. */
+/**
+ * 추천 장소 DTO → 화면 모델. RecommendedPlaceDto 에는 areaName 이 없어 빈 문자열로 둔다.
+ * 추천 응답에는 분위기 태그(mood) 필드가 없어([matchedMoodCount] 만 존재) moodTags 는 비운다.
+ */
 fun RecommendedPlaceDto.toUiModel(): PlaceUiModel = PlaceUiModel(
     placeId = placeId,
     name = name,

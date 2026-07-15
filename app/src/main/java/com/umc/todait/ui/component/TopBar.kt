@@ -8,9 +8,11 @@ import androidx.compose.ui.unit.dp
 import com.umc.todait.ui.theme.Pink100
 
 @Composable
-fun TopBar(){
+fun TopBar(
+    modifier: Modifier = Modifier
+) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(44.dp)
             .background(Pink100)

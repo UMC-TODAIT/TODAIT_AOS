@@ -146,16 +146,6 @@ fun SavedCoursesScreen(
                             .height(1.dp)
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = "이용약관",
-                        color = TermsText,
-                        fontSize = 12.sp,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
-                    )
-
                     Spacer(modifier = Modifier.height(200.dp))
                 }
             }

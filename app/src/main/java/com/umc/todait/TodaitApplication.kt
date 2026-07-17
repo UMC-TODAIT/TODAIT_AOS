@@ -6,11 +6,26 @@ import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
 class TodaitApplication : Application() {
-
+    /* key 생성되면 주석 풀고 이 코드 사용하세요
     override fun onCreate() {
         super.onCreate()
         // 카카오맵 v2 SDK 초기화. 로그인과 동일한 네이티브 앱 키 사용.
         // (Kakao Developers 콘솔에서 앱에 'Kakao Map' 플랫폼 활성화 + 키 해시 등록 필요)
         KakaoMapSdk.init(this, BuildConfig.KAKAO_NATIVE_APP_KEY)
+    }
+}
+*/
+
+    //key 발급 전에 임시로 사용하는 코드입니다.
+    override fun onCreate() {
+        super.onCreate()
+
+        // 카카오맵 키가 있을 때만 SDK 초기화
+        if (BuildConfig.KAKAO_NATIVE_APP_KEY.isNotEmpty()) {
+            KakaoMapSdk.init(
+                this,
+                BuildConfig.KAKAO_NATIVE_APP_KEY
+            )
+        }
     }
 }

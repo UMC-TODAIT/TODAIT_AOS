@@ -15,6 +15,9 @@ coroutines = "1.10.1"
 coil = "2.7.0"
 playServicesLocation = "21.3.0"
 kakaoMap = "2.13.1"
+kakaoSdk = "2.20.6"          # 카카오 로그인 SDK(v2-user). 지도(kakaoMap)와 별개 아티팩트/버전
+credentials = "1.3.0"        # 구글 로그인 Credential Manager
+googleId = "1.1.1"           # Sign in with Google (GetGoogleIdOption)
 reorderable = "2.4.3"
 datastore = "1.1.1"
 junit = "4.13.2"
@@ -58,6 +61,12 @@ play-services-location = { group = "com.google.android.gms", name = "play-servic
 
 # Map (Kakao Map SDK v2 — View 기반, AndroidView 로 래핑)
 kakao-map = { group = "com.kakao.maps.open", name = "android", version.ref = "kakaoMap" }
+
+# Social login (카카오 로그인 v2-user / 구글 Credential Manager)
+kakao-user = { group = "com.kakao.sdk", name = "v2-user", version.ref = "kakaoSdk" }
+androidx-credentials = { group = "androidx.credentials", name = "credentials", version.ref = "credentials" }
+androidx-credentials-play-services-auth = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "credentials" }
+google-identity-googleid = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "googleId" }
 
 # Drag & drop 순서 변경 (LazyColumn reorder)
 reorderable = { group = "sh.calvin.reorderable", name = "reorderable", version.ref = "reorderable" }

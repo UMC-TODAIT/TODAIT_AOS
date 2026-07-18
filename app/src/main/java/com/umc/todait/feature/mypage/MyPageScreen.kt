@@ -53,9 +53,9 @@ fun MyPageScreen(
 
         Text(
             text = "마이페이지",
-            modifier = Modifier.fillMaxWidth(),
             fontSize = 20.sp,
             fontWeight = FontWeight.Medium,
+            modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
             color = Gray800
         )

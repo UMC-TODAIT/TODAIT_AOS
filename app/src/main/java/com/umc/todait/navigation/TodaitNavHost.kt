@@ -16,6 +16,11 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.navigation
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import com.umc.todait.feature.auth.social.SocialLoginEffect
+import com.umc.todait.feature.auth.social.SocialLoginViewModel
+import com.umc.todait.feature.auth.social.SocialProvider
 import com.umc.todait.feature.mypage.compose.MyPageScreen
 import com.umc.todait.feature.mypage.compose.NoticeScreen
 import com.umc.todait.feature.auth.login.EmailLoginScreen
@@ -98,13 +103,28 @@ fun TodaitApp() {
             // ---------- Auth ----------
             // 플로우: 로그인/이메일 로그인 → 약관 동의 → 회원가입(이메일) / 닉네임 설정(소셜) → 가입 완료
             composable(Screen.Login.route) {
+                val context = LocalContext.current
+                val socialViewModel: SocialLoginViewModel = hiltViewModel()
+                // SDK 로그인 성공 시 provider 에 맞는 약관 동의(→ 닉네임 온보딩) 플로우로 이동.
+                // TODO: 백엔드 소셜 로그인 계약 확정 후, 성공 이펙트에 토큰을 실어 서버 로그인 →
+                //  isNewMember 로 홈 직행/온보딩을 분기하도록 확장한다.
+                LaunchedEffect(Unit) {
+                    socialViewModel.effect.collect { effect ->
+                        when (effect) {
+                            is SocialLoginEffect.Success -> when (effect.provider) {
+                                SocialProvider.KAKAO ->
+                                    navController.navigate(Screen.TermsAgreement.createRoute(TermsFlow.KAKAO.route))
+                                SocialProvider.GOOGLE ->
+                                    navController.navigate(Screen.TermsAgreement.createRoute(TermsFlow.GOOGLE.route))
+                            }
+                            // TODO: 실패 안내(스낵바) 연결. 지금은 SDK 반환값 확인이 목적이라 로그만 남긴다.
+                            is SocialLoginEffect.Failure -> Unit
+                        }
+                    }
+                }
                 LoginScreen(
-                    onKakaoLoginClick = {
-                        navController.navigate(Screen.TermsAgreement.createRoute(TermsFlow.KAKAO.route))
-                    },
-                    onGoogleLoginClick = {
-                        navController.navigate(Screen.TermsAgreement.createRoute(TermsFlow.GOOGLE.route))
-                    },
+                    onKakaoLoginClick = { socialViewModel.loginWithKakao(context) },
+                    onGoogleLoginClick = { socialViewModel.loginWithGoogle(context) },
                     onEmailLoginClick = { navController.navigate(Screen.EmailLogin.route) },
                 )
             }

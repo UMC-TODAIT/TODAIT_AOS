@@ -1,11 +1,7 @@
 package com.umc.todait.navigation
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -19,8 +15,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
-import com.umc.todait.feature.mypage.MyPageScreen
-import com.umc.todait.feature.mypage.NoticeScreen
+import com.umc.todait.feature.mypage.compose.MyPageScreen
+import com.umc.todait.feature.mypage.compose.NoticeScreen
 import com.umc.todait.feature.auth.login.EmailLoginScreen
 import com.umc.todait.feature.auth.login.LoginScreen
 import com.umc.todait.feature.auth.onboarding.SignupProvider

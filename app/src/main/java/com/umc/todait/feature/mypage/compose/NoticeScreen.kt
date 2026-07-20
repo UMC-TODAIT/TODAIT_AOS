@@ -1,4 +1,4 @@
-package com.umc.todait.feature.mypage
+package com.umc.todait.feature.mypage.compose
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

@@ -43,6 +43,10 @@ val DividerLine = Color(0xFFEEEEEE)         // 섹션 구분선 (Gray-100)
 val Gray50 = Color(0xFFF5F5F5)              // 알럿 '취소' 버튼 배경 (Gray-50)
 val Green700 = Color(0xFF819158)            // 선택된 기준 장소 카드 테두리 (Green-700)
 
+// 코스 저장 화면 — Figma 디자인 시스템 토큰(정확 매칭)
+val Pink500 = Color(0xFFFDB3B1)             // 경로 미리보기 순서 점·연결선 (Pink-500)
+val Gray350 = Color(0xFFB3B3B3)             // 경로 미리보기 주소 텍스트 (Figma Gray-300)
+
 // 코스 구성하기(코스구성하기(카페)_기본) 화면 — Figma 디자인 시스템 토큰(정확 매칭)
 val Pink600 = Color(0xFFF9AEAC)             // 선택된 카테고리 탭 배경 (Pink-600)
 val CategoryTabTextSelected = Color(0xFF575757) // 선택된 카테고리 탭 텍스트 (Gray-700)

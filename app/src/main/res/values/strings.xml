@@ -97,6 +97,22 @@
     <string name="course_compose_duplicate_title">이미 선택한 장소에요.</string>
     <string name="course_compose_duplicate_desc">다른 장소를 선택해주세요.</string>
 
+    <!-- Course save (코스 저장) -->
+    <string name="course_save_title">코스 저장</string>
+    <string name="course_save_section_name">이름</string>
+    <string name="course_save_section_memo">메모</string>
+    <string name="course_save_section_tag">태그</string>
+    <string name="course_save_section_route">경로 미리보기</string>
+    <string name="course_save_name_placeholder">ex. 한강 데이트 코스</string>
+    <string name="course_save_memo_placeholder">이 코스에 대한 간단한 설명이나 추억을 남겨보세요.</string>
+    <string name="course_save_tag_prefix"># %1$s</string>
+    <string name="course_save_tag_add">태그 추가</string>
+    <string name="course_save_tag_input_placeholder">태그 입력</string>
+    <string name="course_save_back">뒤로가기</string>
+    <string name="course_save_confirm">저장</string>
+    <!-- 이름 미입력 상태에서 저장(체크)을 눌렀을 때 -->
+    <string name="course_save_name_required">코스 이름을 입력해주세요.</string>
+
     <!-- Place detail (장소 상세) -->
     <string name="place_detail_section_menu">메뉴</string>
     <string name="place_detail_section_photos">내부 사진</string>

@@ -41,6 +41,7 @@ import com.umc.todait.feature.course.compose.SelectedPlacesScreen
 import com.umc.todait.feature.course.place_detail.InteriorPhotosScreen
 import com.umc.todait.feature.course.place_detail.MenuFullScreen
 import com.umc.todait.feature.course.place_detail.PlaceDetailScreen
+import com.umc.todait.feature.home.HomeScreen
 import com.umc.todait.feature.saved.CourseDetailScreen
 import com.umc.todait.feature.saved.SavedCoursesScreen
 import com.umc.todait.ui.component.PlaceholderScreen
@@ -171,7 +172,14 @@ fun TodaitApp() {
             composable(Screen.Signup.route) {
                 SignupScreen(
                     onBackClick = { navController.popBackStack() },
-                    onSignupComplete = { navController.navigate(Screen.SignupComplete.route) },
+                    // TODO: SignupCompleteScreen 구현되면 원래대로 Screen.SignupComplete로 되돌리기
+                    //  (README 흐름: 가입완료 → 일정 시간 경과 → 홈). 지금은 SignupComplete가
+                    //  PlaceholderScreen이라 에뮬레이터에서 홈까지 못 가서 임시로 홈 직행.
+                    onSignupComplete = {
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                        }
+                    },
                 )
             }
             composable(
@@ -182,13 +190,27 @@ fun TodaitApp() {
             ) {
                 SocialNicknameScreen(
                     onBackClick = { navController.popBackStack() },
-                    onNavigateToComplete = { navController.navigate(Screen.SignupComplete.route) },
+                    // TODO: 위와 동일 — SignupCompleteScreen 구현되면 되돌리기.
+                    onNavigateToComplete = {
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                        }
+                    },
                 )
             }
             composable(Screen.SignupComplete.route) { PlaceholderScreen("회원가입 완료") }
 
             // ---------- Home ----------
-            composable(Screen.Home.route) { PlaceholderScreen("홈") }
+            composable(Screen.Home.route) {
+                HomeScreen(
+                    onCourseClick = { courseId ->
+                        navController.navigate(Screen.CourseDetail.createRoute(courseId))
+                    },
+                    // TODO: 알림 화면 없음(스코프 밖) — 생기면 연결.
+                    onNotificationClick = {},
+                    onProfileClick = { navController.navigate(Screen.MyPage.route) },
+                )
+            }
 
             // ---------- Course 생성 플로우 ----------
             composable(Screen.MoodSelect.route) { PlaceholderScreen("분위기 선택") }

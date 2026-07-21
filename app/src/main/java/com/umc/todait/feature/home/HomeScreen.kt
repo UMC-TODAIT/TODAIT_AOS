@@ -1,0 +1,432 @@
+package com.umc.todait.feature.home
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
+import com.umc.todait.R
+import com.umc.todait.ui.theme.Cream
+import com.umc.todait.ui.theme.CourseHipGradientEnd
+import com.umc.todait.ui.theme.CourseHipGradientStart
+import com.umc.todait.ui.theme.CourseRomanticGradientEnd
+import com.umc.todait.ui.theme.CourseRomanticGradientStart
+import com.umc.todait.ui.theme.Gray500
+import com.umc.todait.ui.theme.Gray600
+import com.umc.todait.ui.theme.Gray900
+import com.umc.todait.ui.theme.Pink100
+import com.umc.todait.ui.theme.Pink800
+import com.umc.todait.ui.theme.Primary
+import com.umc.todait.ui.theme.TodaitTheme
+import com.umc.todait.ui.theme.White
+
+/**
+ * 홈 화면(라우트 진입점). ViewModel의 상태를 구독한다.
+ * "오늘의 추천 코스" 카드 탭 → 코스 상세, 상단 알림/프로필 아이콘은 각각 상위(NavHost)로 위임한다.
+ */
+@Composable
+fun HomeScreen(
+    onCourseClick: (Long) -> Unit,
+    onNotificationClick: () -> Unit,
+    onProfileClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: HomeViewModel = hiltViewModel(),
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    HomeContent(
+        uiState = uiState,
+        onCourseClick = onCourseClick,
+        onNotificationClick = onNotificationClick,
+        onProfileClick = onProfileClick,
+        onRetryPlaces = viewModel::loadRecommendedPlaces,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun HomeContent(
+    uiState: HomeUiState,
+    onCourseClick: (Long) -> Unit,
+    onNotificationClick: () -> Unit,
+    onProfileClick: () -> Unit,
+    onRetryPlaces: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Cream)
+            .verticalScroll(rememberScrollState()),
+    ) {
+        HomeTopBar(onNotificationClick = onNotificationClick, onProfileClick = onProfileClick)
+
+        Spacer(Modifier.height(30.dp))
+
+        Text(
+            text = stringResource(R.string.home_greeting),
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            color = Gray900,
+            modifier = Modifier.padding(horizontal = 24.dp),
+        )
+
+        Spacer(Modifier.height(28.dp))
+        SectionHeader(
+            iconRes = R.drawable.ic_saved_courses_fire,
+            title = stringResource(R.string.home_section_courses_title),
+            subtitle = stringResource(R.string.home_section_courses_subtitle),
+        )
+        Spacer(Modifier.height(16.dp))
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValuesHorizontal24,
+        ) {
+            items(uiState.courses) { course ->
+                CourseCard(course = course, onClick = { onCourseClick(course.courseId) })
+            }
+        }
+
+        Spacer(Modifier.height(32.dp))
+        SectionHeader(
+            icon = { DiamondIcon() },
+            title = stringResource(R.string.home_section_places_title),
+            subtitle = stringResource(R.string.home_section_places_subtitle),
+        )
+        Spacer(Modifier.height(16.dp))
+        Column(
+            modifier = Modifier.padding(horizontal = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            HomePlacesSection(placesState = uiState.placesState, onRetry = onRetryPlaces)
+        }
+
+        Spacer(Modifier.height(32.dp))
+    }
+}
+
+@Composable
+private fun HomeTopBar(onNotificationClick: () -> Unit, onProfileClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Image(
+            painter = painterResource(R.drawable.ic_todait_logo),
+            contentDescription = null,
+            modifier = Modifier.size(30.dp),
+        )
+        Spacer(Modifier.width(6.dp))
+        Image(
+            painter = painterResource(R.drawable.ic_todait_wordmark),
+            contentDescription = null,
+            modifier = Modifier.height(23.dp),
+        )
+        Spacer(Modifier.weight(1f))
+        HeaderIconButton(
+            iconRes = R.drawable.ic_common_notification,
+            contentDescription = stringResource(R.string.home_notification_content_description),
+            onClick = onNotificationClick,
+        )
+        Spacer(Modifier.width(10.dp))
+        HeaderIconButton(
+            iconRes = R.drawable.ic_my_page_profile,
+            contentDescription = stringResource(R.string.home_profile_content_description),
+            onClick = onProfileClick,
+        )
+    }
+}
+
+@Composable
+private fun HeaderIconButton(iconRes: Int, contentDescription: String, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(26.dp)
+            .clip(CircleShape)
+            .background(Gray600)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Image(
+            painter = painterResource(iconRes),
+            contentDescription = contentDescription,
+            modifier = Modifier.size(16.dp),
+        )
+    }
+}
+
+@Composable
+private fun SectionHeader(
+    title: String,
+    subtitle: String,
+    iconRes: Int? = null,
+    icon: (@Composable () -> Unit)? = null,
+) {
+    Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (iconRes != null) {
+                Icon(
+                    painter = painterResource(iconRes),
+                    contentDescription = null,
+                    tint = Color.Unspecified,
+                    modifier = Modifier.size(16.dp),
+                )
+            } else {
+                icon?.invoke()
+            }
+            Spacer(Modifier.width(6.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = Gray900,
+            )
+        }
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = subtitle,
+            style = MaterialTheme.typography.bodySmall,
+            color = Gray500,
+        )
+    }
+}
+
+/** "취향 기반 추천 장소" 섹션 타이틀 아이콘. 마름모.svg는 rect+rotate라 벡터 에셋 대신 도형으로 재현. */
+@Composable
+private fun DiamondIcon() {
+    Box(
+        modifier = Modifier
+            .size(14.dp)
+            .rotate(45f)
+            .clip(RoundedCornerShape(3.dp))
+            .background(Pink800),
+    )
+}
+
+@Composable
+private fun CourseCard(course: CourseCardUiModel, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .width(222.dp)
+            .height(243.dp)
+            .clip(RoundedCornerShape(15.dp))
+            .background(
+                Brush.verticalGradient(listOf(course.gradientStart, course.gradientEnd)),
+            )
+            .clickable(onClick = onClick),
+    ) {
+        Image(
+            painter = painterResource(course.decorationRes),
+            contentDescription = null,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .size(64.dp),
+        )
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(14.dp),
+        ) {
+            Text(
+                text = course.title,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = White,
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = course.hashtags.joinToString(" "),
+                style = MaterialTheme.typography.bodySmall,
+                color = White,
+            )
+        }
+    }
+}
+
+@Composable
+private fun HomePlacesSection(placesState: HomePlacesState, onRetry: () -> Unit) {
+    when (placesState) {
+        is HomePlacesState.Loading -> Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(96.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            CircularProgressIndicator()
+        }
+
+        is HomePlacesState.Empty -> Text(
+            text = placesState.message,
+            style = MaterialTheme.typography.bodyMedium,
+            color = Gray500,
+        )
+
+        is HomePlacesState.Error -> Column {
+            Text(
+                text = placesState.message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Gray500,
+            )
+            OutlinedButton(onClick = onRetry, modifier = Modifier.padding(top = 8.dp)) {
+                Text("다시 시도")
+            }
+        }
+
+        is HomePlacesState.Success -> placesState.places.forEach { place ->
+            PlaceCard(place = place, onSaveClick = { /* TODO: 코스 저장 API 연동(동작 확정 필요) */ })
+        }
+    }
+}
+
+@Composable
+private fun PlaceCard(place: RecommendedPlaceUiModel, onSaveClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(White),
+    ) {
+        Row(modifier = Modifier.padding(12.dp)) {
+            AsyncImage(
+                model = place.imageUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(88.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+            )
+            Spacer(Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = place.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Gray900,
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = place.address,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Gray500,
+                )
+                Spacer(Modifier.height(8.dp))
+                Box(
+                    modifier = Modifier
+                        .clip(CircleShape)//RoundedCornerShape(8.dp)
+                        .background(White)
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.home_place_nearby_tag),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Primary,
+                    )
+                }
+            }
+        }
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(10.dp)
+                .size(24.dp)
+                .clip(CircleShape)
+                .background(White)
+                .clickable(onClick = onSaveClick),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Add,
+                contentDescription = stringResource(R.string.home_place_save_content_description),
+                tint = Gray600,
+                modifier = Modifier.size(16.dp),
+            )
+        }
+    }
+}
+
+private val PaddingValuesHorizontal24 = PaddingValues(horizontal = 24.dp)
+
+@Preview(showBackground = true, name = "기본")
+@Composable
+private fun HomeScreenDefaultPreview() {
+    TodaitTheme {
+        HomeContent(
+            uiState = HomeUiState(
+                courses = listOf(
+                    CourseCardUiModel(
+                        1L, "연남 데이트 코스", listOf("#낭만", "#분위기"),
+                        CourseRomanticGradientStart,
+                        CourseRomanticGradientEnd,
+                        R.drawable.ic_home_deco_2,
+                    ),
+                    CourseCardUiModel(
+                        2L, "홍대 데이트 코스", listOf("#힙한", "#칵테일"),
+                        CourseHipGradientStart,
+                        CourseHipGradientEnd,
+                        R.drawable.ic_home_deco_1,
+                    ),
+                ),
+                placesState = HomePlacesState.Success(
+                    listOf(
+                        RecommendedPlaceUiModel(1L, "반지공방 지니움", "서울 마포구 연남동 383-37", null),
+                        RecommendedPlaceUiModel(2L, "별마당 도서관", "서울 강남구 영동대로 513", null),
+                    ),
+                ),
+            ),
+            onCourseClick = {}, onNotificationClick = {}, onProfileClick = {}, onRetryPlaces = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "장소 로딩")
+@Composable
+private fun HomeScreenLoadingPreview() {
+    TodaitTheme {
+        HomeContent(
+            uiState = HomeUiState(placesState = HomePlacesState.Loading),
+            onCourseClick = {}, onNotificationClick = {}, onProfileClick = {}, onRetryPlaces = {},
+        )
+    }
+}

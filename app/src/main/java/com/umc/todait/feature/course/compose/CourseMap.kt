@@ -31,7 +31,7 @@ import com.umc.todait.feature.course.base_place.PlaceUiModel
  * View 기반 [MapView] 를 [AndroidView] 로 감싸고, 지도 준비 후 기준 장소/선택 장소를 라벨(핀)로 찍는다.
  * 카메라는 기준 장소(없으면 첫 선택 장소, 그마저 없으면 기본 좌표) 기준으로 이동한다.
  *
- * ⚠️ 실제 렌더링은 기기(에뮬레이터)에서만 확인 가능. 라벨 아이콘은 [R.drawable.ic_place_deco_1]
+ * ⚠️ 실제 렌더링은 기기(에뮬레이터)에서만 확인 가능. 라벨 아이콘은 [R.drawable.ic_place_deco_cloud]
  * 을 임시로 사용하며, 기준/선택 구분 아이콘·번호 라벨은 디자인 확정 후 교체한다.(TODO)
  */
 @Composable
@@ -88,7 +88,7 @@ fun CourseMap(
         labelLayer?.removeAll()
 
         val styles = map.labelManager?.addLabelStyles(
-            LabelStyles.from(LabelStyle.from(R.drawable.ic_place_deco_1)),
+            LabelStyles.from(LabelStyle.from(R.drawable.ic_place_deco_cloud)),
         )
 
         val pins = buildList {

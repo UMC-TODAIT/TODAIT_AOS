@@ -76,7 +76,7 @@ fun SavedCoursesScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Image(
-                    painter = painterResource(R.drawable.divider_my_page_1),
+                    painter = painterResource(R.drawable.divider_line),
                     contentDescription = null,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -144,16 +144,6 @@ fun SavedCoursesScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(1.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = "이용약관",
-                        color = TermsText,
-                        fontSize = 12.sp,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
                     )
 
                     Spacer(modifier = Modifier.height(200.dp))

@@ -122,4 +122,7 @@ dependencies {
 
     // Test
     testImplementation(libs.junit)
+
+    //constraintlayout(코스 저장 팝업에서 사용)
+    implementation("androidx.constraintlayout:constraintlayout-compose:1.1.1")
 }

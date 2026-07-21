@@ -8,19 +8,19 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.navigation.navigation
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.umc.todait.feature.auth.social.SocialLoginEffect
 import com.umc.todait.feature.auth.social.SocialLoginViewModel
 import com.umc.todait.feature.auth.social.SocialProvider
@@ -44,7 +44,10 @@ import com.umc.todait.feature.course.place_detail.PlaceDetailScreen
 import com.umc.todait.feature.home.HomeScreen
 import com.umc.todait.feature.saved.CourseDetailScreen
 import com.umc.todait.feature.saved.SavedCoursesScreen
+import com.umc.todait.ui.component.BottomBar
 import com.umc.todait.ui.component.PlaceholderScreen
+import com.umc.todait.ui.component.TopBar
+import com.umc.todait.ui.theme.Cream
 
 // 코스 구성 플로우 중첩 그래프 라우트. 이 그래프 스코프로 CourseComposeViewModel 을 두 화면이 공유한다.
 private const val COURSE_COMPOSE_GRAPH = "course/compose_graph"
@@ -61,30 +64,38 @@ fun TodaitApp() {
 
     // 하단 탭바를 노출할 화면 (플로우 중간 화면에서는 숨김)
     val bottomBarRoutes = BottomTab.entries.map { it.route }.toSet()
-    val showBottomBar = currentRoute in bottomBarRoutes
+    val showBottomBar =
+        currentRoute in bottomBarRoutes || currentRoute?.startsWith("saved/") == true
 
     Scaffold(
+        containerColor = Cream,
+        topBar = {
+            TopBar()
+        },
         bottomBar = {
-            if (showBottomBar) {
-                NavigationBar {
-                    BottomTab.entries.forEach { tab ->
-                        NavigationBarItem(
-                            selected = currentRoute == tab.route,
-                            onClick = {
-                                navController.navigate(tab.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
-                                    }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                            icon = { Icon(tab.icon, contentDescription = tab.label) },
-                            label = { Text(tab.label) },
-                        )
+
+            if(showBottomBar){
+
+                BottomBar(
+                    currentRoute = currentRoute,
+                    onTabClick = { tab ->
+
+                        navController.navigate(tab.route){
+                            popUpTo(
+                                navController.graph.findStartDestination().id
+                            ){
+                                saveState = true
+                            }
+
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+
                     }
-                }
+                )
+
             }
+
         },
     ) { innerPadding ->
         NavHost(
@@ -300,16 +311,20 @@ fun TodaitApp() {
                 SavedCoursesScreen(navController)
             }
             composable(
-                route = Screen.CourseDetail.route,
+                route = Screen.CourseDetail.route
             ) { backStackEntry ->
-                val courseId = backStackEntry.arguments
-                    ?.getString(Screen.CourseDetail.ARG_COURSE_ID)
-                    ?.toLongOrNull()
+
+                val courseId =
+                    backStackEntry.arguments
+                        ?.getString(Screen.CourseDetail.ARG_COURSE_ID)
+                        ?.toLongOrNull()
+
                 CourseDetailScreen(
                     navController = navController,
-                    courseId = courseId ?: 0L,
+                    courseId = courseId ?: 0L
                 )
             }
+
 
             // ---------- MyPage ----------
             composable(Screen.MyPage.route) {

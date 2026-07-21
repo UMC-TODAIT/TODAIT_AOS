@@ -53,9 +53,9 @@ fun MyPageScreen(
 
         Text(
             text = "마이페이지",
-            modifier = Modifier.fillMaxWidth(),
             fontSize = 20.sp,
             fontWeight = FontWeight.Medium,
+            modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
             color = Gray800
         )
@@ -63,7 +63,7 @@ fun MyPageScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Image(
-            painter = painterResource(R.drawable.divider_my_page_1),
+            painter = painterResource(R.drawable.divider_line),
             contentDescription = null,
             modifier = Modifier.fillMaxWidth()
         )
@@ -95,9 +95,7 @@ fun MyPageScreen(
 
         if (showLogoutDialog) {
             CommonDialog(
-                title = "로그아웃",
-                message = "로그아웃하시겠습니까?",
-                confirmText = "확인",
+                title = "로그아웃하시겠습니까?",
                 onConfirm = {
                     showLogoutDialog = false
 
@@ -189,7 +187,7 @@ fun SettingsCard(
             )
 
             Image(
-                painter = painterResource(R.drawable.divider_my_page_2),
+                painter = painterResource(R.drawable.divider_my_page),
                 contentDescription = null,
                 modifier = Modifier
                     .padding(horizontal = 18.dp)

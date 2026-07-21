@@ -3,6 +3,7 @@ package com.umc.todait.feature.saved
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -104,18 +105,7 @@ fun CourseDetailScreen(
                     )
                 }
 
-
                 item {
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = "이용약관",
-                        color = TermsText,
-                        fontSize = 12.sp,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
-                    )
-
                     Spacer(modifier = Modifier.height(200.dp))
                 }
             }
@@ -149,7 +139,7 @@ private fun DetailHeader(
                 .height(40.dp)
         ) {
             Image(
-                painter = painterResource(R.drawable.shape_button_back),
+                painter = painterResource(R.drawable.ic_back_button),
                 contentDescription = null,
                 modifier = Modifier
                     .size(40.dp)
@@ -175,12 +165,14 @@ private fun DetailHeader(
 private fun SummaryCard(
     course: CourseUiModel
 ) {
+    var isEditing by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(246.dp),
+            .height(if (isEditing) 294.dp else 246.dp),
         shape = RectangleShape
-    ) {
+    ){
         Box {
             Image(
                 painter = painterResource(course.backgroundImage),
@@ -191,75 +183,82 @@ private fun SummaryCard(
             Column(
                 modifier = Modifier.padding(20.dp)
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Column(
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            text = course.title,
-                            color = Color.White,
-                            fontSize = 26.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-
-                        Spacer(Modifier.height(8.dp))
-
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = course.date,
-                                color = Color.White,
-                                fontSize = 13.sp
-                            )
-
-                            Spacer(modifier = Modifier.width(9.dp))
-
-                            Image(
-                                painter = painterResource(course.moodTag),
-                                contentDescription = null,
-                                modifier = Modifier.height(13.dp)
-                            )
-
-                            Spacer(modifier = Modifier.width(9.dp))
-
-                            Image(
-                                painter = painterResource(course.foodTag),
-                                contentDescription = null,
-                                modifier = Modifier.height(13.dp)
-                            )
-                        }
-                    }
 
                     Image(
                         painter = painterResource(course.topImage),
                         contentDescription = null,
-                        modifier = Modifier
-                            .padding(end = 80.dp)
-                            .size(44.dp)
+                        modifier = Modifier.size(44.dp)
                     )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = course.title,
+                        color = Color.White,
+                        fontSize = 26.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+
+                        Text(
+                            text = course.date,
+                            color = Color.White,
+                            fontSize = 13.sp
+                        )
+
+                        Spacer(modifier = Modifier.width(9.dp))
+
+                        Image(
+                            painter = painterResource(course.moodTag),
+                            contentDescription = null,
+                            modifier = Modifier.height(13.dp)
+                        )
+
+                        Spacer(modifier = Modifier.width(9.dp))
+
+                        Image(
+                            painter = painterResource(course.foodTag),
+                            contentDescription = null,
+                            modifier = Modifier.height(13.dp)
+                        )
+                    }
                 }
 
                 Spacer(Modifier.height(20.dp))
 
-                MemoSection()
+                MemoSection(
+                    isEditing = isEditing,
+                    onEditingChange = {
+                        isEditing = it
+                    }
+                )
             }
         }
     }
 }
 
+
 @Composable
-fun MemoSection() {
+fun MemoSection(
+    isEditing: Boolean,
+    onEditingChange: (Boolean) -> Unit
+) {
     var memo by remember { mutableStateOf("") }
-    var isEditing by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(if (isEditing) 136.dp else 89.dp)
+            .height(if (isEditing) 142.dp else 89.dp)
             .background(
                 Color.White.copy(alpha = 0.7f),
                 RoundedCornerShape(12.dp)
@@ -298,7 +297,7 @@ fun MemoSection() {
                         .align(Alignment.CenterEnd)
                         .size(40.dp)
                         .clickable {
-                            isEditing = true
+                            onEditingChange(true)
                         }
                 )
             } else {
@@ -312,7 +311,7 @@ fun MemoSection() {
                             CircleShape
                         )
                         .clickable {
-                            isEditing = false
+                            onEditingChange(false)
                         },
                     contentAlignment = Alignment.Center
                 ) {

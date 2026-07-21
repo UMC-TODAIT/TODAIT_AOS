@@ -66,7 +66,7 @@ fun PlaceCard(
                     ) {
                         if (place.isStartPlace) {
                             Image(
-                                painter = painterResource(R.drawable.ic_icon_todait),
+                                painter = painterResource(R.drawable.ic_todait_symbol),
                                 contentDescription = null,
                                 modifier = Modifier.size(32.dp)
                             )
@@ -255,7 +255,7 @@ private fun PlaceMemoSection(place: PlaceUiModel) {
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
-                        painter = painterResource(R.drawable.ic_course_detail_white_button),
+                        painter = painterResource(R.drawable.ic_white_circle_button),
                         contentDescription = null,
                         modifier = Modifier.size(40.dp)
                     )

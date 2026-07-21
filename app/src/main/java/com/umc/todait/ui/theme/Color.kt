@@ -42,6 +42,7 @@ val DividerLine = Color(0xFFEEEEEE)         // 섹션 구분선 (Gray-100)
 // 기준 장소 시스템 알럿 / 선택 상태 — Figma 디자인 시스템 토큰
 val Gray50 = Color(0xFFF5F5F5)              // 알럿 '취소' 버튼 배경 (Gray-50)
 val Green700 = Color(0xFF819158)            // 선택된 기준 장소 카드 테두리 (Green-700)
+val Green500 = Color(0xFF8D9D61)            // 코스 저장 태그 시트에서 선택된 태그 테두리 (Green-500, Figma node 1243-6988)
 
 // 코스 저장 화면 — Figma 디자인 시스템 토큰(정확 매칭)
 val Pink500 = Color(0xFFFDB3B1)             // 경로 미리보기 순서 점·연결선 (Pink-500)

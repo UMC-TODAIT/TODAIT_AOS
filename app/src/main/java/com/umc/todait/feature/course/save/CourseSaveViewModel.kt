@@ -2,6 +2,7 @@ package com.umc.todait.feature.course.save
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.umc.todait.feature.course.compose.CourseMood
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,7 +32,7 @@ class CourseSaveViewModel @Inject constructor() : ViewModel() {
 
     fun onNameChange(value: String) {
         _uiState.update {
-            it.copy(name = value.take(CourseSaveUiState.MAX_NAME_LENGTH), nameError = null)
+            it.copy(name = value.take(CourseSaveUiState.MAX_NAME_LENGTH))
         }
     }
 
@@ -39,49 +40,59 @@ class CourseSaveViewModel @Inject constructor() : ViewModel() {
         _uiState.update { it.copy(memo = value.take(CourseSaveUiState.MAX_MEMO_LENGTH)) }
     }
 
-    /** '+' 탭 → 태그 입력창 열기. 이미 최대 개수면 무시한다. */
+    /** '+' 탭 → 태그 추가 바텀시트 열기. 현재 선택을 초안으로 복사한다. */
     fun onStartAddTag() {
-        _uiState.update { if (it.canAddTag) it.copy(pendingTag = "") else it }
+        _uiState.update { it.copy(isTagSheetVisible = true, draftTags = it.selectedTags) }
     }
 
-    fun onPendingTagChange(value: String) {
-        // '#' 은 화면에서 붙여주므로 입력값에서는 제거하고, 태그 안에 공백은 허용하지 않는다.
-        val cleaned = value.replace("#", "").replace(" ", "")
+    /** 바텀시트에서 프리셋 태그 탭 → 초안 선택 토글(선택↔해제). 배경색이 회색↔그라데이션으로 바뀐다. */
+    fun onToggleTag(mood: CourseMood) {
         _uiState.update {
-            it.copy(pendingTag = cleaned.take(CourseSaveUiState.MAX_TAG_LENGTH))
+            val draft = if (mood in it.draftTags) it.draftTags - mood else it.draftTags + mood
+            it.copy(draftTags = draft)
         }
     }
 
-    /** 태그 입력 완료(키보드 Done). 비어 있거나 중복이면 추가하지 않고 입력창만 닫는다. */
-    fun onConfirmTag() {
-        _uiState.update { state ->
-            val tag = state.pendingTag?.trim().orEmpty()
-            val isAddable = tag.isNotEmpty() && state.canAddTag && tag !in state.tags
-            state.copy(
-                tags = if (isAddable) state.tags + tag else state.tags,
-                pendingTag = null,
-            )
-        }
+    /** 바텀시트 ✓ → 초안 선택을 확정하고 닫는다. */
+    fun onConfirmTags() {
+        _uiState.update { it.copy(selectedTags = it.draftTags, isTagSheetVisible = false) }
     }
 
-    /** 칩 탭 → 태그 삭제. */
-    fun onRemoveTag(tag: String) {
-        _uiState.update { it.copy(tags = it.tags - tag) }
+    /** 바텀시트 X(또는 딤 영역 탭) → 초안을 버리고 닫는다. */
+    fun onDismissTagSheet() {
+        _uiState.update { it.copy(isTagSheetVisible = false, draftTags = emptySet()) }
     }
 
     /**
-     * 헤더 ✓ → 코스 저장. 이름이 비어 있으면 안내 문구만 노출하고,
-     * 통과하면 저장 완료 다이얼로그를 띄운다.
+     * 헤더 ✓ → 코스 저장 시도. 이름이 비어 있으면 안내 알럿을,
+     * 통과하면 "코스를 저장할까요?" 확인 알럿을 띄운다.
      */
     fun onSave() {
         val state = _uiState.value
         if (!state.canSave) {
-            _uiState.update { it.copy(nameError = NAME_REQUIRED_MESSAGE) }
+            _uiState.update { it.copy(isNameErrorDialogVisible = true) }
             return
         }
+        _uiState.update { it.copy(isSaveConfirmDialogVisible = true) }
+    }
+
+    /** 이름 미입력 안내 알럿 닫기(취소/확인 모두 닫기만 한다). */
+    fun onDismissNameErrorDialog() {
+        _uiState.update { it.copy(isNameErrorDialogVisible = false) }
+    }
+
+    /** 저장 확인 알럿 [확인] → 실제 저장 후 완료 다이얼로그로 넘어간다. */
+    fun onConfirmSave() {
         // TODO(BE 죠): 코스 저장 API(이름·메모·태그 + 임시 코스 세션의 장소 순서) 확정 시 연동.
         //  현재는 API 가 없어 검증만 하고 바로 완료 다이얼로그로 넘어간다.
-        _uiState.update { it.copy(isSavedDialogVisible = true) }
+        _uiState.update {
+            it.copy(isSaveConfirmDialogVisible = false, isSavedDialogVisible = true)
+        }
+    }
+
+    /** 저장 확인 알럿 [취소] → 알럿만 닫는다. */
+    fun onDismissSaveConfirm() {
+        _uiState.update { it.copy(isSaveConfirmDialogVisible = false) }
     }
 
     /** 완료 다이얼로그 [저장된 코스로 이동하기]. */
@@ -94,10 +105,5 @@ class CourseSaveViewModel @Inject constructor() : ViewModel() {
     fun onSkipSavedDialog() {
         _uiState.update { it.copy(isSavedDialogVisible = false) }
         viewModelScope.launch { _effect.send(CourseSaveEffect.NavigateToHome) }
-    }
-
-    companion object {
-        // 명세 문구(Figma: 이름 미입력 상태 저장 시도).
-        private const val NAME_REQUIRED_MESSAGE = "코스 이름을 입력해주세요."
     }
 }

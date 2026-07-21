@@ -6,6 +6,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,33 +18,30 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -52,13 +51,28 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.Image
 import com.umc.todait.R
 import com.umc.todait.feature.course.base_place.PlaceUiModel
+import com.umc.todait.feature.course.compose.CourseMood
+import com.umc.todait.ui.component.CommonDialog
 import com.umc.todait.ui.component.CourseSaveDialog
+import com.umc.todait.ui.theme.CourseActiveGradientEnd
+import com.umc.todait.ui.theme.CourseActiveGradientStart
+import com.umc.todait.ui.theme.CourseCalmGradientEnd
+import com.umc.todait.ui.theme.CourseCalmGradientStart
+import com.umc.todait.ui.theme.CourseHipGradientEnd
+import com.umc.todait.ui.theme.CourseHipGradientStart
+import com.umc.todait.ui.theme.CourseModernGradientEnd
+import com.umc.todait.ui.theme.CourseModernGradientStart
+import com.umc.todait.ui.theme.CourseQuietGradientEnd
+import com.umc.todait.ui.theme.CourseQuietGradientStart
+import com.umc.todait.ui.theme.CourseRomanticGradientEnd
+import com.umc.todait.ui.theme.CourseRomanticGradientStart
 import com.umc.todait.ui.theme.Cream
 import com.umc.todait.ui.theme.DividerLine
-import com.umc.todait.ui.theme.Error
 import com.umc.todait.ui.theme.Gray200
 import com.umc.todait.ui.theme.Gray350
+import com.umc.todait.ui.theme.Gray400
 import com.umc.todait.ui.theme.Gray800
+import com.umc.todait.ui.theme.Green500
 import com.umc.todait.ui.theme.Pink500
 import com.umc.todait.ui.theme.TextPlaceholder
 import com.umc.todait.ui.theme.TodaitTheme
@@ -70,8 +84,8 @@ import com.umc.todait.ui.theme.White
  * [com.umc.todait.feature.course.compose.SelectedPlacesScreen] 에서 ✓ 를 누르면 진입하는 마지막 단계.
  * 헤더(뒤로/타이틀/✓) + 이름 · 메모 · 태그 입력 + 경로 미리보기로 구성된다.
  *
- * - 이름은 필수. 미입력 상태로 ✓ 를 누르면 입력창 아래 안내 문구가 뜬다([CourseSaveViewModel.onSave]).
- * - 태그는 '+' 로 입력창을 열어 추가하고, 칩을 탭하면 삭제된다(최대 [CourseSaveUiState.MAX_TAG_COUNT]개).
+ * - 이름은 필수. 미입력 상태로 ✓ 를 누르면 안내 알럿(CommonDialog)이 뜬다([CourseSaveViewModel.onSave]).
+ * - 태그는 '+' 로 바텀시트를 열어 프리셋 분위기 6종 중 골라 추가한다(선택 시 배경이 그라데이션으로 토글).
  * - [places] 는 경로 미리보기용 코스 순서(기준 장소 + 담은 장소)로, 코스 구성 그래프의 공유
  *   ViewModel 에서 받아 넘긴다. 입력 상태만 [viewModel] 이 소유한다.
  *
@@ -100,10 +114,35 @@ fun CourseSaveScreen(
         }
     }
 
+    if (uiState.isNameErrorDialogVisible) {
+        CommonDialog(
+            title = stringResource(R.string.course_save_name_required),
+            onConfirm = viewModel::onDismissNameErrorDialog,
+            onDismiss = viewModel::onDismissNameErrorDialog,
+        )
+    }
+
+    if (uiState.isSaveConfirmDialogVisible) {
+        CommonDialog(
+            title = stringResource(R.string.course_save_confirm_message),
+            onConfirm = viewModel::onConfirmSave,
+            onDismiss = viewModel::onDismissSaveConfirm,
+        )
+    }
+
     if (uiState.isSavedDialogVisible) {
         CourseSaveDialog(
             onMoveClick = viewModel::onMoveToSavedCourses,
             onSkipClick = viewModel::onSkipSavedDialog,
+        )
+    }
+
+    if (uiState.isTagSheetVisible) {
+        TagBottomSheet(
+            draftTags = uiState.draftTags,
+            onToggle = viewModel::onToggleTag,
+            onConfirm = viewModel::onConfirmTags,
+            onDismiss = viewModel::onDismissTagSheet,
         )
     }
 
@@ -113,9 +152,6 @@ fun CourseSaveScreen(
         onNameChange = viewModel::onNameChange,
         onMemoChange = viewModel::onMemoChange,
         onStartAddTag = viewModel::onStartAddTag,
-        onPendingTagChange = viewModel::onPendingTagChange,
-        onConfirmTag = viewModel::onConfirmTag,
-        onRemoveTag = viewModel::onRemoveTag,
         onSave = viewModel::onSave,
         onBack = onBack,
         modifier = modifier,
@@ -130,9 +166,6 @@ private fun CourseSaveContent(
     onNameChange: (String) -> Unit,
     onMemoChange: (String) -> Unit,
     onStartAddTag: () -> Unit,
-    onPendingTagChange: (String) -> Unit,
-    onConfirmTag: () -> Unit,
-    onRemoveTag: (String) -> Unit,
     onSave: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
@@ -161,15 +194,6 @@ private fun CourseSaveContent(
                 value = uiState.name,
                 onValueChange = onNameChange,
             )
-            uiState.nameError?.let { message ->
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    text = message,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Error,
-                    modifier = Modifier.padding(start = 8.dp),
-                )
-            }
 
             Spacer(Modifier.height(SECTION_GAP))
             SectionLabel(stringResource(R.string.course_save_section_memo))
@@ -183,13 +207,8 @@ private fun CourseSaveContent(
             SectionLabel(stringResource(R.string.course_save_section_tag))
             Spacer(Modifier.height(LABEL_GAP))
             CourseTagRow(
-                tags = uiState.tags,
-                pendingTag = uiState.pendingTag,
-                canAddTag = uiState.canAddTag,
+                tags = uiState.orderedTags,
                 onStartAddTag = onStartAddTag,
-                onPendingTagChange = onPendingTagChange,
-                onConfirmTag = onConfirmTag,
-                onRemoveTag = onRemoveTag,
             )
 
             Spacer(Modifier.height(SECTION_GAP))
@@ -376,56 +395,55 @@ private fun PlaceholderTextField(
     }
 }
 
-/** 태그 칩 목록 + '+' 추가 버튼. 입력 중이면 '+' 자리에 입력 칩이 뜬다. */
+/** 선택된 분위기 태그 칩 목록 + '+' 추가 버튼. 칩은 무드 그라데이션 배경으로 노출한다. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun CourseTagRow(
-    tags: List<String>,
-    pendingTag: String?,
-    canAddTag: Boolean,
+    tags: List<CourseMood>,
     onStartAddTag: () -> Unit,
-    onPendingTagChange: (String) -> Unit,
-    onConfirmTag: () -> Unit,
-    onRemoveTag: (String) -> Unit,
 ) {
-    Row(
+    FlowRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        tags.forEach { tag ->
-            TagChip(
-                text = stringResource(R.string.course_save_tag_prefix, tag),
-                onClick = { onRemoveTag(tag) },
-            )
+        tags.forEach { mood ->
+            MoodTagChip(mood = mood, selected = true)
         }
-        if (pendingTag != null) {
-            TagInputChip(
-                value = pendingTag,
-                onValueChange = onPendingTagChange,
-                onDone = onConfirmTag,
-            )
-        } else if (canAddTag) {
-            AddTagButton(onClick = onStartAddTag)
-        }
+        AddTagButton(onClick = onStartAddTag)
     }
 }
 
+/**
+ * 분위기 태그 칩. [selected] 이면 무드별 그라데이션, 아니면 회색(Gray-200) 배경.
+ * [showSelectionBorder] 이면 선택된 칩에 초록 테두리(Green-500)를 그린다(시트의 선택 표시용).
+ * [onClick] 이 있으면 탭으로 선택을 토글한다(바텀시트). 없으면 표시 전용(메인 화면).
+ */
 @Composable
-private fun TagChip(
-    text: String,
-    onClick: () -> Unit,
+private fun MoodTagChip(
+    mood: CourseMood,
+    selected: Boolean,
+    onClick: (() -> Unit)? = null,
+    showSelectionBorder: Boolean = false,
 ) {
+    val background =
+        if (selected) Modifier.background(Brush.horizontalGradient(mood.tagGradientColors()))
+        else Modifier.background(Gray200)
+    val selectionBorder =
+        if (selected && showSelectionBorder) Modifier.border(2.dp, Green500, CircleShape)
+        else Modifier
     Box(
         modifier = Modifier
             .height(TAG_CHIP_HEIGHT)
             .clip(CircleShape)
-            .background(Gray200)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 20.dp),
+            .then(background)
+            .then(selectionBorder)
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .padding(horizontal = 24.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = text,
+            text = stringResource(R.string.course_save_tag_prefix, mood.label),
             style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold),
             color = White,
             maxLines = 1,
@@ -434,46 +452,104 @@ private fun TagChip(
     }
 }
 
-/** 입력 중인 태그 칩. 열리면 바로 포커스를 받고, 완료(Done)하면 칩으로 확정된다. */
+/**
+ * 태그 추가 바텀시트 (Figma node 1243-6057 "코스저장_태그추가").
+ * 헤더(X / 타이틀 / ✓) + 안내 문구 + 프리셋 6종 그리드. 태그를 탭하면 배경색이 토글된다.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TagInputChip(
-    value: String,
-    onValueChange: (String) -> Unit,
-    onDone: () -> Unit,
+private fun TagBottomSheet(
+    draftTags: Set<CourseMood>,
+    onToggle: (CourseMood) -> Unit,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
 ) {
-    val focusRequester = remember { FocusRequester() }
-    LaunchedEffect(Unit) { focusRequester.requestFocus() }
-
-    Box(
-        modifier = Modifier
-            .height(TAG_CHIP_HEIGHT)
-            .widthIn(min = 88.dp)
-            .clip(CircleShape)
-            .background(Gray200)
-            .padding(horizontal = 20.dp),
-        contentAlignment = Alignment.CenterStart,
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = White,
+        dragHandle = null,
     ) {
-        if (value.isEmpty()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 40.dp),
+        ) {
+            // 헤더: 좌측 X(닫기) / 가운데 타이틀 / 우측 ✓(확인)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = SCREEN_PADDING, vertical = 16.dp),
+            ) {
+                HeaderCircleButton(
+                    modifier = Modifier.align(Alignment.CenterStart),
+                    onClick = onDismiss,
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.ic_common_close),
+                        contentDescription = stringResource(R.string.course_save_tag_sheet_close),
+                        modifier = Modifier.size(16.dp),
+                    )
+                }
+                Text(
+                    text = stringResource(R.string.course_save_tag_sheet_title),
+                    modifier = Modifier.align(Alignment.Center),
+                    style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.SemiBold),
+                    color = Gray800,
+                )
+                HeaderCircleButton(
+                    modifier = Modifier.align(Alignment.CenterEnd),
+                    onClick = onConfirm,
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.ic_common_check),
+                        contentDescription = stringResource(R.string.course_save_tag_sheet_confirm),
+                        modifier = Modifier.width(16.dp),
+                    )
+                }
+            }
             Text(
-                text = stringResource(R.string.course_save_tag_input_placeholder),
-                style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold),
-                color = White.copy(alpha = 0.7f),
+                text = stringResource(R.string.course_save_tag_sheet_subtitle),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = SCREEN_PADDING),
+                style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
+                color = Gray400,
+                textAlign = TextAlign.Center,
             )
+            Spacer(Modifier.height(16.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = SCREEN_PADDING)
+                    .height(1.dp)
+                    .background(DividerLine),
+            )
+            Spacer(Modifier.height(24.dp))
+            // 고정 2열 그리드(좌: 로맨틱·활발한·모던한 / 우: 힙한·조용한·차분한). 열마다 좌측 정렬되어
+            // 열 안의 칩 왼쪽 끝이 나란히 맞는다(Figma node 1243-6988).
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = SCREEN_PADDING),
+                horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
+            ) {
+                for (column in 0..1) {
+                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        CourseSaveUiState.TAG_PRESETS
+                            .filterIndexed { index, _ -> index % 2 == column }
+                            .forEach { mood ->
+                                MoodTagChip(
+                                    mood = mood,
+                                    selected = mood in draftTags,
+                                    onClick = { onToggle(mood) },
+                                    showSelectionBorder = true,
+                                )
+                            }
+                    }
+                }
+            }
         }
-        BasicTextField(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = Modifier.focusRequester(focusRequester),
-            textStyle = LocalTextStyle.current.copy(
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = White,
-            ),
-            singleLine = true,
-            cursorBrush = SolidColor(White),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = { onDone() }),
-        )
     }
 }
 
@@ -586,6 +662,18 @@ private val LABEL_GAP = 12.dp
 private val TAG_CHIP_HEIGHT = 40.dp
 private val ROUTE_DOT_SIZE = 11.dp
 
+/**
+ * 분위기별 태그 그라데이션(가로). 색상 토큰은 Color.kt 로, 코스 구성 화면의 추천 카드 그라데이션과 동일 값.
+ */
+private fun CourseMood.tagGradientColors(): List<Color> = when (this) {
+    CourseMood.HIP -> listOf(CourseHipGradientStart, CourseHipGradientEnd)
+    CourseMood.QUIET -> listOf(CourseQuietGradientStart, CourseQuietGradientEnd)
+    CourseMood.ACTIVE -> listOf(CourseActiveGradientStart, CourseActiveGradientEnd)
+    CourseMood.ROMANTIC -> listOf(CourseRomanticGradientStart, CourseRomanticGradientEnd)
+    CourseMood.MODERN -> listOf(CourseModernGradientStart, CourseModernGradientEnd)
+    CourseMood.CALM -> listOf(CourseCalmGradientStart, CourseCalmGradientEnd)
+}
+
 @Preview(name = "코스 저장", showBackground = true, widthDp = 393, heightDp = 852)
 @Composable
 private fun CourseSaveScreenPreview() {
@@ -597,14 +685,11 @@ private fun CourseSaveScreenPreview() {
     )
     TodaitTheme {
         CourseSaveContent(
-            uiState = CourseSaveUiState(tags = listOf("태그")),
+            uiState = CourseSaveUiState(selectedTags = setOf(CourseMood.HIP, CourseMood.ROMANTIC)),
             places = sample,
             onNameChange = {},
             onMemoChange = {},
             onStartAddTag = {},
-            onPendingTagChange = {},
-            onConfirmTag = {},
-            onRemoveTag = {},
             onSave = {},
             onBack = {},
         )

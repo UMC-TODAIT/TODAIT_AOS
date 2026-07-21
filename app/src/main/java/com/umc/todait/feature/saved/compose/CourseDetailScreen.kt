@@ -241,7 +241,7 @@ fun MemoSection(
     isEditing: Boolean,
     onEditingChange: (Boolean) -> Unit
 ) {
-    var editMemo by remember {
+    var editMemo by remember(memo) {
         mutableStateOf(memo)
     }
 

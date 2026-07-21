@@ -23,7 +23,7 @@ object MockCourseDetail {
             name = "양식"
         ),
 
-        " ",
+        "",
 
         placeCount = 4,
         viewCount = 12,

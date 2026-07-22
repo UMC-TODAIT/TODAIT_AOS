@@ -1,4 +1,4 @@
-package com.umc.todait.feature.saved
+package com.umc.todait.feature.saved.compose
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -25,6 +25,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.foundation.rememberScrollState
+import com.umc.todait.feature.saved.PlaceUiModel
 import com.umc.todait.ui.theme.Gray600
 import com.umc.todait.ui.theme.Gray800
 import com.umc.todait.ui.theme.PlaceNumber
@@ -32,8 +33,7 @@ import com.umc.todait.ui.theme.PlaceNumber
 @Composable
 fun PlaceCard(
     place: PlaceUiModel,
-    number: Int,
-    backgroundImage: Int
+    number: Int
 ) {
     Card(
         modifier = Modifier
@@ -44,7 +44,7 @@ fun PlaceCard(
     ) {
         Box {
             Image(
-                painter = painterResource(backgroundImage),
+                painter = painterResource(place.backgroundImage),
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
@@ -255,14 +255,9 @@ private fun PlaceMemoSection(place: PlaceUiModel) {
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
-                        painter = painterResource(R.drawable.ic_white_circle_button),
+                        painter = painterResource(R.drawable.ic_saved_course_check),
                         contentDescription = null,
                         modifier = Modifier.size(40.dp)
-                    )
-                    Image(
-                        painter = painterResource(R.drawable.ic_save_memo),
-                        contentDescription = null,
-                        modifier = Modifier.size(22.dp)
                     )
                 }
             }

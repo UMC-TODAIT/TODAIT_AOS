@@ -1,9 +1,8 @@
-package com.umc.todait.feature.saved
+package com.umc.todait.feature.saved.compose
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -37,24 +36,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.umc.todait.R
 import com.umc.todait.ui.theme.Cream
 import com.umc.todait.ui.theme.Gray600
 import com.umc.todait.ui.theme.Gray800
-import com.umc.todait.ui.theme.TermsText
 import com.umc.todait.ui.theme.TextPlaceholder
 
-@Preview(
-    showBackground = true,
-    showSystemUi = true
-)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun CourseDetailScreenPreview() {
     CourseDetailScreen(
         navController = rememberNavController(),
-        courseId = recentCourses.first().id
+        courseId = 1L
     )
 }
 @Composable
@@ -63,14 +59,10 @@ fun CourseDetailScreen(
     courseId: Long,
     modifier: Modifier = Modifier
 ) {
-
-    val course =
-        (recentCourses + popularCourses)
-            .firstOrNull { it.id == courseId }
-
-    if (course == null) {
-        Text("코스를 찾을 수 없습니다.")
-        return
+    val viewModel: CourseDetailViewModel = hiltViewModel()
+    val uiState by viewModel.uiState.collectAsState()
+    LaunchedEffect(courseId) {
+        viewModel.getCourseDetail(courseId)
     }
 
     Box(
@@ -83,21 +75,18 @@ fun CourseDetailScreen(
         ) {
             DetailHeader(navController)
 
-            SummaryCard(course)
+            SummaryCard(uiState)
 
             Spacer(modifier = Modifier.height(20.dp))
 
             LazyColumn(
                 modifier = Modifier.weight(1f)
             ) {
-                val places = coursePlaces[course.id] ?: emptyList()
-
-                itemsIndexed(places) { index, place ->
+                itemsIndexed(uiState.places) { index, place ->
 
                     PlaceCard(
                         place = place,
-                        number = index,
-                        backgroundImage = course.backgroundImage
+                        number = index
                     )
 
                     Spacer(
@@ -163,9 +152,10 @@ private fun DetailHeader(
 
 @Composable
 private fun SummaryCard(
-    course: CourseUiModel
+    uiState: CourseDetailUiState
 ) {
     var isEditing by remember { mutableStateOf(false) }
+    val backgroundImage = getMoodBackground(uiState.moodTagCode)
 
     Card(
         modifier = Modifier
@@ -175,7 +165,7 @@ private fun SummaryCard(
     ){
         Box {
             Image(
-                painter = painterResource(course.backgroundImage),
+                painter = painterResource(backgroundImage),
                 contentDescription = null,
                 modifier = Modifier.fillMaxWidth(),
                 contentScale = ContentScale.Crop
@@ -189,7 +179,9 @@ private fun SummaryCard(
                 ) {
 
                     Image(
-                        painter = painterResource(course.topImage),
+                        painter = painterResource(
+                            getMoodIcon(uiState.moodTagCode)
+                        ),
                         contentDescription = null,
                         modifier = Modifier.size(44.dp)
                     )
@@ -197,7 +189,7 @@ private fun SummaryCard(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = course.title,
+                        text = uiState.title,
                         color = Color.White,
                         fontSize = 26.sp,
                         fontWeight = FontWeight.Bold
@@ -210,25 +202,21 @@ private fun SummaryCard(
                     ) {
 
                         Text(
-                            text = course.date,
+                            text = uiState.date,
                             color = Color.White,
                             fontSize = 13.sp
                         )
 
                         Spacer(modifier = Modifier.width(9.dp))
 
-                        Image(
-                            painter = painterResource(course.moodTag),
-                            contentDescription = null,
-                            modifier = Modifier.height(13.dp)
+                        CourseTag(
+                            text = uiState.moodTag ?: ""
                         )
 
                         Spacer(modifier = Modifier.width(9.dp))
 
-                        Image(
-                            painter = painterResource(course.foodTag),
-                            contentDescription = null,
-                            modifier = Modifier.height(13.dp)
+                        CourseTag(
+                            text = uiState.foodTag ?: ""
                         )
                     }
                 }
@@ -236,6 +224,7 @@ private fun SummaryCard(
                 Spacer(Modifier.height(20.dp))
 
                 MemoSection(
+                    memo = uiState.memo,
                     isEditing = isEditing,
                     onEditingChange = {
                         isEditing = it
@@ -246,14 +235,15 @@ private fun SummaryCard(
     }
 }
 
-
 @Composable
 fun MemoSection(
+    memo: String,
     isEditing: Boolean,
     onEditingChange: (Boolean) -> Unit
 ) {
-    var memo by remember { mutableStateOf("") }
-    val scrollState = rememberScrollState()
+    var editMemo by remember(memo) {
+        mutableStateOf(memo)
+    }
 
     Box(
         modifier = Modifier
@@ -316,9 +306,9 @@ fun MemoSection(
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
-                        painter = painterResource(R.drawable.ic_save_memo),
+                        painter = painterResource(R.drawable.ic_saved_course_check),
                         contentDescription = null,
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(40.dp)
                     )
                 }
             }
@@ -346,9 +336,9 @@ fun MemoSection(
                 }
             } else {
                 BasicTextField(
-                    value = memo,
+                    value = editMemo,
                     onValueChange = {
-                        memo = it
+                        editMemo = it
                     },
                     modifier = Modifier
                         .align(Alignment.TopStart)
@@ -385,5 +375,32 @@ fun MemoSection(
                 )
             }
         }
+    }
+}
+private fun getMoodBackground(
+    code: String?
+): Int {
+    return when(code) {
+        "ROMANTIC" -> R.drawable.bg_saved_courses_romantic
+        "QUIET" -> R.drawable.bg_saved_courses_quiet
+        "MODERN" -> R.drawable.bg_saved_courses_modern
+        "HIP" -> R.drawable.bg_saved_courses_hip
+        "ACTIVE" -> R.drawable.bg_saved_courses_active
+        "CALM" -> R.drawable.bg_saved_courses_calm
+        else -> R.drawable.bg_saved_courses_romantic
+    }
+}
+
+private fun getMoodIcon(
+    code: String?
+): Int {
+    return when(code) {
+        "ROMANTIC" -> R.drawable.ic_mood_romantic
+        "QUIET" -> R.drawable.ic_mood_quiet
+        "MODERN" -> R.drawable.ic_mood_modern
+        "HIP" -> R.drawable.ic_mood_hip
+        "ACTIVE" -> R.drawable.ic_mood_active
+        "CALM" -> R.drawable.ic_mood_calm
+        else -> R.drawable.ic_mood_romantic
     }
 }

@@ -34,8 +34,8 @@ import com.umc.todait.feature.course.place_detail.InteriorPhotosScreen
 import com.umc.todait.feature.course.save.CourseSaveScreen
 import com.umc.todait.feature.course.place_detail.MenuFullScreen
 import com.umc.todait.feature.course.place_detail.PlaceDetailScreen
-import com.umc.todait.feature.saved.CourseDetailScreen
-import com.umc.todait.feature.saved.SavedCoursesScreen
+import com.umc.todait.feature.saved.compose.CourseDetailScreen
+import com.umc.todait.feature.saved.compose.SavedCoursesScreen
 import com.umc.todait.ui.component.BottomBar
 import com.umc.todait.ui.component.PlaceholderScreen
 import com.umc.todait.ui.component.TopBar

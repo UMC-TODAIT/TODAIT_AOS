@@ -6,7 +6,7 @@ data class CourseUiModel(
     val topImage: Int,
     val title: String,
     val date: String,
-    val moodTag: Int,
-    val foodTag: Int,
+    val moodTag: String?,
+    val foodTag: String?,
     val places: List<String>
 )

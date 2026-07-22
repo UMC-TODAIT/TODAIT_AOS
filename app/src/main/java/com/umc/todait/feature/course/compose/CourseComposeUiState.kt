@@ -1,6 +1,7 @@
 package com.umc.todait.feature.course.compose
 
 import com.umc.todait.feature.course.base_place.PlaceUiModel
+import com.umc.todait.feature.course.data.dto.PlaceCategoryResponseDto
 
 /**
  * 코스 구성하기 플로우(#26, 와이어프레임 "코스구성하기_수정버전")의 공유 UI 상태.
@@ -19,7 +20,12 @@ import com.umc.todait.feature.course.base_place.PlaceUiModel
 data class CourseComposeUiState(
     // 기준 장소(코스 출발점). 임시 코스 세션 API 연동 전이라 현재는 null 가능.
     val basePlace: PlaceUiModel? = null,
-    val selectedCategory: CourseCategory = CourseCategory.CAFE,
+    // 임시 코스(course-draft) 핸들. 진입 시 POST /api/course-drafts 로 발급. null 이면 미발급/실패.
+    val courseDraftId: Long? = null,
+    // 카테고리 탭(장소 대분류). GET /api/place-categories 로 로드. 비어 있으면 탭 미표시.
+    val categories: List<PlaceCategoryUiModel> = emptyList(),
+    // 현재 선택된 카테고리 id. null 이면 미선택.
+    val selectedCategoryId: Long? = null,
     val recommendState: RecommendListState = RecommendListState.Loading,
     // 코스에 담은 장소들. index 0 = 기준 장소 다음 첫 장소. 순서 = 코스 동선.
     val selectedPlaces: List<PlaceUiModel> = emptyList(),
@@ -30,13 +36,20 @@ data class CourseComposeUiState(
     val canConfirm: Boolean get() = selectedPlaces.isNotEmpty()
 }
 
-/** 추천 장소 카테고리 탭(와이어프레임: 카페/액티비티/식당/술). */
-enum class CourseCategory(val label: String) {
-    CAFE("카페"),
-    ACTIVITY("액티비티"),
-    RESTAURANT("식당"),
-    DRINK("술"),
-}
+/**
+ * 카테고리 탭(장소 대분류: 카페/식당/액티비티/술). GET /api/place-categories 매핑.
+ * 하드코딩 enum 을 대체하며, 라벨/개수는 서버 응답을 따른다.
+ */
+data class PlaceCategoryUiModel(
+    val id: Long,
+    val name: String,
+)
+
+/** 장소 대분류 DTO → 화면 탭 모델. */
+fun PlaceCategoryResponseDto.toUiModel(): PlaceCategoryUiModel = PlaceCategoryUiModel(
+    id = placeCategoryId,
+    name = name,
+)
 
 /**
  * 추천 장소 카드의 분위기(mood). Figma 카드 컴포넌트가 분위기별로 다른 그라데이션/장식을 쓴다.

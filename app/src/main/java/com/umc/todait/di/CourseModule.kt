@@ -1,5 +1,7 @@
 package com.umc.todait.di
 
+import com.umc.todait.feature.course.data.service.CourseDraftService
+import com.umc.todait.feature.course.data.service.PlaceCategoryService
 import com.umc.todait.feature.course.data.service.PlaceService
 import com.umc.todait.feature.course.data.service.RecommendationService
 import com.umc.todait.feature.course.data.service.SearchService
@@ -35,4 +37,14 @@ object CourseModule {
     @Singleton
     fun provideRecommendationService(retrofit: Retrofit): RecommendationService =
         retrofit.create(RecommendationService::class.java)
+
+    @Provides
+    @Singleton
+    fun providePlaceCategoryService(retrofit: Retrofit): PlaceCategoryService =
+        retrofit.create(PlaceCategoryService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideCourseDraftService(retrofit: Retrofit): CourseDraftService =
+        retrofit.create(CourseDraftService::class.java)
 }

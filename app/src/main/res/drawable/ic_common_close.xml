@@ -1,0 +1,12 @@
+<!-- 헤더 원형 [닫기] 버튼의 X. Figma node 1678:9403 (태그 추가 바텀시트 등 코스 플로우 공통) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="16dp"
+    android:height="16dp"
+    android:viewportWidth="16"
+    android:viewportHeight="16">
+    <path
+        android:pathData="M3,3 L13,13 M13,3 L3,13"
+        android:strokeColor="#8E8E8E"
+        android:strokeWidth="2"
+        android:strokeLineCap="round" />
+</vector>

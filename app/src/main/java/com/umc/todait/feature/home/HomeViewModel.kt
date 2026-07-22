@@ -3,6 +3,7 @@ package com.umc.todait.feature.home
 import androidx.lifecycle.viewModelScope
 import com.umc.todait.R
 import com.umc.todait.core.base.BaseViewModel
+import com.umc.todait.core.location.LocationProvider
 import com.umc.todait.core.network.ApiResult
 import com.umc.todait.core.network.toUiError
 import com.umc.todait.feature.home.data.repository.HomeRepository
@@ -21,12 +22,15 @@ import javax.inject.Inject
 /**
  * 홈 화면의 상태를 관리한다.
  *
- * "취향 기반 추천 장소" 섹션은 GET /api/recommendations/places?type=HOME_PLACE 로 조회한다.
+ * "취향 기반 추천 장소" 섹션은 GET /api/recommended-places 로 조회한다.
+ * 위치 권한이 있으면 현재 좌표를 함께 보내 거리 기반 정렬(500m 이내 "가까워요")을 적용하고,
+ * 없으면(권한 거부/조회 실패) 좌표 없이 요청해 지역 균형 정렬로 대체된다 — 둘 다 정상 응답이라 별도 에러 처리 불필요.
  * "오늘의 추천 코스" 섹션은 대응하는 추천 코스 API가 아직 없어 더미 데이터로 채운다(DUMMY_COURSES).
  */
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val homeRepository: HomeRepository,
+    private val locationProvider: LocationProvider,
 ) : BaseViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState(courses = DUMMY_COURSES))
@@ -39,7 +43,12 @@ class HomeViewModel @Inject constructor(
     fun loadRecommendedPlaces() {
         _uiState.update { it.copy(placesState = HomePlacesState.Loading) }
         viewModelScope.launch {
-            val result = homeRepository.getRecommendedPlaces(type = RECOMMENDATION_TYPE_HOME_PLACE)
+            val coordinate = locationProvider.getCurrentLocation()
+            val result = homeRepository.getRecommendedPlaces(
+                size = HOME_PLACES_SIZE,
+                latitude = coordinate?.latitude,
+                longitude = coordinate?.longitude,
+            )
             _uiState.update { state ->
                 when (result) {
                     is ApiResult.Success -> {
@@ -61,8 +70,7 @@ class HomeViewModel @Inject constructor(
     }
 
     private companion object {
-        // TODO(BE 죠/멍이): 추천 장소 type enum 확정값(HOME_PLACE)으로 교체 확인 필요.
-        const val RECOMMENDATION_TYPE_HOME_PLACE = "HOME_PLACE"
+        const val HOME_PLACES_SIZE = 2
         const val EMPTY_PLACES_MESSAGE = "아직 추천할 장소가 없어요."
 
         // TODO(BE): "오늘의 추천 코스" 조회 API 확정되면 실제 연동으로 교체.
@@ -73,7 +81,8 @@ class HomeViewModel @Inject constructor(
                 hashtags = listOf("#낭만", "#분위기"),
                 gradientStart = CourseRomanticGradientStart,
                 gradientEnd = CourseRomanticGradientEnd,
-                decorationRes = R.drawable.ic_home_deco_2,
+                imageRes = R.drawable.img_home_course_yeonnam,
+                decorationRes = R.drawable.ic_home_course_flower,
             ),
             CourseCardUiModel(
                 courseId = 2L,
@@ -81,6 +90,7 @@ class HomeViewModel @Inject constructor(
                 hashtags = listOf("#힙한", "#칵테일"),
                 gradientStart = CourseHipGradientStart,
                 gradientEnd = CourseHipGradientEnd,
+                imageRes = R.drawable.img_home_course_hongdae,
                 decorationRes = R.drawable.ic_home_deco_1,
             ),
         )

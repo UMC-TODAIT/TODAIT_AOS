@@ -11,6 +11,7 @@ data class CourseCardUiModel(
     val hashtags: List<String>,
     val gradientStart: Color,
     val gradientEnd: Color,
+    @DrawableRes val imageRes: Int,
     @DrawableRes val decorationRes: Int,
 )
 
@@ -20,13 +21,16 @@ data class RecommendedPlaceUiModel(
     val name: String,
     val address: String,
     val imageUrl: String?,
+    /** 카드 하단 추천 문구. 서버가 isNearby/지역명 기준으로 생성해 내려준다("현재 위치와 가까워요" / "홍대 추천 장소예요" 등). */
+    val recommendReason: String,
 )
 
 fun HomeRecommendedPlaceDto.toUiModel(): RecommendedPlaceUiModel = RecommendedPlaceUiModel(
     placeId = placeId,
     name = name,
     address = address,
-    imageUrl = imageUrl,
+    imageUrl = representativeImageUrl,
+    recommendReason = recommendReason,
 )
 
 data class HomeUiState(

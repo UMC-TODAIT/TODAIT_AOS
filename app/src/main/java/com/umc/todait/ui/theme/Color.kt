@@ -78,6 +78,12 @@ val CourseModernGradientEnd = Color(0xFF7CA2BA)
 val CourseCalmGradientStart = Color(0xFFB8DCC4)
 val CourseCalmGradientEnd = Color(0xFF99C6CE)
 
+// 홈 "취향 기반 추천 장소" 카드 배경 그라디언트 (Figma 지정값, 카드 순서대로 초록/민트 번갈아 적용)
+val HomePlaceGreenStart = Color(0xFFC4D3B7)
+val HomePlaceGreenEnd = Color(0xFFDFD9BC)
+val HomePlaceMintStart = Color(0xFFB7DCC5)
+val HomePlaceMintEnd = Color(0xFF9AC7CE)
+
 // Semantic
 val Error = Color(0xFFF04438)
 val Success = Color(0xFF12B76A)
@@ -99,6 +105,7 @@ val BgGradientBottom = Color(0xFFFFEDED)
 val Pink400 = Color(0xFFFFBDBC)             // 로그인/가입완료 버튼 활성화 (Figma: PINK-400)
 val Pink800 = Color(0xFFF09F9D)             // 회원가입/이메일 로그인 링크 텍스트 (Figma: PINK-800)
 val LoginHeadingPink = Color(0xFFED9896)    // 이메일 로그인 화면 "LOG IN" 타이틀 텍스트
+val Pink900 = Color(0xFFED9896)             // Figma PINK-900 (홈 추천장소 "가까워요" 태그 텍스트)
 val VerifyPink = Color(0xFFF4A7A5)          // 인증번호 발송/재전송/확인(활성) 버튼
 val DisabledButtonGray = Color(0xFFEEEEEE)  // 가입완료 버튼 비활성화
 val DisabledConfirmGray = Gray200           // 확인 버튼 비활성화

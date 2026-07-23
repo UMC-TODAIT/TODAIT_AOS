@@ -1,6 +1,7 @@
-package com.umc.todait.feature.saved
+package com.umc.todait.feature.saved.compose
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.umc.todait.R
+import com.umc.todait.feature.saved.CourseUiModel
 
 @Composable
 fun SavedCourseCard(
@@ -84,16 +86,17 @@ fun SavedCourseCard(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    Image(
-                        painter = painterResource(course.moodTag),
-                        contentDescription = null
-                    )
-                    Spacer(modifier = Modifier.width(7.dp))
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(7.dp)
+                    ) {
+                        course.moodTag?.takeIf { it.isNotBlank() }?.let {
+                            CourseTag(it)
+                        }
 
-                    Image(
-                        painter = painterResource(course.foodTag),
-                        contentDescription = null
-                    )
+                        course.foodTag?.takeIf { it.isNotBlank() }?.let {
+                            CourseTag(it)
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(5.dp))
@@ -138,5 +141,28 @@ fun SavedCourseCard(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun CourseTag(
+    text: String,
+    backgroundColor: Color = Color.White.copy(alpha = 0.3f)
+) {
+    Box(
+        modifier = Modifier
+            .height(19.dp)
+            .background(
+                backgroundColor,
+                RoundedCornerShape(99.dp)
+            )
+            .padding(horizontal = 9.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            color = Color.White,
+            fontSize = 10.sp
+        )
     }
 }

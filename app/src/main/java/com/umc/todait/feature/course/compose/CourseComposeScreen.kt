@@ -130,7 +130,7 @@ private fun CourseComposeContent(
     state: CourseComposeUiState,
     onBack: () -> Unit,
     onConfirm: () -> Unit,
-    onSelectCategory: (CourseCategory) -> Unit,
+    onSelectCategory: (Long) -> Unit,
     onPlaceClick: (PlaceUiModel) -> Unit,
     onAddPlace: (PlaceUiModel) -> Unit,
     onRetry: () -> Unit,
@@ -171,12 +171,16 @@ private fun CourseComposeContent(
                 )
             }
 
-            item {
-                CategoryTabs(
-                    selected = state.selectedCategory,
-                    onSelect = onSelectCategory,
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
-                )
+            // 카테고리 탭은 서버(place-categories) 로드 후에만 노출한다.
+            if (state.categories.isNotEmpty()) {
+                item {
+                    CategoryTabs(
+                        categories = state.categories,
+                        selectedId = state.selectedCategoryId,
+                        onSelect = onSelectCategory,
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
+                    )
+                }
             }
 
             // 추천 장소 목록.
@@ -293,26 +297,27 @@ private fun CircleIconButton(
 
 @Composable
 private fun CategoryTabs(
-    selected: CourseCategory,
-    onSelect: (CourseCategory) -> Unit,
+    categories: List<PlaceCategoryUiModel>,
+    selectedId: Long?,
+    onSelect: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier.horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        CourseCategory.entries.forEach { category ->
-            val isSelected = category == selected
+        categories.forEach { category ->
+            val isSelected = category.id == selectedId
             Box(
                 modifier = Modifier
                     .clip(CircleShape)
                     // Figma: 선택 Pink-600(#F9AEAC)/텍스트 Gray-700, 미선택 Gray-200/텍스트 White.
                     .background(if (isSelected) Pink600 else Gray200)
-                    .clickable { onSelect(category) }
+                    .clickable { onSelect(category.id) }
                     .padding(horizontal = 24.dp, vertical = 8.dp),
             ) {
                 Text(
-                    text = category.label,
+                    text = category.name,
                     style = TextStyle(fontSize = 17.sp, fontWeight = FontWeight.Medium),
                     color = if (isSelected) CategoryTabTextSelected else White,
                 )
@@ -519,6 +524,13 @@ private fun PreviewMapPlaceholder(modifier: Modifier = Modifier) {
     }
 }
 
+private val previewCategories = listOf(
+    PlaceCategoryUiModel(1, "카페"),
+    PlaceCategoryUiModel(2, "액티비티"),
+    PlaceCategoryUiModel(3, "식당"),
+    PlaceCategoryUiModel(4, "술"),
+)
+
 private val previewPlaces = listOf(
     PlaceUiModel(1, "Everyday HappyBirthDay", "서울 마포구 연희로 33 3층", "카페", "연남", null, "현재 위치와 가까워요", 37.56, 126.92),
     PlaceUiModel(2, "코이크", "서울 마포구 동교로 39길 8", "카페", "연남", null, "현재 위치와 가까워요", 37.56, 126.92),
@@ -531,6 +543,8 @@ private fun CourseComposeContentPreview() {
     TodaitTheme {
         CourseComposeContent(
             state = CourseComposeUiState(
+                categories = previewCategories,
+                selectedCategoryId = previewCategories.first().id,
                 recommendState = RecommendListState.Success(previewPlaces),
                 selectedPlaces = listOf(previewPlaces[1]),
             ),
@@ -551,6 +565,8 @@ private fun CourseComposeContentEmptySelectionPreview() {
     TodaitTheme {
         CourseComposeContent(
             state = CourseComposeUiState(
+                categories = previewCategories,
+                selectedCategoryId = previewCategories.first().id,
                 recommendState = RecommendListState.Success(previewPlaces),
                 selectedPlaces = emptyList(),
             ),
@@ -596,7 +612,8 @@ private fun CategoryTabsPreview() {
     TodaitTheme {
         Box(modifier = Modifier.background(Cream)) {
             CategoryTabs(
-                selected = CourseCategory.CAFE,
+                categories = previewCategories,
+                selectedId = previewCategories.first().id,
                 onSelect = {},
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
             )

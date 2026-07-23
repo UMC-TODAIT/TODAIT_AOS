@@ -6,6 +6,8 @@ import com.umc.todait.core.network.ApiResult
 import com.umc.todait.core.network.toUiError
 import com.umc.todait.feature.course.base_place.PlaceUiModel
 import com.umc.todait.feature.course.base_place.toUiModel
+import com.umc.todait.feature.course.data.repository.CourseDraftRepository
+import com.umc.todait.feature.course.data.repository.PlaceCategoryRepository
 import com.umc.todait.feature.course.data.repository.RecommendationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,13 +29,53 @@ import javax.inject.Inject
 @HiltViewModel
 class CourseComposeViewModel @Inject constructor(
     private val recommendationRepository: RecommendationRepository,
+    private val placeCategoryRepository: PlaceCategoryRepository,
+    private val courseDraftRepository: CourseDraftRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CourseComposeUiState())
     val uiState: StateFlow<CourseComposeUiState> = _uiState.asStateFlow()
 
     init {
+        // TODO(2차): 임시 코스는 원래 코스 생성 진입(기준 장소 확정) 시점에 만들어야 한다.
+        //  base-place 저장 API 배포 전까지는 구성 화면 진입 시 발급해 courseDraftId 핸들을 확보한다.
+        createCourseDraft()
+        loadCategories()
         loadRecommendations()
+    }
+
+    /** 임시 코스 생성(POST /api/course-drafts). 성공 시 courseDraftId 를 상태에 보관한다. */
+    private fun createCourseDraft() {
+        viewModelScope.launch {
+            when (val result = courseDraftRepository.createCourseDraft()) {
+                is ApiResult.Success ->
+                    _uiState.update { it.copy(courseDraftId = result.data.courseDraftId) }
+                // draft 발급 실패는 화면을 막지 않는다(추천/카테고리는 draft 없이도 조회). 로그만 남기고 2차에서 재시도 UX 보강.
+                is ApiResult.Failure -> Unit
+            }
+        }
+    }
+
+    /** 카테고리 탭(장소 대분류) 로드(GET /api/place-categories). sortOrder 순으로 노출. */
+    private fun loadCategories() {
+        viewModelScope.launch {
+            when (val result = placeCategoryRepository.getPlaceCategories()) {
+                is ApiResult.Success -> {
+                    val categories = result.data.placeCategories
+                        .sortedBy { it.sortOrder }
+                        .map { it.toUiModel() }
+                    _uiState.update { state ->
+                        state.copy(
+                            categories = categories,
+                            // 첫 진입 시 첫 카테고리를 기본 선택(없으면 null).
+                            selectedCategoryId = state.selectedCategoryId ?: categories.firstOrNull()?.id,
+                        )
+                    }
+                }
+                // 카테고리 로드 실패 시 탭만 비고 추천 목록은 그대로 노출.
+                is ApiResult.Failure -> Unit
+            }
+        }
     }
 
     /** 현재 선택된 카테고리 기준 추천 장소 조회. 재시도에서도 재사용한다. */
@@ -64,9 +106,9 @@ class CourseComposeViewModel @Inject constructor(
     }
 
     /** 카테고리 탭 선택. 선택 카테고리 기준으로 추천 목록을 다시 불러온다. */
-    fun onSelectCategory(category: CourseCategory) {
-        if (_uiState.value.selectedCategory == category) return
-        _uiState.update { it.copy(selectedCategory = category) }
+    fun onSelectCategory(categoryId: Long) {
+        if (_uiState.value.selectedCategoryId == categoryId) return
+        _uiState.update { it.copy(selectedCategoryId = categoryId) }
         loadRecommendations()
     }
 

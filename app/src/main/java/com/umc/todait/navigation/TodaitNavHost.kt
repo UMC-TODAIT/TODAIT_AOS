@@ -1,11 +1,7 @@
 package com.umc.todait.navigation
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -18,14 +14,15 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.navigation
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import com.umc.todait.feature.auth.social.SocialLoginEffect
 import com.umc.todait.feature.auth.social.SocialLoginViewModel
 import com.umc.todait.feature.auth.social.SocialProvider
-import com.umc.todait.feature.mypage.MyPageScreen
-import com.umc.todait.feature.mypage.NoticeScreen
+import com.umc.todait.feature.mypage.compose.MyPageScreen
+import com.umc.todait.feature.mypage.compose.NoticeScreen
 import com.umc.todait.feature.auth.login.EmailLoginScreen
 import com.umc.todait.feature.auth.login.LoginScreen
 import com.umc.todait.feature.auth.onboarding.SignupProvider
@@ -39,11 +36,12 @@ import com.umc.todait.feature.course.compose.CourseComposeScreen
 import com.umc.todait.feature.course.compose.CourseComposeViewModel
 import com.umc.todait.feature.course.compose.SelectedPlacesScreen
 import com.umc.todait.feature.course.place_detail.InteriorPhotosScreen
+import com.umc.todait.feature.course.save.CourseSaveScreen
 import com.umc.todait.feature.course.place_detail.MenuFullScreen
 import com.umc.todait.feature.course.place_detail.PlaceDetailScreen
 import com.umc.todait.feature.home.HomeScreen
-import com.umc.todait.feature.saved.CourseDetailScreen
-import com.umc.todait.feature.saved.SavedCoursesScreen
+import com.umc.todait.feature.saved.compose.CourseDetailScreen
+import com.umc.todait.feature.saved.compose.SavedCoursesScreen
 import com.umc.todait.ui.component.BottomBar
 import com.umc.todait.ui.component.PlaceholderScreen
 import com.umc.todait.ui.component.TopBar
@@ -303,8 +301,29 @@ fun TodaitApp() {
                         onBack = { navController.popBackStack() },
                     )
                 }
+                // 코스 저장도 같은 그래프에 둔다. 경로 미리보기에 쓸 코스 순서(기준 장소 + 담은 장소)를
+                // 공유 ViewModel 에서 그대로 받아야 하기 때문.
+                composable(Screen.CourseSave.route) { entry ->
+                    val graphEntry = remember(entry) { navController.getBackStackEntry(COURSE_COMPOSE_GRAPH) }
+                    val composeViewModel: CourseComposeViewModel = hiltViewModel(graphEntry)
+                    val composeState by composeViewModel.uiState.collectAsStateWithLifecycle()
+                    CourseSaveScreen(
+                        places = listOfNotNull(composeState.basePlace) + composeState.selectedPlaces,
+                        // 저장 완료 후에는 코스 생성 플로우를 백스택에서 비운다.
+                        onNavigateToSavedCourses = {
+                            navController.navigate(Screen.SavedCourses.route) {
+                                popUpTo(COURSE_COMPOSE_GRAPH) { inclusive = true }
+                            }
+                        },
+                        onNavigateToHome = {
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(COURSE_COMPOSE_GRAPH) { inclusive = true }
+                            }
+                        },
+                        onBack = { navController.popBackStack() },
+                    )
+                }
             }
-            composable(Screen.CourseSave.route) { PlaceholderScreen("코스 저장") }
 
             // ---------- Saved ----------
             composable(Screen.SavedCourses.route) {

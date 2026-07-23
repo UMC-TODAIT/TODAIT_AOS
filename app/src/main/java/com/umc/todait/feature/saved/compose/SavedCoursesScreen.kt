@@ -1,4 +1,4 @@
-package com.umc.todait.feature.saved
+package com.umc.todait.feature.saved.compose
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -30,13 +30,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.umc.todait.navigation.Screen
 import com.umc.todait.ui.theme.Cream
 import com.umc.todait.ui.theme.Gray800
-import com.umc.todait.ui.theme.TermsText
-
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
@@ -50,6 +51,9 @@ fun SavedCoursesScreen(
     navController: NavController,
     modifier: Modifier = Modifier
 ) {
+    val viewModel: SavedCoursesViewModel = hiltViewModel()
+    val uiState by viewModel.uiState.collectAsState()
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -92,7 +96,7 @@ fun SavedCoursesScreen(
 
                     CourseSection(
                         title = "최근 저장된 코스",
-                        description = "투데잇님이 최근 저장하신 코스에요."
+                        description = "${uiState.nickname}님이 최근 저장하신 코스에요."
                     )
 
                     Spacer(modifier = Modifier.height(24.dp))
@@ -100,7 +104,7 @@ fun SavedCoursesScreen(
                     LazyRow(
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        items(recentCourses) { course ->
+                        items(uiState.recentCourses) { course ->
                             SavedCourseCard(
                                 course = course,
                                 onClick = {
@@ -116,7 +120,7 @@ fun SavedCoursesScreen(
 
                     CourseSection(
                         title = "많이 이용한 코스",
-                        description = "투데잇님이 많이 이용한 코스에요."
+                        description = "${uiState.nickname}님이 많이 이용한 코스에요."
                     )
 
                     Spacer(modifier = Modifier.height(24.dp))
@@ -124,7 +128,7 @@ fun SavedCoursesScreen(
                     LazyRow(
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        items(recentCourses) { course ->
+                        items(uiState.frequentlyViewedCourses) { course ->
                             SavedCourseCard(
                                 course = course,
                                 onClick = {
@@ -135,16 +139,6 @@ fun SavedCoursesScreen(
                             )
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(32.dp))
-
-                    Image(
-                        painter = painterResource(R.drawable.divider_terms),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(1.dp)
-                    )
 
                     Spacer(modifier = Modifier.height(200.dp))
                 }

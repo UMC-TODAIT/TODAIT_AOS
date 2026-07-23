@@ -1,4 +1,4 @@
-package com.umc.todait.feature.mypage
+package com.umc.todait.feature.mypage.compose
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -26,6 +26,8 @@ import com.umc.todait.ui.theme.Cream
 import com.umc.todait.ui.theme.Gray800
 import com.umc.todait.ui.theme.ProfileCardBackground
 import com.umc.todait.ui.theme.TermsText
+import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
@@ -37,8 +39,11 @@ fun MyPageScreenPreview() {
 @Composable
 fun MyPageScreen(
     navController: NavController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: MyPageViewModel = hiltViewModel(),
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -70,7 +75,11 @@ fun MyPageScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        ProfileCard()
+        ProfileCard(
+            nickname = uiState.nickname,
+            email = uiState.email,
+            profileImageUrl = uiState.profileImageUrl,
+        )
 
         Spacer(modifier = Modifier.height(32.dp))
 
@@ -111,7 +120,11 @@ fun MyPageScreen(
 }
 
 @Composable
-fun ProfileCard() {
+fun ProfileCard(
+    nickname: String,
+    email: String,
+    profileImageUrl: String? = null,
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -132,18 +145,26 @@ fun ProfileCard() {
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Image(
-                    painter = painterResource(R.drawable.ic_my_page_profile),
-                    contentDescription = null,
-                    modifier = Modifier.size(36.dp)
-                )
+                if (profileImageUrl.isNullOrBlank()) {
+                    Image(
+                        painter = painterResource(R.drawable.ic_my_page_profile),
+                        contentDescription = null,
+                        modifier = Modifier.size(36.dp)
+                    )
+                } else {
+                    AsyncImage(
+                        model = profileImageUrl,
+                        contentDescription = null,
+                        modifier = Modifier.size(36.dp)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.width(16.dp))
 
             Column {
                 Text(
-                    text = "투데잇",
+                    text = nickname,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                     color = Gray800
@@ -152,7 +173,7 @@ fun ProfileCard() {
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = "todait@naver.com",
+                    text = email,
                     color = Gray800,
                     fontSize = 14.sp
                 )

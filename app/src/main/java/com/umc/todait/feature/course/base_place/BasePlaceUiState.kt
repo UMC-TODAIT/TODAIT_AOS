@@ -1,6 +1,6 @@
 package com.umc.todait.feature.course.base_place
 
-import com.umc.todait.feature.course.data.dto.PlaceDto
+import com.umc.todait.feature.course.data.dto.PlaceResponseDto
 import com.umc.todait.feature.course.data.dto.RecommendedPlaceDto
 
 /**
@@ -49,7 +49,7 @@ sealed interface PlaceListState {
 
 /**
  * 화면에 노출하는 장소 카드 모델.
- * DTO(PlaceDto / RecommendedPlaceDto)를 화면 표현용으로 매핑한다. (컨벤션 §5: DTO는 data 안에서만)
+ * DTO(PlaceResponseDto / RecommendedPlaceDto)를 화면 표현용으로 매핑한다. (컨벤션 §5: DTO는 data 안에서만)
  *
  * 명세 정책상 별점/평점/내부 점수는 담지 않으며, 신뢰도는 [reasonText](추천 이유)로만 표현한다.
  */
@@ -68,18 +68,26 @@ data class PlaceUiModel(
     val moodTags: List<String> = emptyList(),
 )
 
-/** 검색 결과 DTO → 화면 모델. 검색 결과에는 추천 이유가 없어 [reasonText] 는 null. */
-fun PlaceDto.toUiModel(): PlaceUiModel = PlaceUiModel(
+/**
+ * 검색 결과 DTO → 화면 모델. 검색 결과에는 추천 이유가 없어 [reasonText] 는 null.
+ *
+ * 배포 스펙 매핑:
+ * - category 는 [PlaceResponseDto.placeCategory] 객체의 name 을 쓴다(없으면 빈 문자열).
+ * - imageUrl 은 defaultImageUrl.
+ * - moodTags 는 객체 배열이라 name 만 추출한다.
+ * - areaName 은 검색 응답에 없어 빈 문자열(지원 지역 검증은 GET /api/areas 연동 시 처리 — 2차).
+ */
+fun PlaceResponseDto.toUiModel(): PlaceUiModel = PlaceUiModel(
     placeId = placeId,
     name = name,
     address = address,
-    category = category,
-    areaName = areaName,
-    imageUrl = imageUrl,
+    category = placeCategory?.name.orEmpty(),
+    areaName = "",
+    imageUrl = defaultImageUrl,
     reasonText = null,
     latitude = latitude,
     longitude = longitude,
-    moodTags = moodTags.orEmpty(),
+    moodTags = moodTags?.map { it.name }.orEmpty(),
 )
 
 /**

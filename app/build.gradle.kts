@@ -43,6 +43,14 @@ android {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
+        debug {
+            // 카카오맵 v2 네이티브 lib(libK3fAndroid.so)는 arm64-v8a/armeabi-v7a 만 제공되고
+            // x86/x86_64 빌드가 없다. 그래서 일반 x86_64 에뮬레이터에서 KakaoMapSdk.init 시
+            // UnsatisfiedLinkError 로 앱이 시작 즉시 크래시한다.
+            // debug 는 arm64 로 설치를 강제해 실기기 및 arm64 변환 지원 에뮬레이터에서 지도가 뜨게 한다.
+            // (release 는 손대지 않아 전체 ABI 유지)
+            ndk { abiFilters += "arm64-v8a" }
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

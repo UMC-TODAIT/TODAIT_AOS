@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  배포 API 서버(54.116.215.134)가 http(cleartext)라, 앱 전역 cleartext 차단은 유지하면서
+  이 서버에만 예외로 평문 통신을 허용한다. BE가 https 로 전환되면 이 도메인 예외를 제거한다.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">54.116.215.134</domain>
+    </domain-config>
+</network-security-config>

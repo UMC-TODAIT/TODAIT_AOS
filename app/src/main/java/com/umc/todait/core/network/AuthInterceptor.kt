@@ -68,6 +68,8 @@ class AuthInterceptor @Inject constructor(
     private fun isAuthFreeEndpoint(request: Request): Boolean {
         val path = request.url.encodedPath
         return path.endsWith("/api/auth/login") ||
+            path.endsWith("/api/auth/kakao/login") ||
+            path.endsWith("/api/auth/google/login") ||
             path.endsWith("/api/auth/signup") ||
             path.endsWith("/api/auth/token/refresh")
     }

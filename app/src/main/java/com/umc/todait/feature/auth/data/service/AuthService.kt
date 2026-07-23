@@ -11,8 +11,11 @@ import com.umc.todait.feature.auth.data.dto.OnboardingRequestDto
 import com.umc.todait.feature.auth.data.dto.OnboardingResultDto
 import com.umc.todait.feature.auth.data.dto.PasswordResetRequestDto
 import com.umc.todait.feature.auth.data.dto.PasswordResetVerifyResultDto
+import com.umc.todait.feature.auth.data.dto.GoogleLoginRequestDto
+import com.umc.todait.feature.auth.data.dto.KakaoLoginRequestDto
 import com.umc.todait.feature.auth.data.dto.SignupRequestDto
 import com.umc.todait.feature.auth.data.dto.SignupResultDto
+import com.umc.todait.feature.auth.data.dto.SocialLoginResultDto
 import com.umc.todait.feature.auth.data.dto.TokenRefreshRequestDto
 import com.umc.todait.feature.auth.data.dto.TokenRefreshResultDto
 import retrofit2.http.Body
@@ -25,9 +28,8 @@ import retrofit2.http.Query
 /**
  * 인증(member/auth) 도메인 Retrofit 서비스.
  *
- * 카카오/구글 로그인(GET /api/auth/kakao, /google + 콜백)은 브라우저 리다이렉트 기반 OAuth 흐름으로
- * 설계돼 있어 일반 JSON Retrofit 호출과 맞지 않는다 — 네이티브 SDK 연동 방식이 확정된 뒤 별도로 추가한다.
- * (자세한 내용은 memory의 reference_auth_api_schemas 참고)
+ * 카카오/구글 로그인은 네이티브 SDK로 받은 토큰(카카오 accessToken / 구글 idToken)을
+ * POST body로 넘기는 방식으로 배포 서버에 확정됐다(POST /api/auth/kakao|google/login).
  *
  * ⚠️ 모든 엔드포인트는 TODAIT_BE 스펙 확정본 기준. 필드 추가/변경 시 명세서와 대조해 수정한다.
  */
@@ -36,6 +38,14 @@ interface AuthService {
     /** 이메일 로그인 — POST /api/auth/login */
     @POST("api/auth/login")
     suspend fun login(@Body request: LoginRequestDto): BaseResponse<LoginResultDto>
+
+    /** 카카오 로그인 — POST /api/auth/kakao/login (네이티브 SDK accessToken 전달) */
+    @POST("api/auth/kakao/login")
+    suspend fun loginWithKakao(@Body request: KakaoLoginRequestDto): BaseResponse<SocialLoginResultDto>
+
+    /** 구글 로그인 — POST /api/auth/google/login (Credential Manager idToken 전달) */
+    @POST("api/auth/google/login")
+    suspend fun loginWithGoogle(@Body request: GoogleLoginRequestDto): BaseResponse<SocialLoginResultDto>
 
     /** 일반 회원가입 — POST /api/auth/signup (약관 동의까지 다 받은 시점에 호출) */
     @POST("api/auth/signup")

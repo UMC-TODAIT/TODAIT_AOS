@@ -105,19 +105,22 @@ fun TodaitApp() {
             composable(Screen.Login.route) {
                 val context = LocalContext.current
                 val socialViewModel: SocialLoginViewModel = hiltViewModel()
-                // SDK 로그인 성공 시 provider 에 맞는 약관 동의(→ 닉네임 온보딩) 플로우로 이동.
-                // TODO: 백엔드 소셜 로그인 계약 확정 후, 성공 이펙트에 토큰을 실어 서버 로그인 →
-                //  isNewMember 로 홈 직행/온보딩을 분기하도록 확장한다.
                 LaunchedEffect(Unit) {
                     socialViewModel.effect.collect { effect ->
                         when (effect) {
-                            is SocialLoginEffect.Success -> when (effect.provider) {
+                            // 기존 회원 — 이미 토큰 저장됨, 홈으로 직행(인증 플로우는 백스택에서 제거).
+                            is SocialLoginEffect.Success ->
+                                navController.navigate(Screen.Home.route) {
+                                    popUpTo(Screen.Login.route) { inclusive = true }
+                                }
+                            // 신규 회원 — 약관 동의(→ 닉네임) 온보딩 플로우로 이동.
+                            is SocialLoginEffect.NeedsOnboarding -> when (effect.provider) {
                                 SocialProvider.KAKAO ->
                                     navController.navigate(Screen.TermsAgreement.createRoute(TermsFlow.KAKAO.route))
                                 SocialProvider.GOOGLE ->
                                     navController.navigate(Screen.TermsAgreement.createRoute(TermsFlow.GOOGLE.route))
                             }
-                            // TODO: 실패 안내(스낵바) 연결. 지금은 SDK 반환값 확인이 목적이라 로그만 남긴다.
+                            // TODO: 실패 안내(스낵바) 연결.
                             is SocialLoginEffect.Failure -> Unit
                         }
                     }

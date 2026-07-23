@@ -44,7 +44,7 @@ class HomeViewModel @Inject constructor(
             _uiState.update { state ->
                 when (result) {
                     is ApiResult.Success -> {
-                        val courses = result.data.courses.mapIndexed { index, dto -> dto.toUiModel(index) }
+                        val courses = result.data.courses.map { it.toUiModel() }
                         state.copy(
                             coursesState = if (courses.isEmpty()) {
                                 CoursesState.Empty(EMPTY_COURSES_MESSAGE)

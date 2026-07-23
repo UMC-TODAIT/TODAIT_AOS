@@ -43,16 +43,19 @@ private val MOOD_GRADIENTS: Map<String, Pair<Color, Color>> = mapOf(
  * 카드 배경 장식 도형. API가 도형을 내려주지 않아 courseId 순서로 기존 에셋을 순환 배정한다
  * (분위기별 고정 매핑 규칙 미확정 — 디자인 확인 필요).
  */
-private val COURSE_DECORATIONS: List<Int> = listOf(
-    R.drawable.ic_home_course_flower,
-    R.drawable.ic_home_deco_1,
-    R.drawable.ic_home_deco_2,
-    R.drawable.ic_home_deco_3,
-    R.drawable.ic_home_deco_4,
+/** moodTag.code → 카드 장식 문양. 분위기별 고정(피그마 취향설정 카드 문양 에셋 재사용). 매칭 안 되면 CALM. */
+private val MOOD_DECORATIONS: Map<String, Int> = mapOf(
+    "HIP" to R.drawable.ic_mood_hip,
+    "QUIET" to R.drawable.ic_mood_quiet,
+    "ACTIVE" to R.drawable.ic_mood_active,
+    "ROMANTIC" to R.drawable.ic_mood_romantic,
+    "MODERN" to R.drawable.ic_mood_modern,
+    "CALM" to R.drawable.ic_mood_calm,
 )
 
-fun RecommendedCourseSummaryDto.toUiModel(index: Int): CourseCardUiModel {
-    val (gradientStart, gradientEnd) = MOOD_GRADIENTS[representativeMoodTag?.code]
+fun RecommendedCourseSummaryDto.toUiModel(): CourseCardUiModel {
+    val moodCode = representativeMoodTag?.code
+    val (gradientStart, gradientEnd) = MOOD_GRADIENTS[moodCode]
         ?: (CourseCalmGradientStart to CourseCalmGradientEnd)
     return CourseCardUiModel(
         courseId = courseId,
@@ -64,7 +67,7 @@ fun RecommendedCourseSummaryDto.toUiModel(index: Int): CourseCardUiModel {
         gradientStart = gradientStart,
         gradientEnd = gradientEnd,
         imageUrl = representativeImageUrl,
-        decorationRes = COURSE_DECORATIONS[index % COURSE_DECORATIONS.size],
+        decorationRes = MOOD_DECORATIONS[moodCode] ?: R.drawable.ic_mood_calm,
     )
 }
 

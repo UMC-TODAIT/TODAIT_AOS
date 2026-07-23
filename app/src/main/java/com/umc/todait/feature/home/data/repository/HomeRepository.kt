@@ -4,6 +4,7 @@ import com.umc.todait.core.network.ApiResult
 import com.umc.todait.core.network.safeApiCall
 import com.umc.todait.feature.home.data.dto.HomeRecommendedPlaceResultDto
 import com.umc.todait.feature.home.data.dto.RecommendedCourseDetailDto
+import com.umc.todait.feature.home.data.dto.RecommendedCourseListResultDto
 import com.umc.todait.feature.home.data.dto.RecommendedCourseSaveResultDto
 import com.umc.todait.feature.home.data.service.HomeService
 import javax.inject.Inject
@@ -21,7 +22,10 @@ class HomeRepository @Inject constructor(
         homeService.getRecommendedPlaces(page = page, size = size, latitude = latitude, longitude = longitude)
     }
 
-    // 아래 둘은 데이터 계층만 준비 — 화면 연결은 "추천 코스 목록 조회" API 확정 후 진행(TODO).
+    suspend fun getRecommendedCourses(page: Int? = null, size: Int? = null): ApiResult<RecommendedCourseListResultDto> =
+        safeApiCall { homeService.getRecommendedCourses(page = page, size = size) }
+
+    // 상세/저장은 데이터 계층만 준비 — 화면 연결은 CourseDetailScreen(feature/saved) 조율 후 진행(TODO).
     suspend fun getRecommendedCourseDetail(courseId: Long): ApiResult<RecommendedCourseDetailDto> =
         safeApiCall { homeService.getRecommendedCourseDetail(courseId) }
 

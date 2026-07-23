@@ -87,6 +87,7 @@ fun HomeScreen(
         onCourseClick = onCourseClick,
         onNotificationClick = onNotificationClick,
         onProfileClick = onProfileClick,
+        onRetryCourses = viewModel::loadRecommendedCourses,
         onRetryPlaces = viewModel::loadRecommendedPlaces,
         modifier = modifier,
     )
@@ -98,6 +99,7 @@ private fun HomeContent(
     onCourseClick: (Long) -> Unit,
     onNotificationClick: () -> Unit,
     onProfileClick: () -> Unit,
+    onRetryCourses: () -> Unit,
     onRetryPlaces: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -126,14 +128,7 @@ private fun HomeContent(
             subtitle = stringResource(R.string.home_section_courses_subtitle),
         )
         Spacer(Modifier.height(16.dp))
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValuesHorizontal24,
-        ) {
-            items(uiState.courses) { course ->
-                CourseCard(course = course, onClick = { onCourseClick(course.courseId) })
-            }
-        }
+        HomeCoursesSection(coursesState = uiState.coursesState, onCourseClick = onCourseClick, onRetry = onRetryCourses)
 
         Spacer(Modifier.height(32.dp))
         SectionHeader(
@@ -276,6 +271,49 @@ private fun DiamondIcon() {
     )
 }
 
+/** "오늘의 추천 코스" 섹션. Loading/Empty/Error 는 카드와 같은 높이(243dp)의 자리로 표시해 레이아웃이 튀지 않게 한다. */
+@Composable
+private fun HomeCoursesSection(coursesState: CoursesState, onCourseClick: (Long) -> Unit, onRetry: () -> Unit) {
+    when (coursesState) {
+        is CoursesState.Loading -> Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(243.dp)
+                .padding(horizontal = 24.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            CircularProgressIndicator()
+        }
+
+        is CoursesState.Empty -> Text(
+            text = coursesState.message,
+            style = MaterialTheme.typography.bodyMedium,
+            color = Gray500,
+            modifier = Modifier.padding(horizontal = 24.dp),
+        )
+
+        is CoursesState.Error -> Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+            Text(
+                text = coursesState.message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Gray500,
+            )
+            OutlinedButton(onClick = onRetry, modifier = Modifier.padding(top = 8.dp)) {
+                Text("다시 시도")
+            }
+        }
+
+        is CoursesState.Success -> LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValuesHorizontal24,
+        ) {
+            items(coursesState.courses) { course ->
+                CourseCard(course = course, onClick = { onCourseClick(course.courseId) })
+            }
+        }
+    }
+}
+
 @Composable
 private fun CourseCard(course: CourseCardUiModel, onClick: () -> Unit) {
     Column(
@@ -285,10 +323,8 @@ private fun CourseCard(course: CourseCardUiModel, onClick: () -> Unit) {
             .clip(RoundedCornerShape(15.dp))
             .clickable(onClick = onClick),
     ) {
-        Image(
-            painter = painterResource(course.imageRes),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
+        CourseThumbnail(
+            imageUrl = course.imageUrl,
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
@@ -328,6 +364,24 @@ private fun CourseCard(course: CourseCardUiModel, onClick: () -> Unit) {
                 )
             }
         }
+    }
+}
+
+/**
+ * 코스 카드 상단 사진. URL이 없으면(대표 이미지 미등록 등) 반투명 플레이스홀더를 보여준다.
+ * weight(1f)는 ColumnScope 에서만 쓸 수 있어 호출부(Column) 에서 modifier 로 전달받는다.
+ */
+@Composable
+private fun CourseThumbnail(imageUrl: String?, modifier: Modifier = Modifier) {
+    if (imageUrl != null) {
+        AsyncImage(
+            model = imageUrl,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = modifier,
+        )
+    } else {
+        Box(modifier = modifier.background(White.copy(alpha = 0.4f)))
     }
 }
 
@@ -503,20 +557,22 @@ private fun HomeScreenDefaultPreview() {
     TodaitTheme {
         HomeContent(
             uiState = HomeUiState(
-                courses = listOf(
-                    CourseCardUiModel(
-                        1L, "연남 데이트 코스", listOf("#낭만", "#분위기"),
-                        CourseRomanticGradientStart,
-                        CourseRomanticGradientEnd,
-                        R.drawable.img_home_course_yeonnam,
-                        R.drawable.ic_home_course_flower,
-                    ),
-                    CourseCardUiModel(
-                        2L, "홍대 데이트 코스", listOf("#힙한", "#칵테일"),
-                        CourseHipGradientStart,
-                        CourseHipGradientEnd,
-                        R.drawable.img_home_course_hongdae,
-                        R.drawable.ic_home_deco_1,
+                coursesState = CoursesState.Success(
+                    listOf(
+                        CourseCardUiModel(
+                            1L, "연남 데이트 코스", listOf("#낭만적인", "#베이커리카페"),
+                            CourseRomanticGradientStart,
+                            CourseRomanticGradientEnd,
+                            null,
+                            R.drawable.ic_home_course_flower,
+                        ),
+                        CourseCardUiModel(
+                            2L, "홍대 데이트 코스", listOf("#힙한", "#팝업"),
+                            CourseHipGradientStart,
+                            CourseHipGradientEnd,
+                            null,
+                            R.drawable.ic_home_deco_1,
+                        ),
                     ),
                 ),
                 placesState = HomePlacesState.Success(
@@ -526,7 +582,7 @@ private fun HomeScreenDefaultPreview() {
                     ),
                 ),
             ),
-            onCourseClick = {}, onNotificationClick = {}, onProfileClick = {}, onRetryPlaces = {},
+            onCourseClick = {}, onNotificationClick = {}, onProfileClick = {}, onRetryCourses = {}, onRetryPlaces = {},
         )
     }
 }
@@ -537,7 +593,7 @@ private fun HomeScreenLoadingPreview() {
     TodaitTheme {
         HomeContent(
             uiState = HomeUiState(placesState = HomePlacesState.Loading),
-            onCourseClick = {}, onNotificationClick = {}, onProfileClick = {}, onRetryPlaces = {},
+            onCourseClick = {}, onNotificationClick = {}, onProfileClick = {}, onRetryCourses = {}, onRetryPlaces = {},
         )
     }
 }

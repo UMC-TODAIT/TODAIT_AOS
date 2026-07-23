@@ -3,6 +3,7 @@ package com.umc.todait.feature.home.data.service
 import com.umc.todait.core.network.BaseResponse
 import com.umc.todait.feature.home.data.dto.HomeRecommendedPlaceResultDto
 import com.umc.todait.feature.home.data.dto.RecommendedCourseDetailDto
+import com.umc.todait.feature.home.data.dto.RecommendedCourseListResultDto
 import com.umc.todait.feature.home.data.dto.RecommendedCourseSaveResultDto
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -27,8 +28,18 @@ interface HomeService {
     ): BaseResponse<HomeRecommendedPlaceResultDto>
 
     /**
+     * 홈 화면 추천 코스 목록 조회 — GET /api/recommended-courses?page&size
+     * (TODAIT_BE 스펙 확정본. 홈 화면은 page=0, size=3 고정 사용 — 서버가 날짜 기준으로 순환 반환)
+     */
+    @GET("api/recommended-courses")
+    suspend fun getRecommendedCourses(
+        @Query("page") page: Int? = null,
+        @Query("size") size: Int? = null,
+    ): BaseResponse<RecommendedCourseListResultDto>
+
+    /**
      * 추천 코스 상세 조회 — GET /api/recommended-courses/{courseId}
-     * (TODAIT_BE 스펙 확정본. 목록 조회 API는 아직 명세 없음 — 화면 연결은 목록 API 확정 후 진행.)
+     * (TODAIT_BE 스펙 확정본. 화면 연결은 아직 안 함 — feature/saved 소유 CourseDetailScreen 조율 후 진행.)
      */
     @GET("api/recommended-courses/{courseId}")
     suspend fun getRecommendedCourseDetail(

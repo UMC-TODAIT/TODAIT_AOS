@@ -71,7 +71,11 @@ class AuthInterceptor @Inject constructor(
             path.endsWith("/api/auth/kakao/login") ||
             path.endsWith("/api/auth/google/login") ||
             path.endsWith("/api/auth/signup") ||
-            path.endsWith("/api/auth/token/refresh")
+            path.endsWith("/api/auth/token/refresh") ||
+            // 명세상 인증 헤더 불필요(public). accessToken이 남아있어도 붙이지 않는다.
+            path.endsWith("/api/members/nickname-availability") ||
+            // Bearer temporaryToken을 @Header로 직접 싣는 요청 — accessToken으로 덮어쓰면 안 된다.
+            path.endsWith("/api/members/me/onboarding")
     }
 
     /**

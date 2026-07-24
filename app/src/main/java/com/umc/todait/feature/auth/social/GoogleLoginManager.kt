@@ -39,7 +39,6 @@ class GoogleLoginManager @Inject constructor() {
                 credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
             ) {
                 val googleCredential = GoogleIdTokenCredential.createFrom(credential.data)
-                logCredential(googleCredential)
                 Result.success(googleCredential)
             } else {
                 Result.failure(IllegalStateException("예상치 못한 자격 증명 타입: ${credential.type}"))
@@ -48,16 +47,6 @@ class GoogleLoginManager @Inject constructor() {
             Log.w(TAG, "구글 로그인 실패", e)
             Result.failure(e)
         }
-    }
-
-    /** 백엔드 문의 대응: 구글 로그인 성공 시 실제로 받는 필드 확인용 로그. */
-    private fun logCredential(credential: GoogleIdTokenCredential) {
-        Log.d(TAG, "구글 로그인 성공")
-        Log.d(TAG, "  idToken=${credential.idToken}")
-        Log.d(TAG, "  id(email)=${credential.id}")
-        Log.d(TAG, "  displayName=${credential.displayName}")
-        Log.d(TAG, "  givenName=${credential.givenName}, familyName=${credential.familyName}")
-        Log.d(TAG, "  profilePictureUri=${credential.profilePictureUri}")
     }
 
     companion object {

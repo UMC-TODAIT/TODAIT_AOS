@@ -1,5 +1,7 @@
 package com.umc.todait.navigation
 
+import java.net.URLEncoder
+
 /**
  * 앱의 전체 화면 라우트 정의.
  * README의 "화면 목록 & 담당자" 표와 1:1로 대응한다.
@@ -8,18 +10,25 @@ sealed class Screen(val route: String) {
     // Auth (무즈/김규리)
     data object Login : Screen("login")
     data object EmailLogin : Screen("email_login")             // 첫화면 "이메일로 로그인/회원가입" 클릭 시
-    data object TermsAgreement : Screen("terms_agreement/{flow}") { // 로그인 화면(카카오/구글) 또는 이메일 로그인 화면(회원가입) 진입 시
+    data object TermsAgreement : Screen("terms_agreement/{flow}?token={token}") { // 로그인 화면(카카오/구글) 또는 이메일 로그인 화면(회원가입) 진입 시
         const val ARG_FLOW = "flow"                            // "email" | "kakao" | "google"
-        fun createRoute(flow: String) = "terms_agreement/$flow"
+        const val ARG_TOKEN = "token"                          // 소셜 온보딩 임시 토큰(온보딩 완료 API 호출까지 들고 감). 이메일 플로우는 빈 문자열.
+        fun createRoute(flow: String, token: String = "") =
+            "terms_agreement/$flow?token=${URLEncoder.encode(token, "UTF-8")}"
     }
     data object TermDetail : Screen("terms_agreement/detail/{termId}") { // 약관 동의 화면에서 필수 약관 항목(화살표) 탭 시
         const val ARG_TERM_ID = "termId"
         fun createRoute(termId: Long) = "terms_agreement/detail/$termId"
     }
     data object Signup : Screen("signup")                      // 약관 동의 완료(이메일 플로우)
-    data object SocialNickname : Screen("onboarding/nickname/{provider}") { // 약관 동의 완료(소셜 플로우)
+    data object SocialNickname : Screen("onboarding/nickname/{provider}?token={token}&terms={terms}") { // 약관 동의 완료(소셜 플로우)
         const val ARG_PROVIDER = "provider"                    // "kakao" | "google"
-        fun createRoute(provider: String) = "onboarding/nickname/$provider"
+        const val ARG_TOKEN = "token"                          // 온보딩 임시 토큰
+        const val ARG_TERMS = "terms"                          // TermAgreementDto 리스트를 JSON 문자열로 직렬화한 값
+        fun createRoute(provider: String, token: String, termsJson: String) =
+            "onboarding/nickname/$provider" +
+                "?token=${URLEncoder.encode(token, "UTF-8")}" +
+                "&terms=${URLEncoder.encode(termsJson, "UTF-8")}"
     }
     data object SignupComplete : Screen("signup_complete")
 

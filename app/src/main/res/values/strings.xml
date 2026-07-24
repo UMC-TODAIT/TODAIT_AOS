@@ -61,6 +61,7 @@
     <string name="social_nickname_rule_special">특수문자는 사용할 수 없습니다</string>
     <string name="social_nickname_rule_changeable">나중에 프로필에서 변경할 수 있습니다.</string>
     <string name="social_nickname_start_button">시작하기</string>
+    <string name="social_nickname_submitting_button">처리 중…</string>
 
     <!-- Terms agreement (약관 동의) -->
     <string name="terms_agreement_title">약관 동의</string>

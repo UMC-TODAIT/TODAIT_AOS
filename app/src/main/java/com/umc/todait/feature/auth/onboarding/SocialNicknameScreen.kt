@@ -182,6 +182,20 @@ private fun SocialNicknameContent(
             Spacer(Modifier.height(32.dp))
         }
 
+        if (uiState.submitError != null) {
+            Text(
+                text = uiState.submitError,
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center,
+                color = Error,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+            )
+            Spacer(Modifier.height(8.dp))
+        }
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -194,7 +208,10 @@ private fun SocialNicknameContent(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = stringResource(R.string.social_nickname_start_button),
+                text = stringResource(
+                    if (uiState.isSubmitting) R.string.social_nickname_submitting_button
+                    else R.string.social_nickname_start_button,
+                ),
                 style = MaterialTheme.typography.labelLarge,
                 fontSize = 18.sp,
                 color = if (uiState.isStartEnabled) White else Gray500,

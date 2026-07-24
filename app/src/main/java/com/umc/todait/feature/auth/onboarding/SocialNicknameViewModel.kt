@@ -2,8 +2,13 @@ package com.umc.todait.feature.auth.onboarding
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.umc.todait.core.base.BaseViewModel
+import com.umc.todait.core.datastore.TokenDataStore
 import com.umc.todait.core.network.ApiResult
+import com.umc.todait.core.network.toUiError
+import com.umc.todait.feature.auth.data.dto.TermAgreementDto
 import com.umc.todait.feature.auth.data.repository.AuthRepository
 import com.umc.todait.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,15 +25,23 @@ import javax.inject.Inject
  * 소셜 간편가입 닉네임 설정 화면의 상태를 관리한다.
  *
  * 형식 검증(2~12자, 특수문자 불가)은 클라이언트에서 먼저 걸러내고,
- * 통과한 닉네임만 서버(GET /api/members/nickname-availability)로 중복 여부를 확인한다.
- * 약관 동의는 이 화면 진입 전(TermsAgreementScreen)에서 이미 끝났으므로,
- * 실제 온보딩 완료(PATCH /api/members/me/onboarding) 호출은 이후 API 연동 시 이 화면에서 처리한다.
+ * 통과한 닉네임만 서버(GET /api/members/nickname-availability, 인증 불필요)로 중복 여부를 확인한다.
+ * "시작하기"를 누르면 약관 동의 화면에서 넘어온 termAgreements와 함께
+ * 온보딩 완료(PATCH /api/members/me/onboarding, Bearer {onboardingToken})를 호출해 회원가입을 확정한다.
  */
 @HiltViewModel
 class SocialNicknameViewModel @Inject constructor(
     private val authRepository: AuthRepository,
+    private val tokenDataStore: TokenDataStore,
     savedStateHandle: SavedStateHandle,
 ) : BaseViewModel() {
+
+    private val onboardingToken: String = savedStateHandle[Screen.SocialNickname.ARG_TOKEN] ?: ""
+    private val agreedTerms: List<TermAgreementDto> = runCatching {
+        val termsJson: String = savedStateHandle[Screen.SocialNickname.ARG_TERMS] ?: "[]"
+        val listType = object : TypeToken<List<TermAgreementDto>>() {}.type
+        Gson().fromJson<List<TermAgreementDto>>(termsJson, listType)
+    }.getOrDefault(emptyList())
 
     private val _uiState = MutableStateFlow(
         SocialNicknameUiState(
@@ -42,7 +55,7 @@ class SocialNicknameViewModel @Inject constructor(
 
     fun onNicknameChange(value: String) {
         // 입력이 바뀌면 직전 검사 결과를 초기화해 메시지를 지운다.
-        _uiState.update { it.copy(nickname = value, status = NicknameStatus.IDLE) }
+        _uiState.update { it.copy(nickname = value, status = NicknameStatus.IDLE, submitError = null) }
     }
 
     fun onCheckDuplicate() {
@@ -73,9 +86,23 @@ class SocialNicknameViewModel @Inject constructor(
 
     fun onStartClick() {
         val state = _uiState.value
-        if (state.status != NicknameStatus.AVAILABLE) return
+        if (!state.isStartEnabled) return
+        _uiState.update { it.copy(isSubmitting = true, submitError = null) }
         viewModelScope.launch {
-            _effect.send(SocialNicknameEffect.NavigateToComplete)
+            val result = authRepository.completeOnboarding(
+                temporaryToken = onboardingToken,
+                nickname = state.nickname,
+                termAgreements = agreedTerms,
+            )
+            when (result) {
+                is ApiResult.Success -> {
+                    tokenDataStore.saveTokens(result.data.accessToken, result.data.refreshToken)
+                    _uiState.update { it.copy(isSubmitting = false) }
+                    _effect.send(SocialNicknameEffect.NavigateToComplete)
+                }
+                is ApiResult.Failure ->
+                    _uiState.update { it.copy(isSubmitting = false, submitError = result.toUiError().message) }
+            }
         }
     }
 

@@ -291,10 +291,10 @@ private fun TermCheckCircle(checked: Boolean) {
 }
 
 private val previewTerms = listOf(
-    TermItemUiModel(1, "서비스 이용약관", isRequired = true, isAgreed = false, hasDetail = true),
-    TermItemUiModel(2, "개인정보 수집 및 이용", isRequired = true, isAgreed = false, hasDetail = true),
-    TermItemUiModel(3, "위치정보 이용 권한", isRequired = false, isAgreed = false),
-    TermItemUiModel(4, "마케팅 푸시 알림", isRequired = false, isAgreed = false),
+    TermItemUiModel(1, "SERVICE", "서비스 이용약관", isRequired = true, isAgreed = false, hasDetail = true),
+    TermItemUiModel(2, "PRIVACY", "개인정보 수집 및 이용", isRequired = true, isAgreed = false, hasDetail = true),
+    TermItemUiModel(3, "LOCATION", "위치정보 이용 권한", isRequired = false, isAgreed = false),
+    TermItemUiModel(4, "MARKETING", "마케팅 푸시 알림", isRequired = false, isAgreed = false),
 )
 
 @Preview(showBackground = true, name = "기본")

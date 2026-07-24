@@ -18,6 +18,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.navigation
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
+import com.google.gson.Gson
 import com.umc.todait.feature.auth.social.SocialLoginEffect
 import com.umc.todait.feature.auth.social.SocialLoginViewModel
 import com.umc.todait.feature.auth.social.SocialProvider
@@ -114,12 +115,16 @@ fun TodaitApp() {
                                 navController.navigate(Screen.Home.route) {
                                     popUpTo(Screen.Login.route) { inclusive = true }
                                 }
-                            // 신규 회원 — 약관 동의(→ 닉네임) 온보딩 플로우로 이동.
+                            // 신규 회원 — 약관 동의(→ 닉네임) 온보딩 플로우로 이동. onboardingToken은 온보딩 완료 API 호출까지 들고 간다.
                             is SocialLoginEffect.NeedsOnboarding -> when (effect.provider) {
                                 SocialProvider.KAKAO ->
-                                    navController.navigate(Screen.TermsAgreement.createRoute(TermsFlow.KAKAO.route))
+                                    navController.navigate(
+                                        Screen.TermsAgreement.createRoute(TermsFlow.KAKAO.route, effect.onboardingToken),
+                                    )
                                 SocialProvider.GOOGLE ->
-                                    navController.navigate(Screen.TermsAgreement.createRoute(TermsFlow.GOOGLE.route))
+                                    navController.navigate(
+                                        Screen.TermsAgreement.createRoute(TermsFlow.GOOGLE.route, effect.onboardingToken),
+                                    )
                             }
                             // TODO: 실패 안내(스낵바) 연결.
                             is SocialLoginEffect.Failure -> Unit
@@ -149,19 +154,35 @@ fun TodaitApp() {
                 route = Screen.TermsAgreement.route,
                 arguments = listOf(
                     navArgument(Screen.TermsAgreement.ARG_FLOW) { type = NavType.StringType },
+                    navArgument(Screen.TermsAgreement.ARG_TOKEN) {
+                        type = NavType.StringType
+                        defaultValue = ""
+                    },
                 ),
-            ) {
+            ) { backStackEntry ->
+                val onboardingToken = backStackEntry.arguments?.getString(Screen.TermsAgreement.ARG_TOKEN).orEmpty()
                 TermsAgreementScreen(
                     onBackClick = { navController.popBackStack() },
-                    // TODO: 회원가입/닉네임 설정 화면에 실제 signup/onboarding API를 붙일 때
-                    //  agreedTerms(TermsAgreementEffect.NavigateNext)도 함께 넘기도록 정리한다.
-                    onNext = { flow ->
+                    onNext = { flow, agreedTerms ->
+                        val termsJson = Gson().toJson(agreedTerms)
                         when (flow) {
                             TermsFlow.EMAIL -> navController.navigate(Screen.Signup.route)
                             TermsFlow.KAKAO ->
-                                navController.navigate(Screen.SocialNickname.createRoute(SignupProvider.KAKAO.route))
+                                navController.navigate(
+                                    Screen.SocialNickname.createRoute(
+                                        provider = SignupProvider.KAKAO.route,
+                                        token = onboardingToken,
+                                        termsJson = termsJson,
+                                    ),
+                                )
                             TermsFlow.GOOGLE ->
-                                navController.navigate(Screen.SocialNickname.createRoute(SignupProvider.GOOGLE.route))
+                                navController.navigate(
+                                    Screen.SocialNickname.createRoute(
+                                        provider = SignupProvider.GOOGLE.route,
+                                        token = onboardingToken,
+                                        termsJson = termsJson,
+                                    ),
+                                )
                         }
                     },
                     onViewDetail = { termId ->
@@ -198,6 +219,8 @@ fun TodaitApp() {
                 route = Screen.SocialNickname.route,
                 arguments = listOf(
                     navArgument(Screen.SocialNickname.ARG_PROVIDER) { type = NavType.StringType },
+                    navArgument(Screen.SocialNickname.ARG_TOKEN) { type = NavType.StringType },
+                    navArgument(Screen.SocialNickname.ARG_TERMS) { type = NavType.StringType },
                 ),
             ) {
                 SocialNicknameScreen(

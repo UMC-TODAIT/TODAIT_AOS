@@ -24,8 +24,8 @@ sealed interface SocialLoginEffect {
     /** 기존 회원 로그인 완료(토큰 저장됨) → 홈으로 이동. */
     data class Success(val provider: SocialProvider) : SocialLoginEffect
 
-    /** 신규 회원 → 온보딩(약관 동의 → 닉네임 설정) 플로우로 이동. */
-    data class NeedsOnboarding(val provider: SocialProvider) : SocialLoginEffect
+    /** 신규 회원 → 온보딩(약관 동의 → 닉네임 설정) 플로우로 이동. onboardingToken은 온보딩 완료 API 호출까지 들고 가야 한다. */
+    data class NeedsOnboarding(val provider: SocialProvider, val onboardingToken: String) : SocialLoginEffect
 
     data class Failure(val message: String) : SocialLoginEffect
 }
@@ -91,7 +91,7 @@ class SocialLoginViewModel @Inject constructor(
                 when {
                     // onboardingToken 이 있으면 신규 회원 — 온보딩 필요.
                     !data.onboardingToken.isNullOrBlank() ->
-                        _effect.send(SocialLoginEffect.NeedsOnboarding(provider))
+                        _effect.send(SocialLoginEffect.NeedsOnboarding(provider, data.onboardingToken))
                     // 기존 회원 — 서비스 토큰 저장 후 로그인 완료.
                     !data.accessToken.isNullOrBlank() && !data.refreshToken.isNullOrBlank() -> {
                         tokenDataStore.saveTokens(data.accessToken, data.refreshToken)

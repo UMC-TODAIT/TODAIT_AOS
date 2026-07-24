@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.todait.R
+import com.umc.todait.feature.auth.data.dto.TermAgreementDto
 import com.umc.todait.ui.theme.DisabledButtonGray
 import com.umc.todait.ui.theme.Gray300
 import com.umc.todait.ui.theme.Gray500
@@ -61,7 +62,7 @@ import com.umc.todait.ui.theme.White
 @Composable
 fun TermsAgreementScreen(
     onBackClick: () -> Unit,
-    onNext: (TermsFlow) -> Unit,
+    onNext: (TermsFlow, List<TermAgreementDto>) -> Unit,
     onViewDetail: (Long) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: TermsAgreementViewModel = hiltViewModel(),
@@ -71,7 +72,7 @@ fun TermsAgreementScreen(
     LaunchedEffect(viewModel) {
         viewModel.effect.collect { effect ->
             when (effect) {
-                is TermsAgreementEffect.NavigateNext -> onNext(effect.flow)
+                is TermsAgreementEffect.NavigateNext -> onNext(effect.flow, effect.agreedTerms)
                 is TermsAgreementEffect.NavigateToDetail -> onViewDetail(effect.termId)
             }
         }

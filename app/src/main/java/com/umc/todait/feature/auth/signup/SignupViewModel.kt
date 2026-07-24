@@ -104,9 +104,7 @@ class SignupViewModel @Inject constructor(
             when (result) {
                 is ApiResult.Success -> {
                     countdownJob?.cancel()
-                    _uiState.update {
-                        it.copy(verificationState = EmailVerificationState.Verified(result.data.emailVerificationToken))
-                    }
+                    _uiState.update { it.copy(verificationState = EmailVerificationState.Verified) }
                 }
                 is ApiResult.Failure ->
                     _uiState.update { it.copy(verifyCodeError = result.toUiError().message) }
@@ -116,7 +114,6 @@ class SignupViewModel @Inject constructor(
 
     fun onSubmitClick() {
         val state = _uiState.value
-        val verified = state.verificationState as? EmailVerificationState.Verified ?: return
         if (!state.isSignupEnabled) return
         _uiState.update { it.copy(isSubmitting = true, submitError = null) }
         viewModelScope.launch {
@@ -124,7 +121,6 @@ class SignupViewModel @Inject constructor(
                 email = state.email,
                 password = state.password,
                 nickname = state.nickname,
-                emailVerificationToken = verified.emailVerificationToken,
                 termAgreements = agreedTerms,
             )
             when (result) {

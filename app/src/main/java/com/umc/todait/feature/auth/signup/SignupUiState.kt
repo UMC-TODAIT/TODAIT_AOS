@@ -9,8 +9,8 @@ sealed interface EmailVerificationState {
     data object Idle : EmailVerificationState
     data class CodeSent(val secondsLeft: Int) : EmailVerificationState
 
-    /** [emailVerificationToken]은 회원가입 요청(POST /api/auth/signup)에 그대로 실어야 한다. */
-    data class Verified(val emailVerificationToken: String) : EmailVerificationState
+    /** 인증 완료. 서버가 이메일 기준으로 인증완료 상태를 저장하므로 앱은 별도 토큰을 들고 있지 않는다. */
+    data object Verified : EmailVerificationState
     data object Expired : EmailVerificationState
 }
 

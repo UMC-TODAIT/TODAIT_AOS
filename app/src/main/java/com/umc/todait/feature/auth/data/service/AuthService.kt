@@ -3,7 +3,6 @@ package com.umc.todait.feature.auth.data.service
 import com.umc.todait.core.network.BaseResponse
 import com.umc.todait.feature.auth.data.dto.EmailCodeRequestDto
 import com.umc.todait.feature.auth.data.dto.EmailCodeVerifyRequestDto
-import com.umc.todait.feature.auth.data.dto.EmailVerifyResultDto
 import com.umc.todait.feature.auth.data.dto.LoginRequestDto
 import com.umc.todait.feature.auth.data.dto.LoginResultDto
 import com.umc.todait.feature.auth.data.dto.NicknameAvailabilityResultDto
@@ -49,9 +48,9 @@ interface AuthService {
     @POST("api/auth/email/send-code")
     suspend fun sendSignupEmailCode(@Body request: EmailCodeRequestDto): BaseResponse<Unit>
 
-    /** 회원가입용 이메일 인증번호 확인 — POST /api/auth/email/verify-code */
+    /** 회원가입용 이메일 인증번호 확인 — POST /api/auth/email/verify-code (성공 시 서버가 이메일 인증완료 상태를 저장, 별도 토큰 없음) */
     @POST("api/auth/email/verify-code")
-    suspend fun verifySignupEmailCode(@Body request: EmailCodeVerifyRequestDto): BaseResponse<EmailVerifyResultDto>
+    suspend fun verifySignupEmailCode(@Body request: EmailCodeVerifyRequestDto): BaseResponse<Unit>
 
     /** 닉네임 중복 확인 — GET /api/members/nickname-availability?nickname= */
     @GET("api/members/nickname-availability")

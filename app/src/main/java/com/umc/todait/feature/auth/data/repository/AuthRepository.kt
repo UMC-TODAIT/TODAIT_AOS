@@ -14,6 +14,7 @@ import com.umc.todait.feature.auth.data.dto.PasswordResetRequestDto
 import com.umc.todait.feature.auth.data.dto.PasswordResetVerifyResultDto
 import com.umc.todait.feature.auth.data.dto.SignupRequestDto
 import com.umc.todait.feature.auth.data.dto.SignupResultDto
+import com.umc.todait.feature.auth.data.dto.SignupTermAgreementDto
 import com.umc.todait.feature.auth.data.dto.TermAgreementDto
 import com.umc.todait.feature.auth.data.dto.TokenRefreshRequestDto
 import com.umc.todait.feature.auth.data.dto.TokenRefreshResultDto
@@ -34,16 +35,14 @@ class AuthRepository @Inject constructor(
     suspend fun signup(
         email: String,
         password: String,
-        passwordCheck: String,
         nickname: String,
         emailVerificationToken: String,
-        termAgreements: List<TermAgreementDto>,
+        termAgreements: List<SignupTermAgreementDto>,
     ): ApiResult<SignupResultDto> = safeApiCall {
         authService.signup(
             SignupRequestDto(
                 email = email,
                 password = password,
-                passwordCheck = passwordCheck,
                 nickname = nickname,
                 emailVerificationToken = emailVerificationToken,
                 termAgreements = termAgreements,

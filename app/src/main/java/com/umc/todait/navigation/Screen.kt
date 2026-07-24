@@ -1,5 +1,7 @@
 package com.umc.todait.navigation
 
+import java.net.URLEncoder
+
 /**
  * 앱의 전체 화면 라우트 정의.
  * README의 "화면 목록 & 담당자" 표와 1:1로 대응한다.
@@ -16,7 +18,10 @@ sealed class Screen(val route: String) {
         const val ARG_TERM_ID = "termId"
         fun createRoute(termId: Long) = "terms_agreement/detail/$termId"
     }
-    data object Signup : Screen("signup")                      // 약관 동의 완료(이메일 플로우)
+    data object Signup : Screen("signup?terms={terms}") {      // 약관 동의 완료(이메일 플로우)
+        const val ARG_TERMS = "terms"                          // SignupTermAgreementDto 리스트를 JSON 문자열로 직렬화한 값
+        fun createRoute(termsJson: String) = "signup?terms=${URLEncoder.encode(termsJson, "UTF-8")}"
+    }
     data object SocialNickname : Screen("onboarding/nickname/{provider}") { // 약관 동의 완료(소셜 플로우)
         const val ARG_PROVIDER = "provider"                    // "kakao" | "google"
         fun createRoute(provider: String) = "onboarding/nickname/$provider"

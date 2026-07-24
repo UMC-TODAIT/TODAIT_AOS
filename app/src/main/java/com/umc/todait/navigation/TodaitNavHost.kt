@@ -18,6 +18,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.navigation
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
+import com.google.gson.Gson
 import com.umc.todait.feature.auth.social.SocialLoginEffect
 import com.umc.todait.feature.auth.social.SocialLoginViewModel
 import com.umc.todait.feature.auth.social.SocialProvider
@@ -27,6 +28,7 @@ import com.umc.todait.feature.auth.login.EmailLoginScreen
 import com.umc.todait.feature.auth.login.LoginScreen
 import com.umc.todait.feature.auth.onboarding.SignupProvider
 import com.umc.todait.feature.auth.onboarding.SocialNicknameScreen
+import com.umc.todait.feature.auth.data.dto.SignupTermAgreementDto
 import com.umc.todait.feature.auth.signup.SignupScreen
 import com.umc.todait.feature.auth.terms.TermDetailScreen
 import com.umc.todait.feature.auth.terms.TermsAgreementScreen
@@ -150,11 +152,14 @@ fun TodaitApp() {
             ) {
                 TermsAgreementScreen(
                     onBackClick = { navController.popBackStack() },
-                    // TODO: 회원가입/닉네임 설정 화면에 실제 signup/onboarding API를 붙일 때
-                    //  agreedTerms(TermsAgreementEffect.NavigateNext)도 함께 넘기도록 정리한다.
-                    onNext = { flow ->
+                    onNext = { flow, agreedTerms ->
                         when (flow) {
-                            TermsFlow.EMAIL -> navController.navigate(Screen.Signup.route)
+                            TermsFlow.EMAIL -> {
+                                val termsJson = Gson().toJson(
+                                    agreedTerms.map { SignupTermAgreementDto(termType = it.termType, agreed = it.isAgreed) },
+                                )
+                                navController.navigate(Screen.Signup.createRoute(termsJson))
+                            }
                             TermsFlow.KAKAO ->
                                 navController.navigate(Screen.SocialNickname.createRoute(SignupProvider.KAKAO.route))
                             TermsFlow.GOOGLE ->
@@ -178,7 +183,12 @@ fun TodaitApp() {
                     onBackClick = { navController.popBackStack() },
                 )
             }
-            composable(Screen.Signup.route) {
+            composable(
+                route = Screen.Signup.route,
+                arguments = listOf(
+                    navArgument(Screen.Signup.ARG_TERMS) { type = NavType.StringType },
+                ),
+            ) {
                 SignupScreen(
                     onBackClick = { navController.popBackStack() },
                     // TODO: SignupCompleteScreen 구현되면 원래대로 Screen.SignupComplete로 되돌리기

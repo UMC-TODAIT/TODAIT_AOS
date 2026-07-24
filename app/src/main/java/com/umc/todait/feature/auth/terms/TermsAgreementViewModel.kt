@@ -3,7 +3,6 @@ package com.umc.todait.feature.auth.terms
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.umc.todait.core.base.BaseViewModel
-import com.umc.todait.feature.auth.data.dto.TermAgreementDto
 import com.umc.todait.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -18,8 +17,8 @@ import javax.inject.Inject
 /**
  * 약관 동의 화면의 상태를 관리한다.
  *
- * GET /api/terms 응답 스펙이 아직 확정되지 않아 우선 더미 약관 목록(DUMMY_TERMS)으로 화면을
- * 완성하고, 스펙이 나오면 서버 목록 조회로 교체한다.
+ * GET /api/terms, GET /api/terms/{termId}는 폐기됐다(노션 문서로 이동, API 없음) — 약관 목록은
+ * 서버 조회 없이 앱에 영구 고정(DUMMY_TERMS)한다.
  */
 @HiltViewModel
 class TermsAgreementViewModel @Inject constructor(
@@ -69,19 +68,31 @@ class TermsAgreementViewModel @Inject constructor(
             _effect.send(
                 TermsAgreementEffect.NavigateNext(
                     flow = state.flow,
-                    agreedTerms = state.terms.map { TermAgreementDto(termId = it.termId, agreed = it.isAgreed) },
+                    agreedTerms = state.terms,
                 ),
             )
         }
     }
 
     private companion object {
-        // TODO(BE 고슴이): GET /api/terms 스펙 확정되면 서버 응답으로 교체.
+        // GET /api/terms 폐기(노션 이동)로 서버 목록 조회가 없어 영구 고정한다.
         val DUMMY_TERMS = listOf(
-            TermItemUiModel(termId = 1, title = "서비스 이용약관", isRequired = true, isAgreed = false, hasDetail = true),
-            TermItemUiModel(termId = 2, title = "개인정보 수집 및 이용", isRequired = true, isAgreed = false, hasDetail = true),
-            TermItemUiModel(termId = 3, title = "위치정보 이용 권한", isRequired = false, isAgreed = false),
-            TermItemUiModel(termId = 4, title = "마케팅 푸시 알림", isRequired = false, isAgreed = false),
+            TermItemUiModel(
+                termId = 1, termType = "SERVICE", title = "서비스 이용약관",
+                isRequired = true, isAgreed = false, hasDetail = true,
+            ),
+            TermItemUiModel(
+                termId = 2, termType = "PRIVACY", title = "개인정보 수집 및 이용",
+                isRequired = true, isAgreed = false, hasDetail = true,
+            ),
+            TermItemUiModel(
+                termId = 3, termType = "LOCATION", title = "위치정보 이용 권한",
+                isRequired = false, isAgreed = false,
+            ),
+            TermItemUiModel(
+                termId = 4, termType = "MARKETING", title = "마케팅 푸시 알림",
+                isRequired = false, isAgreed = false,
+            ),
         )
     }
 }

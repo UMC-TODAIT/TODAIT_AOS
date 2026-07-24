@@ -36,6 +36,13 @@ android {
             "String", "KAKAO_NATIVE_APP_KEY",
             "\"${localProperties.getProperty("KAKAO_NATIVE_APP_KEY") ?: ""}\""
         )
+        // 구글 로그인 serverClientId. 백엔드가 발급한 Web Client ID(공개값, 시크릿 아님).
+        // local.properties 에 GOOGLE_WEB_CLIENT_ID 가 있으면 그 값을, 없으면 백엔드가 공유한 기본값을 사용.
+        buildConfigField(
+            "String", "GOOGLE_WEB_CLIENT_ID",
+            "\"${localProperties.getProperty("GOOGLE_WEB_CLIENT_ID")
+                ?: "218676067662-pmt9jkjc0pqv87c09jcd07ngeaq0j48d.apps.googleusercontent.com"}\""
+        )
     }
 
     buildTypes {
@@ -105,6 +112,12 @@ dependencies {
 
     // Map (Kakao Map SDK v2)
     implementation(libs.kakao.map)
+
+    // Social login (카카오 로그인 + 구글 Credential Manager)
+    implementation(libs.kakao.user)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.google.identity.googleid)
 
     // Drag & drop 순서 변경 (선택한 장소 리스트)
     implementation(libs.reorderable)

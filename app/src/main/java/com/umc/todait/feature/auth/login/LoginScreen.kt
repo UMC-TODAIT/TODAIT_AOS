@@ -42,8 +42,9 @@ import com.umc.todait.ui.theme.TodaitTheme
 import com.umc.todait.ui.theme.White
 
 /**
- * 앱 최초 진입 화면. 소셜/이메일 로그인 진입점만 제공한다.
- * 카카오/구글 로그인은 SDK 연동 전까지 onKakaoLoginClick/onGoogleLoginClick을 TODO로 둔다.
+ * 앱 최초 진입 화면. 소셜/이메일 로그인 진입점을 제공한다.
+ * 카카오/구글 버튼의 실제 SDK 로그인 트리거는 NavHost 의 SocialLoginViewModel 이 담당하고,
+ * 이 컴포저블은 클릭 콜백만 위임받는다(Preview 유지를 위해 stateless).
  */
 @Composable
 fun LoginScreen(

@@ -2,7 +2,7 @@ package com.umc.todait.feature.saved.data.dto
 
 data class SavedCoursesResponseDto(
     val recentCourses: List<SavedCourseDto>,
-    val frequentlyViewedCourses: List<SavedCourseDto>,
+    val popularCourses: List<SavedCourseDto>,
 )
 
 data class SavedCourseDto(

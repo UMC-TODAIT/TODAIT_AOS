@@ -40,6 +40,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.umc.todait.R
+import com.umc.todait.ui.component.CommonDialog
+import com.umc.todait.ui.component.ErrorContent
+import com.umc.todait.ui.component.LoadingIndicator
 import com.umc.todait.ui.theme.Cream
 import com.umc.todait.ui.theme.Gray600
 import com.umc.todait.ui.theme.Gray800
@@ -61,61 +64,128 @@ fun CourseDetailScreen(
 ) {
     val viewModel: CourseDetailViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
+    var isEditing by remember { mutableStateOf(false) }
+    //var summaryEditing by remember { mutableStateOf(false) }
+    //var placeEditing by remember { mutableStateOf(false) }
+    var showExitDialog by remember { mutableStateOf(false) }
+
+    var editingPlaces by remember {
+        mutableStateOf(setOf<Long>())
+    }
+
     LaunchedEffect(courseId) {
         viewModel.getCourseDetail(courseId)
     }
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Cream)
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            DetailHeader(navController)
+    when {
+        uiState.isLoading -> {
+            LoadingIndicator()
+        }
 
-            SummaryCard(uiState)
+        uiState.error != null -> {
+            ErrorContent(
+                error = uiState.error!!,
+                onRetry = {
+                    viewModel.getCourseDetail(courseId)
+                },
+                onDismiss = {
+                    viewModel.clearError()
+                }
+            )
+        }
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-            LazyColumn(
-                modifier = Modifier.weight(1f)
+        else -> {
+            Box(
+                modifier = modifier
+                    .fillMaxSize()
+                    .background(Cream)
             ) {
-                itemsIndexed(uiState.places) { index, place ->
-
-                    PlaceCard(
-                        place = place,
-                        number = index
+                Column(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    DetailHeader(
+                        navController = navController,
+                        onBackClick = {
+                            if (isEditing || editingPlaces.isNotEmpty()) {
+                                showExitDialog = true
+                            } else {
+                                navController.popBackStack()
+                            }
+                        }
                     )
 
-                    Spacer(
-                        modifier = Modifier.height(16.dp)
+                    SummaryCard(
+                        uiState = uiState,
+                        isEditing = isEditing,
+                        onEditingChange = {
+                            isEditing = it
+                        }
                     )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    LazyColumn(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        itemsIndexed(uiState.places) { index, place ->
+                            PlaceCard(
+                                place = place,
+                                number = index,
+                                onEditingChanged = { placeId, editing ->
+                                    editingPlaces =
+                                        if (editing) {
+                                            editingPlaces + placeId
+                                        } else {
+                                            editingPlaces - placeId
+                                        }
+                                }
+                            )
+
+                            Spacer(
+                                modifier = Modifier.height(16.dp)
+                            )
+                        }
+
+                        item {
+                            Spacer(modifier = Modifier.height(200.dp))
+                        }
+                    }
                 }
 
-                item {
-                    Spacer(modifier = Modifier.height(200.dp))
+                Image(
+                    painter = painterResource(R.drawable.ic_saved_courses_gradient),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(190.dp)
+                        .align(Alignment.BottomCenter)
+                        .offset(y = 80.dp),
+                    contentScale = ContentScale.FillBounds
+                )
+
+                if (showExitDialog) {
+                    CommonDialog(
+                        title = "수정 중인 메모가 있습니다.\n저장하지 않고 나가시겠습니까?",
+                        confirmText = "나가기",
+                        cancelText = "계속 수정하기",
+                        onConfirm = {
+                            showExitDialog = false
+                            navController.popBackStack()
+                        },
+                        onDismiss = {
+                            showExitDialog = false
+                        }
+                    )
                 }
             }
         }
-
-        Image(
-            painter = painterResource(R.drawable.ic_saved_courses_gradient),
-            contentDescription = null,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(190.dp)
-                .align(Alignment.BottomCenter)
-                .offset(y = 80.dp),
-            contentScale = ContentScale.FillBounds
-        )
     }
 }
 
 @Composable
 private fun DetailHeader(
-    navController: NavController
+    navController: NavController,
+    onBackClick: () -> Unit
 ) {
     Column(
         modifier = Modifier.padding(horizontal = 20.dp)
@@ -133,7 +203,7 @@ private fun DetailHeader(
                 modifier = Modifier
                     .size(40.dp)
                     .clickable {
-                        navController.popBackStack()
+                        onBackClick()
                     }
             )
 
@@ -152,9 +222,11 @@ private fun DetailHeader(
 
 @Composable
 private fun SummaryCard(
-    uiState: CourseDetailUiState
+    uiState: CourseDetailUiState,
+    isEditing: Boolean,
+    onEditingChange: (Boolean) -> Unit
 ) {
-    var isEditing by remember { mutableStateOf(false) }
+    var showExitDialog by remember { mutableStateOf(false) }
     val backgroundImage = getMoodBackground(uiState.moodTagCode)
 
     Card(
@@ -226,9 +298,7 @@ private fun SummaryCard(
                 MemoSection(
                     memo = uiState.memo,
                     isEditing = isEditing,
-                    onEditingChange = {
-                        isEditing = it
-                    }
+                    onEditingChange = onEditingChange
                 )
             }
         }

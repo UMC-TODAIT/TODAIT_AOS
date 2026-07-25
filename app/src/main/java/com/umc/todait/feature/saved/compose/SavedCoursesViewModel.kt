@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.umc.todait.R
+import com.umc.todait.core.network.toUiError
 import com.umc.todait.feature.mypage.data.repository.MyPageRepository
 
 @HiltViewModel
@@ -30,9 +31,12 @@ class SavedCoursesViewModel @Inject constructor(
         getNickname()
     }
 
-    private fun getSavedCourses() {
+    fun getSavedCourses() {
         _uiState.update {
-            it.copy(isLoading = true)
+            it.copy(
+                isLoading = true,
+                error = null
+            )
         }
 
         viewModelScope.launch {
@@ -42,7 +46,7 @@ class SavedCoursesViewModel @Inject constructor(
                         it.copy(
                             isLoading = false,
                             recentCourses = result.data.recentCourses.map { it.toUiModel() },
-                            frequentlyViewedCourses = result.data.frequentlyViewedCourses.map { it.toUiModel() },
+                            popularCourses= result.data.popularCourses.map { it.toUiModel() },
                         )
                     }
                 }
@@ -50,11 +54,18 @@ class SavedCoursesViewModel @Inject constructor(
                 is ApiResult.Failure -> {
                     _uiState.update {
                         it.copy(
-                            isLoading = false
+                            isLoading = false,
+                            error = result.toUiError()
                         )
                     }
                 }
             }
+        }
+    }
+
+    fun clearError() {
+        _uiState.update {
+            it.copy(error = null)
         }
     }
 
@@ -64,24 +75,26 @@ class SavedCoursesViewModel @Inject constructor(
                 nickname = "투데잇"
             )
 
-    /*
-    실제 API 연결 시
-    viewModelScope.launch {
-        when(val result = myPageRepository.getMyPage()){
+            /*
+            실제 API 연결 시
+            viewModelScope.launch {
+                when(val result = myPageRepository.getMyPage()){
+                    is ApiResult.Success -> {
+                        _uiState.update {
+                            it.copy(
+                                nickname = result.data.nickname,
+                                error = null
+                            )
+                        }
+                    }
 
-            is ApiResult.Success -> {
-                _uiState.update {
-                    it.copy(
-                        nickname = result.data.nickname
-                    )
+                    is ApiResult.Failure -> {
+                         isLoading = false,
+                         error = result.toUiError()
+                    }
                 }
             }
-
-            is ApiResult.Failure -> { }
-        }
-    }
-
-     */
+             */
         }
     }
 }

@@ -39,10 +39,8 @@ class KakaoLoginManager @Inject constructor() {
                     Log.w(TAG, "카카오 로그인 실패", error)
                     if (cont.isActive) cont.resume(Result.failure(error))
                 }
-                token != null -> {
-                    logToken(token)
+                token != null ->
                     if (cont.isActive) cont.resume(Result.success(token))
-                }
                 else -> if (cont.isActive) {
                     cont.resume(Result.failure(IllegalStateException("카카오 토큰이 비어 있습니다.")))
                 }
@@ -58,26 +56,13 @@ class KakaoLoginManager @Inject constructor() {
                     // 그 외 오류(카카오톡 미로그인 등)는 카카오계정 로그인으로 폴백
                     error != null ->
                         UserApiClient.instance.loginWithKakaoAccount(context, callback = callback)
-                    token != null -> {
-                        logToken(token)
+                    token != null ->
                         if (cont.isActive) cont.resume(Result.success(token))
-                    }
                 }
             }
         } else {
             UserApiClient.instance.loginWithKakaoAccount(context, callback = callback)
         }
-    }
-
-    /** 백엔드 문의 대응: 카카오 네이티브 SDK 로그인 성공 시 실제로 받는 필드 확인용 로그. */
-    private fun logToken(token: OAuthToken) {
-        Log.d(TAG, "카카오 로그인 성공")
-        Log.d(TAG, "  accessToken=${token.accessToken}")
-        Log.d(TAG, "  refreshToken=${token.refreshToken}")
-        Log.d(TAG, "  idToken=${token.idToken}") // 콘솔에서 OpenID Connect 활성화 시에만 값이 들어온다
-        Log.d(TAG, "  accessTokenExpiresAt=${token.accessTokenExpiresAt}")
-        Log.d(TAG, "  refreshTokenExpiresAt=${token.refreshTokenExpiresAt}")
-        Log.d(TAG, "  scopes=${token.scopes}")
     }
 
     companion object {

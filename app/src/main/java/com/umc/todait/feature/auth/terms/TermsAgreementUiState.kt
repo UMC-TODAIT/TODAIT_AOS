@@ -18,9 +18,15 @@ enum class TermsFlow(val route: String) {
     }
 }
 
-/** 약관 목록 한 항목. */
+/**
+ * 약관 목록 한 항목.
+ *
+ * `termType`은 회원가입·온보딩 API가 요구하는 값(SERVICE/PRIVACY/LOCATION/MARKETING),
+ * `termId`는 화면 내부 식별/약관 상세 이동용. `GET /api/terms`가 폐기(노션 이동)돼 두 값 모두 앱에 고정한다.
+ */
 data class TermItemUiModel(
     val termId: Long,
+    val termType: String,
     val title: String,
     val isRequired: Boolean,
     val isAgreed: Boolean,

@@ -16,10 +16,9 @@ data class OnboardingRequestDto(
 
 /**
  * 온보딩 완료 응답 result. 이 시점부터 정식 accessToken/refreshToken으로 로그인 상태가 된다.
+ * (실제 배포 서버 응답 확인: result에 accessToken/refreshToken만 포함, memberId/nickname 없음)
  */
 data class OnboardingResultDto(
-    @SerializedName("memberId") val memberId: Long,
-    @SerializedName("nickname") val nickname: String,
     @SerializedName("accessToken") val accessToken: String,
     @SerializedName("refreshToken") val refreshToken: String,
 )

@@ -30,7 +30,7 @@ class SavedCoursesViewModel @Inject constructor(
         getNickname()
     }
 
-    private fun getSavedCourses() {
+    fun getSavedCourses() {
         _uiState.update {
             it.copy(isLoading = true)
         }
@@ -42,7 +42,7 @@ class SavedCoursesViewModel @Inject constructor(
                         it.copy(
                             isLoading = false,
                             recentCourses = result.data.recentCourses.map { it.toUiModel() },
-                            frequentlyViewedCourses = result.data.frequentlyViewedCourses.map { it.toUiModel() },
+                            popularCourses= result.data.popularCourses.map { it.toUiModel() },
                         )
                     }
                 }
@@ -58,30 +58,38 @@ class SavedCoursesViewModel @Inject constructor(
         }
     }
 
+    fun clearError() {
+        _uiState.update {
+            it.copy(error = null)
+        }
+    }
+
     private fun getNickname() {
         _uiState.update {
             it.copy(
                 nickname = "투데잇"
             )
 
-    /*
-    실제 API 연결 시
-    viewModelScope.launch {
-        when(val result = myPageRepository.getMyPage()){
+            /*
+            실제 API 연결 시
+            viewModelScope.launch {
+                when(val result = myPageRepository.getMyPage()){
+                    is ApiResult.Success -> {
+                        _uiState.update {
+                            it.copy(
+                                nickname = result.data.nickname,
+                                error = null
+                            )
+                        }
+                    }
 
-            is ApiResult.Success -> {
-                _uiState.update {
-                    it.copy(
-                        nickname = result.data.nickname
-                    )
+                    is ApiResult.Failure -> {
+                         isLoading = false,
+                         error = result.toUiError()
+                    }
                 }
             }
-
-            is ApiResult.Failure -> { }
-        }
-    }
-
-     */
+             */
         }
     }
 }

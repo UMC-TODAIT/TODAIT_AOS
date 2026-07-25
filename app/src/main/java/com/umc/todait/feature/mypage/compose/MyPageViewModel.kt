@@ -25,7 +25,7 @@ class MyPageViewModel @Inject constructor(
         getMyPage()
     }
 
-    private fun getMyPage() {
+    fun getMyPage() {
         _uiState.update {
             it.copy(
                 isLoading = true
@@ -38,6 +38,7 @@ class MyPageViewModel @Inject constructor(
                 is ApiResult.Success -> {
                     _uiState.update {
                         it.copy(
+                            error = null,
                             isLoading = false,
                             nickname = result.data.nickname,
                             email = result.data.email,
@@ -49,11 +50,19 @@ class MyPageViewModel @Inject constructor(
                 is ApiResult.Failure -> {
                     _uiState.update {
                         it.copy(
-                            isLoading = false
+                            isLoading = false,
+                            error = result.toUiError()
                         )
                     }
                 }
             }
+        }
+    }
+    fun clearError() {
+        _uiState.update {
+            it.copy(
+                error = null
+            )
         }
     }
 }

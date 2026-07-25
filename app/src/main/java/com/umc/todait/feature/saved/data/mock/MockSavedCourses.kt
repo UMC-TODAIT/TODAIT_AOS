@@ -67,6 +67,6 @@ object SavedCoursesMock {
 
     val savedCourses = SavedCoursesResponseDto(
         recentCourses = courseList,
-        frequentlyViewedCourses = courseList
+        popularCourses = courseList
     )
 }

@@ -1,5 +1,6 @@
 package com.umc.todait.feature.saved.compose
 
+import com.umc.todait.core.network.UiError
 import com.umc.todait.feature.saved.PlaceUiModel
 
 data class CourseDetailUiState(
@@ -16,5 +17,6 @@ data class CourseDetailUiState(
 
     val places: List<PlaceUiModel> = emptyList(),
 
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val error: UiError? = null,
 )

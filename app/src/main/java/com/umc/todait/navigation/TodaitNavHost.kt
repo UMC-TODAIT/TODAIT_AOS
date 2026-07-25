@@ -164,9 +164,11 @@ fun TodaitApp() {
                 TermsAgreementScreen(
                     onBackClick = { navController.popBackStack() },
                     onNext = { flow, agreedTerms ->
+                        // 회원가입(signup)·온보딩 모두 termType 기반 TermAgreementDto를 그대로 실어 보낸다.
                         val termsJson = Gson().toJson(agreedTerms)
                         when (flow) {
-                            TermsFlow.EMAIL -> navController.navigate(Screen.Signup.route)
+                            TermsFlow.EMAIL ->
+                                navController.navigate(Screen.Signup.createRoute(termsJson))
                             TermsFlow.KAKAO ->
                                 navController.navigate(
                                     Screen.SocialNickname.createRoute(
@@ -202,7 +204,12 @@ fun TodaitApp() {
                     onBackClick = { navController.popBackStack() },
                 )
             }
-            composable(Screen.Signup.route) {
+            composable(
+                route = Screen.Signup.route,
+                arguments = listOf(
+                    navArgument(Screen.Signup.ARG_TERMS) { type = NavType.StringType },
+                ),
+            ) {
                 SignupScreen(
                     onBackClick = { navController.popBackStack() },
                     // TODO: SignupCompleteScreen 구현되면 원래대로 Screen.SignupComplete로 되돌리기

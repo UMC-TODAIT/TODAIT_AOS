@@ -4,7 +4,6 @@ import com.umc.todait.core.network.ApiResult
 import com.umc.todait.core.network.safeApiCall
 import com.umc.todait.feature.auth.data.dto.EmailCodeRequestDto
 import com.umc.todait.feature.auth.data.dto.EmailCodeVerifyRequestDto
-import com.umc.todait.feature.auth.data.dto.EmailVerifyResultDto
 import com.umc.todait.feature.auth.data.dto.GoogleLoginRequestDto
 import com.umc.todait.feature.auth.data.dto.KakaoLoginRequestDto
 import com.umc.todait.feature.auth.data.dto.LoginRequestDto
@@ -45,18 +44,14 @@ class AuthRepository @Inject constructor(
     suspend fun signup(
         email: String,
         password: String,
-        passwordCheck: String,
         nickname: String,
-        emailVerificationToken: String,
         termAgreements: List<TermAgreementDto>,
     ): ApiResult<SignupResultDto> = safeApiCall {
         authService.signup(
             SignupRequestDto(
                 email = email,
                 password = password,
-                passwordCheck = passwordCheck,
                 nickname = nickname,
-                emailVerificationToken = emailVerificationToken,
                 termAgreements = termAgreements,
             ),
         )
@@ -69,8 +64,8 @@ class AuthRepository @Inject constructor(
     suspend fun sendSignupEmailCode(email: String): ApiResult<Unit> =
         safeApiCall { authService.sendSignupEmailCode(EmailCodeRequestDto(email = email)) }
 
-    /** 회원가입용 이메일 인증번호 확인. 성공하면 signup 요청에 실을 emailVerificationToken을 반환한다. */
-    suspend fun verifySignupEmailCode(email: String, code: String): ApiResult<EmailVerifyResultDto> =
+    /** 회원가입용 이메일 인증번호 확인. 성공하면 서버가 해당 이메일의 인증완료 상태를 저장한다(별도 토큰 없음). */
+    suspend fun verifySignupEmailCode(email: String, code: String): ApiResult<Unit> =
         safeApiCall { authService.verifySignupEmailCode(EmailCodeVerifyRequestDto(email = email, code = code)) }
 
     /** 닉네임 중복 확인. 실패(예외)가 아니라 정상 응답의 available 값으로 중복 여부를 판단한다. */

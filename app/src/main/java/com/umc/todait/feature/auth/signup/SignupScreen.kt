@@ -34,7 +34,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,6 +48,8 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.todait.R
 import com.umc.todait.ui.theme.DisabledButtonGray
 import com.umc.todait.ui.theme.DisabledConfirmGray
@@ -64,58 +65,59 @@ import com.umc.todait.ui.theme.Success
 import com.umc.todait.ui.theme.TodaitTheme
 import com.umc.todait.ui.theme.VerifyPink
 import com.umc.todait.ui.theme.White
-import kotlinx.coroutines.delay
-
-private const val CODE_TIMEOUT_SECONDS = 180
-
-private val PASSWORD_REGEX = Regex("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}$")
-private val EMAIL_REGEX = Regex("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
-
-private sealed interface EmailVerificationState {
-    data object Idle : EmailVerificationState
-    data class CodeSent(val secondsLeft: Int) : EmailVerificationState
-    data object Verified : EmailVerificationState
-    data object Expired : EmailVerificationState
-}
 
 /**
- * 회원가입 화면 (이메일 가입 폼). 이메일 인증/비밀번호 검증은 실제 API 연동 전까지 로컬 목업으로 동작한다.
+ * 회원가입 화면(라우트 진입점). ViewModel의 상태/효과를 구독한다.
+ * 약관 동의는 이 화면 진입 전(TermsAgreementScreen)에서 이미 끝난 상태다.
  */
 @Composable
 fun SignupScreen(
     onBackClick: () -> Unit,
     onSignupComplete: () -> Unit,
     modifier: Modifier = Modifier,
+    viewModel: SignupViewModel = hiltViewModel(),
 ) {
-    var name by rememberSaveable { mutableStateOf("") }
-    var email by rememberSaveable { mutableStateOf("") }
-    var code by rememberSaveable { mutableStateOf("") }
-    var password by rememberSaveable { mutableStateOf("") }
-    var passwordConfirm by rememberSaveable { mutableStateOf("") }
-    var passwordVisible by rememberSaveable { mutableStateOf(false) }
-    var passwordConfirmVisible by rememberSaveable { mutableStateOf(false) }
-    var verificationState by remember { mutableStateOf<EmailVerificationState>(EmailVerificationState.Idle) }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    // TODO: 실제 인증번호 발송/확인 API 연동 전까지의 로컬 카운트다운 목업
-    LaunchedEffect(verificationState) {
-        val current = verificationState
-        if (current is EmailVerificationState.CodeSent) {
-            if (current.secondsLeft <= 0) {
-                verificationState = EmailVerificationState.Expired
-            } else {
-                delay(1000)
-                verificationState = current.copy(secondsLeft = current.secondsLeft - 1)
+    LaunchedEffect(viewModel) {
+        viewModel.effect.collect { effect ->
+            when (effect) {
+                SignupEffect.NavigateToComplete -> onSignupComplete()
             }
         }
     }
 
-    val isEmailValid = email.isNotEmpty() && EMAIL_REGEX.matches(email)
-    val isPasswordValid = password.isNotEmpty() && PASSWORD_REGEX.matches(password)
-    val isPasswordConfirmMatching = passwordConfirm.isNotEmpty() && passwordConfirm == password
-    val isSignupEnabled = name.isNotBlank() &&
-        verificationState is EmailVerificationState.Verified &&
-        isPasswordValid &&
-        isPasswordConfirmMatching
+    SignupContent(
+        uiState = uiState,
+        onBackClick = onBackClick,
+        onNicknameChange = viewModel::onNicknameChange,
+        onEmailChange = viewModel::onEmailChange,
+        onCodeChange = viewModel::onCodeChange,
+        onPasswordChange = viewModel::onPasswordChange,
+        onPasswordConfirmChange = viewModel::onPasswordConfirmChange,
+        onSendCodeClick = viewModel::onSendCodeClick,
+        onVerifyCodeClick = viewModel::onVerifyCodeClick,
+        onSubmitClick = viewModel::onSubmitClick,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun SignupContent(
+    uiState: SignupUiState,
+    onBackClick: () -> Unit,
+    onNicknameChange: (String) -> Unit,
+    onEmailChange: (String) -> Unit,
+    onCodeChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onPasswordConfirmChange: (String) -> Unit,
+    onSendCodeClick: () -> Unit,
+    onVerifyCodeClick: () -> Unit,
+    onSubmitClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var passwordVisible by remember { mutableStateOf(false) }
+    var passwordConfirmVisible by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -146,38 +148,34 @@ fun SignupScreen(
 
             AuthTextField(
                 label = stringResource(R.string.signup_name_label),
-                value = name,
-                onValueChange = { name = it },
+                value = uiState.nickname,
+                onValueChange = onNicknameChange,
                 placeholder = stringResource(R.string.signup_name_placeholder),
             )
             Spacer(Modifier.height(20.dp))
 
             AuthTextField(
                 label = stringResource(R.string.signup_email_label),
-                value = email,
-                onValueChange = { email = it },
+                value = uiState.email,
+                onValueChange = onEmailChange,
                 placeholder = stringResource(R.string.signup_email_placeholder),
-                enabled = verificationState is EmailVerificationState.Idle,
+                enabled = uiState.verificationState is EmailVerificationState.Idle,
                 keyboardType = KeyboardType.Email,
                 trailingIcon = {
                     Box(modifier = Modifier.padding(end = 12.dp)) {
                         InlinePillButton(
-                            text = if (verificationState is EmailVerificationState.Idle) {
+                            text = if (uiState.verificationState is EmailVerificationState.Idle) {
                                 stringResource(R.string.signup_send_code_button)
                             } else {
                                 stringResource(R.string.signup_resend_code_button)
                             },
-                            enabled = isEmailValid,
-                            onClick = {
-                                // TODO: 이메일 인증번호 발송 API 호출
-                                code = ""
-                                verificationState = EmailVerificationState.CodeSent(CODE_TIMEOUT_SECONDS)
-                            },
+                            enabled = uiState.canSendCode,
+                            onClick = onSendCodeClick,
                         )
                     }
                 },
             )
-            if (email.isNotEmpty() && !isEmailValid) {
+            if (uiState.email.isNotEmpty() && !uiState.isEmailValid) {
                 Spacer(Modifier.height(4.dp))
                 Text(
                     text = stringResource(R.string.signup_email_invalid_message),
@@ -185,8 +183,16 @@ fun SignupScreen(
                     color = Error,
                 )
             }
+            if (uiState.sendCodeError != null) {
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = uiState.sendCodeError,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Error,
+                )
+            }
 
-            if (verificationState !is EmailVerificationState.Idle) {
+            if (uiState.verificationState !is EmailVerificationState.Idle) {
                 Spacer(Modifier.height(20.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
@@ -196,11 +202,7 @@ fun SignupScreen(
                         color = Gray900,
                     )
                     IconButton(
-                        onClick = {
-                            // TODO: 이메일 인증번호 재발송 API 호출
-                            code = ""
-                            verificationState = EmailVerificationState.CodeSent(CODE_TIMEOUT_SECONDS)
-                        },
+                        onClick = onSendCodeClick,
                         modifier = Modifier.size(24.dp),
                     ) {
                         Icon(
@@ -212,22 +214,24 @@ fun SignupScreen(
                     }
                 }
                 Spacer(Modifier.height(8.dp))
-                val isVerified = verificationState is EmailVerificationState.Verified
-                val secondsLeft = (verificationState as? EmailVerificationState.CodeSent)?.secondsLeft ?: 0
+                val isVerified = uiState.verificationState is EmailVerificationState.Verified
+                val secondsLeft = (uiState.verificationState as? EmailVerificationState.CodeSent)?.secondsLeft ?: 0
                 OutlinedTextField(
-                    value = code,
-                    onValueChange = { code = it },
+                    value = uiState.code,
+                    onValueChange = onCodeChange,
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = verificationState is EmailVerificationState.CodeSent,
+                    enabled = uiState.verificationState is EmailVerificationState.CodeSent,
                     placeholder = { Text(stringResource(R.string.signup_code_placeholder)) },
                     singleLine = true,
                     shape = RoundedCornerShape(16.dp),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     colors = authTextFieldColors(),
                     trailingIcon = {
-                        Row(verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(end=12.dp)) {
-                            if (verificationState is EmailVerificationState.CodeSent) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(end = 12.dp),
+                        ) {
+                            if (uiState.verificationState is EmailVerificationState.CodeSent) {
                                 Text(
                                     text = "%d:%02d".format(secondsLeft / 60, secondsLeft % 60),
                                     style = MaterialTheme.typography.bodySmall,
@@ -237,16 +241,13 @@ fun SignupScreen(
                             }
                             InlinePillButton(
                                 text = stringResource(R.string.signup_confirm_code_button),
-                                enabled = verificationState is EmailVerificationState.CodeSent && code.isNotBlank(),
-                                onClick = {
-                                    // TODO: 이메일 인증번호 확인 API 호출
-                                    verificationState = EmailVerificationState.Verified
-                                },
+                                enabled = uiState.canVerifyCode,
+                                onClick = onVerifyCodeClick,
                             )
                         }
                     },
                 )
-                if (isVerified || verificationState is EmailVerificationState.Expired) {
+                if (isVerified || uiState.verificationState is EmailVerificationState.Expired) {
                     Spacer(Modifier.height(4.dp))
                     Text(
                         text = if (isVerified) {
@@ -258,14 +259,22 @@ fun SignupScreen(
                         color = if (isVerified) Success else Error,
                     )
                 }
+                if (uiState.verifyCodeError != null) {
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = uiState.verifyCodeError,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Error,
+                    )
+                }
             }
 
-            if (verificationState is EmailVerificationState.Verified) {
+            if (uiState.verificationState is EmailVerificationState.Verified) {
                 Spacer(Modifier.height(20.dp))
                 AuthTextField(
                     label = stringResource(R.string.signup_password_label),
-                    value = password,
-                    onValueChange = { password = it },
+                    value = uiState.password,
+                    onValueChange = onPasswordChange,
                     placeholder = stringResource(R.string.signup_password_placeholder),
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     keyboardType = KeyboardType.Password,
@@ -276,26 +285,30 @@ fun SignupScreen(
                         )
                     },
                 )
-                if (password.isNotEmpty()) {
+                if (uiState.password.isNotEmpty()) {
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = if (isPasswordValid) {
+                        text = if (uiState.isPasswordValid) {
                             stringResource(R.string.signup_password_valid_message)
                         } else {
                             stringResource(R.string.signup_password_invalid_message)
                         },
                         style = MaterialTheme.typography.bodySmall,
-                        color = if (isPasswordValid) Success else Error,
+                        color = if (uiState.isPasswordValid) Success else Error,
                     )
                 }
 
                 Spacer(Modifier.height(20.dp))
                 AuthTextField(
                     label = stringResource(R.string.signup_password_confirm_label),
-                    value = passwordConfirm,
-                    onValueChange = { passwordConfirm = it },
+                    value = uiState.passwordConfirm,
+                    onValueChange = onPasswordConfirmChange,
                     placeholder = stringResource(R.string.signup_password_confirm_placeholder),
-                    visualTransformation = if (passwordConfirmVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    visualTransformation = if (passwordConfirmVisible) {
+                        VisualTransformation.None
+                    } else {
+                        PasswordVisualTransformation()
+                    },
                     keyboardType = KeyboardType.Password,
                     trailingIcon = {
                         PasswordVisibilityToggle(
@@ -304,18 +317,27 @@ fun SignupScreen(
                         )
                     },
                 )
-                if (passwordConfirm.isNotEmpty()) {
+                if (uiState.passwordConfirm.isNotEmpty()) {
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = if (isPasswordConfirmMatching) {
+                        text = if (uiState.isPasswordConfirmMatching) {
                             stringResource(R.string.signup_password_match_message)
                         } else {
                             stringResource(R.string.signup_password_mismatch_message)
                         },
                         style = MaterialTheme.typography.bodySmall,
-                        color = if (isPasswordConfirmMatching) Success else Error,
+                        color = if (uiState.isPasswordConfirmMatching) Success else Error,
                     )
                 }
+            }
+
+            if (uiState.submitError != null) {
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    text = uiState.submitError,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Error,
+                )
             }
 
             Spacer(Modifier.height(32.dp))
@@ -328,15 +350,15 @@ fun SignupScreen(
                 .padding(horizontal = 24.dp, vertical = 20.dp)
                 .height(56.dp)
                 .clip(CircleShape)
-                .background(if (isSignupEnabled) Pink400 else DisabledButtonGray)
-                .clickable(enabled = isSignupEnabled, onClick = onSignupComplete),
+                .background(if (uiState.isSignupEnabled) Pink400 else DisabledButtonGray)
+                .clickable(enabled = uiState.isSignupEnabled, onClick = onSubmitClick),
             contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = stringResource(R.string.signup_complete_button),
                 style = MaterialTheme.typography.labelLarge,
                 fontSize = 18.sp,
-                color = if (isSignupEnabled) White else Gray500,
+                color = if (uiState.isSignupEnabled) White else Gray500,
             )
         }
     }
@@ -445,6 +467,11 @@ private fun PasswordVisibilityToggle(visible: Boolean, onToggle: () -> Unit) {
 @Composable
 private fun SignupScreenPreview() {
     TodaitTheme {
-        SignupScreen(onBackClick = {}, onSignupComplete = {})
+        SignupContent(
+            uiState = SignupUiState(),
+            onBackClick = {}, onNicknameChange = {}, onEmailChange = {}, onCodeChange = {},
+            onPasswordChange = {}, onPasswordConfirmChange = {},
+            onSendCodeClick = {}, onVerifyCodeClick = {}, onSubmitClick = {},
+        )
     }
 }

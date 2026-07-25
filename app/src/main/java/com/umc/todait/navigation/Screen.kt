@@ -20,7 +20,10 @@ sealed class Screen(val route: String) {
         const val ARG_TERM_ID = "termId"
         fun createRoute(termId: Long) = "terms_agreement/detail/$termId"
     }
-    data object Signup : Screen("signup")                      // 약관 동의 완료(이메일 플로우)
+    data object Signup : Screen("signup?terms={terms}") {      // 약관 동의 완료(이메일 플로우)
+        const val ARG_TERMS = "terms"                          // TermAgreementDto 리스트를 JSON 문자열로 직렬화한 값
+        fun createRoute(termsJson: String) = "signup?terms=${URLEncoder.encode(termsJson, "UTF-8")}"
+    }
     data object SocialNickname : Screen("onboarding/nickname/{provider}?token={token}&terms={terms}") { // 약관 동의 완료(소셜 플로우)
         const val ARG_PROVIDER = "provider"                    // "kakao" | "google"
         const val ARG_TOKEN = "token"                          // 온보딩 임시 토큰

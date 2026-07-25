@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -31,29 +32,31 @@ fun CommonDialog(
     cancelText: String = "취소",
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
-){
+) {
     Dialog(
         onDismissRequest = onDismiss
     ) {
         Surface(
             modifier = Modifier
                 .width(304.dp)
-                .height(122.dp),
+                .height(148.dp),
             shape = RoundedCornerShape(16.dp),
             color = White
         ) {
             Column {
                 Box(
                     modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .height(92.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = title,
+                        modifier = Modifier.fillMaxWidth(),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Gray800
+                        color = Gray800,
+                        textAlign = TextAlign.Center
                     )
                 }
 
@@ -62,7 +65,7 @@ fun CommonDialog(
                 )
 
                 Row(
-                    modifier = Modifier.height(60.dp)
+                    modifier = Modifier.height(55.dp)
                 ) {
                     Box(
                         modifier = Modifier
@@ -78,9 +81,11 @@ fun CommonDialog(
                             color = Gray800
                         )
                     }
+
                     VerticalDivider(
                         color = DividerLine
                     )
+
                     Box(
                         modifier = Modifier
                             .weight(1f)

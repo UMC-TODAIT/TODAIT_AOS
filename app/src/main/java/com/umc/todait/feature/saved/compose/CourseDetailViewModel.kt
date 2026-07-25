@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.umc.todait.R
 import com.umc.todait.core.base.BaseViewModel
 import com.umc.todait.core.network.ApiResult
+import com.umc.todait.core.network.toUiError
 import com.umc.todait.feature.saved.PlaceUiModel
 import com.umc.todait.feature.saved.data.repository.SavedRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -32,6 +33,7 @@ class CourseDetailViewModel @Inject constructor(
 
                     _uiState.update {
                         it.copy(
+                            error = null,
                             isLoading = false,
 
                             title = data.title,
@@ -46,14 +48,15 @@ class CourseDetailViewModel @Inject constructor(
                             memo = data.memo ?: "",
 
                             places = data.places.map { place -> PlaceUiModel(
-                                    isStartPlace = place.visitOrder == 1,
-                                    name = place.name,
-                                    address = place.address,
-                                    backgroundImage = getMoodBackground(
-                                        data.representativeMoodTag?.code
-                                    ),
-                                    memo = place.memo ?: ""
-                                )
+                                placeId = place.placeId,
+                                isStartPlace = place.visitOrder == 1,
+                                name = place.name,
+                                address = place.address,
+                                backgroundImage = getMoodBackground(
+                                    data.representativeMoodTag?.code
+                                ),
+                                memo = place.memo ?: ""
+                            )
                             }
                         )
                     }
@@ -63,11 +66,17 @@ class CourseDetailViewModel @Inject constructor(
 
                     _uiState.update {
                         it.copy(
-                            isLoading = false
+                            isLoading = false,
+                            error = result.toUiError()
                         )
                     }
                 }
             }
+        }
+    }
+    fun clearError() {
+        _uiState.update {
+            it.copy(error = null)
         }
     }
 }

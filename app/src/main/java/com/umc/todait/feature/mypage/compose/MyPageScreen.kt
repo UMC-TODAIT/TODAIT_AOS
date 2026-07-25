@@ -28,6 +28,8 @@ import com.umc.todait.ui.theme.ProfileCardBackground
 import com.umc.todait.ui.theme.TermsText
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.umc.todait.ui.component.ErrorContent
+import com.umc.todait.ui.component.LoadingIndicator
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
@@ -44,77 +46,97 @@ fun MyPageScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Cream)
-            .padding(horizontal = 20.dp)
-    ) {
-        var showLogoutDialog by remember {
-            mutableStateOf(false)
+    when {
+        uiState.isLoading -> {
+            LoadingIndicator()
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Text(
-            text = "마이페이지",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center,
-            color = Gray800
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Image(
-            painter = painterResource(R.drawable.divider_line),
-            contentDescription = null,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        ProfileCard(
-            nickname = uiState.nickname,
-            email = uiState.email,
-            profileImageUrl = uiState.profileImageUrl,
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Text(
-            text = "앱 설정 및 계정",
-            modifier = Modifier.fillMaxWidth(),
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 17.sp,
-            color = Gray800
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        SettingsCard(
-            onNoticeClick = {
-                navController.navigate("notice")
-            },
-            onLogoutClick = {
-                showLogoutDialog = true
-            }
-        )
-
-        if (showLogoutDialog) {
-            CommonDialog(
-                title = "로그아웃하시겠습니까?",
-                onConfirm = {
-                    showLogoutDialog = false
-
-                    // TODO 로그아웃 API 호출
-                    // TODO 로그인 화면 이동
+        uiState.error != null -> {
+            ErrorContent(
+                error = uiState.error!!,
+                onRetry = {
+                    viewModel.getMyPage()
                 },
                 onDismiss = {
-                    showLogoutDialog = false
+                    viewModel.clearError()
                 }
             )
+        }
+
+        else -> {
+            var showLogoutDialog by remember {
+                mutableStateOf(false)
+            }
+
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .background(Cream)
+                    .padding(horizontal = 20.dp)
+            ) {
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Text(
+                    text = "마이페이지",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                    color = Gray800
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Image(
+                    painter = painterResource(R.drawable.divider_line),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                ProfileCard(
+                    nickname = uiState.nickname,
+                    email = uiState.email,
+                    profileImageUrl = uiState.profileImageUrl,
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Text(
+                    text = "앱 설정 및 계정",
+                    modifier = Modifier.fillMaxWidth(),
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 17.sp,
+                    color = Gray800
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                SettingsCard(
+                    onNoticeClick = {
+                        navController.navigate("notice")
+                    },
+                    onLogoutClick = {
+                        showLogoutDialog = true
+                    }
+                )
+
+                if (showLogoutDialog) {
+                    CommonDialog(
+                        title = "로그아웃하시겠습니까?",
+                        onConfirm = {
+                            showLogoutDialog = false
+
+                            // TODO 로그아웃 API 호출
+                            // TODO 로그인 화면 이동
+                        },
+                        onDismiss = {
+                            showLogoutDialog = false
+                        }
+                    )
+                }
+            }
         }
     }
 }
@@ -268,4 +290,3 @@ fun SettingItem(
         }
     }
 }
-

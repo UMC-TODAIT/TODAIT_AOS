@@ -2,29 +2,26 @@ package com.umc.todait.feature.saved.compose
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.umc.todait.R
-import androidx.compose.runtime.*
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.foundation.rememberScrollState
 import com.umc.todait.feature.saved.PlaceUiModel
 import com.umc.todait.ui.theme.Gray600
 import com.umc.todait.ui.theme.Gray800
@@ -33,7 +30,8 @@ import com.umc.todait.ui.theme.PlaceNumber
 @Composable
 fun PlaceCard(
     place: PlaceUiModel,
-    number: Int
+    number: Int,
+    onEditingChanged: (Long, Boolean) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -111,19 +109,23 @@ fun PlaceCard(
 
                 Spacer(modifier = Modifier.height(2.dp))
 
-                PlaceMemoSection(place)
+                PlaceMemoSection(
+                    place=place,
+                    onEditingChanged = onEditingChanged
+                )
             }
         }
     }
 }
 
 @Composable
-private fun PlaceMemoSection(place: PlaceUiModel) {
-
+private fun PlaceMemoSection(
+    place: PlaceUiModel,
+    onEditingChanged: (Long, Boolean) -> Unit
+) {
     var memo by remember {
         mutableStateOf(place.memo)
     }
-
     var isEditing by remember {
         mutableStateOf(false)
     }
@@ -199,6 +201,7 @@ private fun PlaceMemoSection(place: PlaceUiModel) {
                         .size(40.dp)
                         .clickable {
                             isEditing = true
+                            onEditingChanged(place.placeId, true)
                         }
                 )
 
@@ -251,6 +254,7 @@ private fun PlaceMemoSection(place: PlaceUiModel) {
                         .clickable {
                             place.memo = memo
                             isEditing = false
+                            onEditingChanged(place.placeId, false)
                         },
                     contentAlignment = Alignment.Center
                 ) {

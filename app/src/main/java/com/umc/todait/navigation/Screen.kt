@@ -34,6 +34,10 @@ sealed class Screen(val route: String) {
 
     // Home (무즈/김규리)
     data object Home : Screen("home")
+    data object RecommendedCourseDetail : Screen("home/recommended-courses/{courseId}") { // 홈 "오늘의 추천 코스" 카드 탭
+        const val ARG_COURSE_ID = "courseId"
+        fun createRoute(courseId: Long) = "home/recommended-courses/$courseId"
+    }
 
     // Course 생성 플로우
     data object MoodSelect : Screen("course/mood")            // 무즈/김규리

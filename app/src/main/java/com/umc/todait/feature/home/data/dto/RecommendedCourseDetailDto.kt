@@ -7,28 +7,38 @@ import com.google.gson.annotations.SerializedName
  * 홈 화면은 page=0, size=3 사용 — 서버가 날짜 기준으로 홍대/연남/성수 코스를 순환 반환한다.
  */
 data class RecommendedCourseListResultDto(
-    @SerializedName("courses") val courses: List<RecommendedCourseSummaryDto>,
+    @SerializedName("recommendationLogId") val recommendationLogId: Long,
     @SerializedName("page") val page: Int,
     @SerializedName("size") val size: Int,
     @SerializedName("totalElements") val totalElements: Int,
     @SerializedName("totalPages") val totalPages: Int,
     @SerializedName("hasNext") val hasNext: Boolean,
+    @SerializedName("courses") val courses: List<RecommendedCourseSummaryDto>,
 )
 
 /** "오늘의 추천 코스" 카드 한 장(목록 조회 응답 원소). */
 data class RecommendedCourseSummaryDto(
     @SerializedName("courseId") val courseId: Long,
     @SerializedName("title") val title: String,
+    @SerializedName("area") val area: HomeAreaDto,
     @SerializedName("representativeImageUrl") val representativeImageUrl: String?,
-    @SerializedName("representativeMoodTag") val representativeMoodTag: MoodTagDto?,
-    @SerializedName("representativePlaceCategory") val representativePlaceCategory: PlaceCategoryDto?,
+    @SerializedName("tags") val tags: List<CourseTagDto>,
+    @SerializedName("placeCount") val placeCount: Int,
+    @SerializedName("rank") val rank: Int,
+    @SerializedName("detailAvailable") val detailAvailable: Boolean,
+)
+
+/** 목록 카드의 대표 태그 1건(첫 번째=MOOD, 두 번째=SUB_CATEGORY). */
+data class CourseTagDto(
+    @SerializedName("type") val type: String,
+    @SerializedName("code") val code: String?,
+    @SerializedName("name") val name: String,
 )
 
 /**
  * "추천 코스 상세 조회"(GET /api/recommended-courses/{courseId}) 의 result.
- *
- * ⚠️ TODAIT_BE 스펙 확정본(2026-07-22) 기준. 홈 "오늘의 추천 코스" 카드 탭 → 상세 화면 진입 시 사용.
- * (상세/저장 화면 연결은 아직 안 함 — feature/saved 소유 CourseDetailScreen 조율 후 진행)
+ * 홈 "오늘의 추천 코스" 카드 탭 → 추천 코스 상세 화면(#55) 진입 시 사용. 목록과 달리 대표 태그를
+ * tags 배열이 아닌 flat 필드(representativeMoodTag/representativePlaceCategory)로 받는다 — API 명세 원문 기준.
  */
 data class RecommendedCourseDetailDto(
     @SerializedName("courseId") val courseId: Long,
@@ -46,6 +56,7 @@ data class MoodTagDto(
 )
 
 data class PlaceCategoryDto(
+    @SerializedName("placeCategoryId") val placeCategoryId: Long? = null,
     @SerializedName("code") val code: String,
     @SerializedName("name") val name: String,
 )

@@ -75,6 +75,7 @@ import com.umc.todait.ui.theme.White
 @Composable
 fun HomeScreen(
     onCourseClick: (Long) -> Unit,
+    onPlaceClick: (Long) -> Unit,
     onNotificationClick: () -> Unit,
     onProfileClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -85,6 +86,7 @@ fun HomeScreen(
     HomeContent(
         uiState = uiState,
         onCourseClick = onCourseClick,
+        onPlaceClick = onPlaceClick,
         onNotificationClick = onNotificationClick,
         onProfileClick = onProfileClick,
         onRetryCourses = viewModel::loadRecommendedCourses,
@@ -97,6 +99,7 @@ fun HomeScreen(
 private fun HomeContent(
     uiState: HomeUiState,
     onCourseClick: (Long) -> Unit,
+    onPlaceClick: (Long) -> Unit,
     onNotificationClick: () -> Unit,
     onProfileClick: () -> Unit,
     onRetryCourses: () -> Unit,
@@ -141,7 +144,7 @@ private fun HomeContent(
             modifier = Modifier.padding(horizontal = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            HomePlacesSection(placesState = uiState.placesState, onRetry = onRetryPlaces)
+            HomePlacesSection(placesState = uiState.placesState, onPlaceClick = onPlaceClick, onRetry = onRetryPlaces)
         }
 
         Spacer(Modifier.height(32.dp))
@@ -386,7 +389,7 @@ private fun CourseThumbnail(imageUrl: String?, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun HomePlacesSection(placesState: HomePlacesState, onRetry: () -> Unit) {
+private fun HomePlacesSection(placesState: HomePlacesState, onPlaceClick: (Long) -> Unit, onRetry: () -> Unit) {
     when (placesState) {
         is HomePlacesState.Loading -> Box(
             modifier = Modifier
@@ -419,6 +422,7 @@ private fun HomePlacesSection(placesState: HomePlacesState, onRetry: () -> Unit)
             val isGreen = index % 2 == 0
             PlaceCard(
                 place = place,
+                onClick = { onPlaceClick(place.placeId) },
                 gradient = if (isGreen) {
                     listOf(HomePlaceGreenStart, HomePlaceGreenEnd)
                 } else {
@@ -453,6 +457,7 @@ private data class PlaceDecoration(
 @Composable
 private fun PlaceCard(
     place: RecommendedPlaceUiModel,
+    onClick: () -> Unit,
     gradient: List<Color>,
     decoration: PlaceDecoration,
     onSaveClick: () -> Unit,
@@ -462,6 +467,7 @@ private fun PlaceCard(
             .fillMaxWidth()
             .height(110.dp)
             .clip(RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick)
             .background(Brush.verticalGradient(gradient)),
     ) {
         // 크기는 벡터 원본(피그마 export)에 scale(비율 유지)만 적용 — size(단일값)는 정사각형이 돼 찌그러지므로 쓰지 않는다.
@@ -582,7 +588,7 @@ private fun HomeScreenDefaultPreview() {
                     ),
                 ),
             ),
-            onCourseClick = {}, onNotificationClick = {}, onProfileClick = {}, onRetryCourses = {}, onRetryPlaces = {},
+            onCourseClick = {}, onPlaceClick = {}, onNotificationClick = {}, onProfileClick = {}, onRetryCourses = {}, onRetryPlaces = {},
         )
     }
 }
@@ -593,7 +599,7 @@ private fun HomeScreenLoadingPreview() {
     TodaitTheme {
         HomeContent(
             uiState = HomeUiState(placesState = HomePlacesState.Loading),
-            onCourseClick = {}, onNotificationClick = {}, onProfileClick = {}, onRetryCourses = {}, onRetryPlaces = {},
+            onCourseClick = {}, onPlaceClick = {}, onNotificationClick = {}, onProfileClick = {}, onRetryCourses = {}, onRetryPlaces = {},
         )
     }
 }

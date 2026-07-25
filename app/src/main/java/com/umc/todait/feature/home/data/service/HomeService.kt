@@ -39,7 +39,7 @@ interface HomeService {
 
     /**
      * 추천 코스 상세 조회 — GET /api/recommended-courses/{courseId}
-     * (TODAIT_BE 스펙 확정본. 화면 연결은 아직 안 함 — feature/saved 소유 CourseDetailScreen 조율 후 진행.)
+     * 홈 "오늘의 추천 코스" 카드 탭 → 추천 코스 상세 화면(#55, feature/home 소유·저장코스 상세와 별개 화면)에서 사용.
      */
     @GET("api/recommended-courses/{courseId}")
     suspend fun getRecommendedCourseDetail(

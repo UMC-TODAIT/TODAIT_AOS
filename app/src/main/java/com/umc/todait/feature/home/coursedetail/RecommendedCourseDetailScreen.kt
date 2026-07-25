@@ -3,7 +3,6 @@ package com.umc.todait.feature.home.coursedetail
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -154,12 +153,12 @@ private fun RecommendedCourseDetailContent(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = stringResource(R.string.course_detail_load_error),
+                        text = stringResource(R.string.recommended_course_detail_load_error),
                         style = MaterialTheme.typography.bodyMedium,
                         color = Gray500,
                     )
                     OutlinedButton(onClick = onRetry, modifier = Modifier.padding(top = 8.dp)) {
-                        Text(stringResource(R.string.course_detail_retry))
+                        Text(stringResource(R.string.recommended_course_detail_retry))
                     }
                 }
             }
@@ -180,7 +179,7 @@ private fun RecommendedCourseDetailContent(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = stringResource(R.string.course_detail_place_count, uiState.placeCount),
+                        text = stringResource(R.string.recommended_course_detail_place_count, uiState.placeCount),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         fontSize = 25.sp,
@@ -251,7 +250,7 @@ private fun CourseDetailTopBar(title: String, onBack: () -> Unit) {
             ) {
                 Image(
                     painter = painterResource(R.drawable.ic_back_button),
-                    contentDescription = stringResource(R.string.course_detail_back_content_description),
+                    contentDescription = stringResource(R.string.recommended_course_detail_back_content_description),
                 )
             }
             Text(
@@ -276,7 +275,7 @@ private fun SaveCoursePillButton(onClick: () -> Unit, enabled: Boolean) {
             .padding(horizontal = 20.dp, vertical = 10.dp),
     ) {
         Text(
-            text = stringResource(R.string.course_detail_save_button),
+            text = stringResource(R.string.recommended_course_detail_save_button),
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.SemiBold,
             color = White,

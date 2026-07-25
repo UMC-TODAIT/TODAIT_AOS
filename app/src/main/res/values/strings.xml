@@ -137,10 +137,10 @@
     <string name="home_place_save_content_description">코스에 저장</string>
 
     <!-- Recommended Course Detail (추천 코스 상세) -->
-    <string name="course_detail_back_content_description">뒤로가기</string>
-    <string name="course_detail_place_count">추천 코스 (%1$d)</string>
-    <string name="course_detail_save_button">코스 저장</string>
-    <string name="course_detail_load_error">코스 정보를 불러오지 못했어요.</string>
-    <string name="course_detail_retry">다시 시도</string>
-    <string name="course_detail_save_error">코스 저장에 실패했어요. 다시 시도해주세요.</string>
+    <string name="recommended_course_detail_back_content_description">뒤로가기</string>
+    <string name="recommended_course_detail_place_count">추천 코스 (%1$d)</string>
+    <string name="recommended_course_detail_save_button">코스 저장</string>
+    <string name="recommended_course_detail_load_error">코스 정보를 불러오지 못했어요.</string>
+    <string name="recommended_course_detail_retry">다시 시도</string>
+    <string name="recommended_course_detail_save_error">코스 저장에 실패했어요. 다시 시도해주세요.</string>
 </resources>

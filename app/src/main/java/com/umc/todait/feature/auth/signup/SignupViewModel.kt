@@ -8,7 +8,7 @@ import com.umc.todait.core.base.BaseViewModel
 import com.umc.todait.core.datastore.TokenDataStore
 import com.umc.todait.core.network.ApiResult
 import com.umc.todait.core.network.toUiError
-import com.umc.todait.feature.auth.data.dto.SignupTermAgreementDto
+import com.umc.todait.feature.auth.data.dto.TermAgreementDto
 import com.umc.todait.feature.auth.data.repository.AuthRepository
 import com.umc.todait.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -37,10 +37,10 @@ class SignupViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
 ) : BaseViewModel() {
 
-    private val agreedTerms: List<SignupTermAgreementDto> = runCatching {
+    private val agreedTerms: List<TermAgreementDto> = runCatching {
         val termsJson: String = savedStateHandle[Screen.Signup.ARG_TERMS] ?: "[]"
-        val listType = object : TypeToken<List<SignupTermAgreementDto>>() {}.type
-        Gson().fromJson<List<SignupTermAgreementDto>>(termsJson, listType)
+        val listType = object : TypeToken<List<TermAgreementDto>>() {}.type
+        Gson().fromJson<List<TermAgreementDto>>(termsJson, listType)
     }.getOrDefault(emptyList())
 
     private val _uiState = MutableStateFlow(SignupUiState())

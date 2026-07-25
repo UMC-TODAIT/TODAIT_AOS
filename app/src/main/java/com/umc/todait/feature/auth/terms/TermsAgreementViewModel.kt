@@ -3,6 +3,7 @@ package com.umc.todait.feature.auth.terms
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.umc.todait.core.base.BaseViewModel
+import com.umc.todait.feature.auth.data.dto.TermAgreementDto
 import com.umc.todait.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -17,8 +18,8 @@ import javax.inject.Inject
 /**
  * 약관 동의 화면의 상태를 관리한다.
  *
- * GET /api/terms, GET /api/terms/{termId}는 폐기됐다(노션 문서로 이동, API 없음) — 약관 목록은
- * 서버 조회 없이 앱에 영구 고정(DUMMY_TERMS)한다.
+ * GET /api/terms 응답 스펙이 아직 확정되지 않아 우선 더미 약관 목록(DUMMY_TERMS)으로 화면을
+ * 완성하고, 스펙이 나오면 서버 목록 조회로 교체한다.
  */
 @HiltViewModel
 class TermsAgreementViewModel @Inject constructor(
@@ -68,14 +69,14 @@ class TermsAgreementViewModel @Inject constructor(
             _effect.send(
                 TermsAgreementEffect.NavigateNext(
                     flow = state.flow,
-                    agreedTerms = state.terms,
+                    agreedTerms = state.terms.map { TermAgreementDto(termType = it.termType, agreed = it.isAgreed) },
                 ),
             )
         }
     }
 
     private companion object {
-        // GET /api/terms 폐기(노션 이동)로 서버 목록 조회가 없어 영구 고정한다.
+        // TODO(BE 고슴이): GET /api/terms 스펙 확정되면 서버 응답으로 교체.
         val DUMMY_TERMS = listOf(
             TermItemUiModel(
                 termId = 1, termType = "SERVICE", title = "서비스 이용약관",

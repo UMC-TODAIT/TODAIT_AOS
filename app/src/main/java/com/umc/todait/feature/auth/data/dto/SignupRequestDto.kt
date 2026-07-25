@@ -16,16 +16,7 @@ data class SignupRequestDto(
     @SerializedName("email") val email: String,
     @SerializedName("password") val password: String,
     @SerializedName("nickname") val nickname: String,
-    @SerializedName("termAgreements") val termAgreements: List<SignupTermAgreementDto>,
-)
-
-/**
- * 일반 회원가입의 약관 동의 항목 1건. 온보딩(`PATCH /api/members/me/onboarding`)의 `termId` 기반
- * [TermAgreementDto]와 달리, 이 API는 `termType`(SERVICE/PRIVACY/LOCATION/MARKETING) 문자열을 쓴다.
- */
-data class SignupTermAgreementDto(
-    @SerializedName("termType") val termType: String,
-    @SerializedName("agreed") val agreed: Boolean,
+    @SerializedName("termAgreements") val termAgreements: List<TermAgreementDto>,
 )
 
 /**

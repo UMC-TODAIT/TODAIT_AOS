@@ -4,8 +4,11 @@ import com.umc.todait.core.network.ApiResult
 import com.umc.todait.core.network.safeApiCall
 import com.umc.todait.feature.auth.data.dto.EmailCodeRequestDto
 import com.umc.todait.feature.auth.data.dto.EmailCodeVerifyRequestDto
+import com.umc.todait.feature.auth.data.dto.GoogleLoginRequestDto
+import com.umc.todait.feature.auth.data.dto.KakaoLoginRequestDto
 import com.umc.todait.feature.auth.data.dto.LoginRequestDto
 import com.umc.todait.feature.auth.data.dto.LoginResultDto
+import com.umc.todait.feature.auth.data.dto.SocialLoginResultDto
 import com.umc.todait.feature.auth.data.dto.NicknameAvailabilityResultDto
 import com.umc.todait.feature.auth.data.dto.OnboardingRequestDto
 import com.umc.todait.feature.auth.data.dto.OnboardingResultDto
@@ -13,7 +16,6 @@ import com.umc.todait.feature.auth.data.dto.PasswordResetRequestDto
 import com.umc.todait.feature.auth.data.dto.PasswordResetVerifyResultDto
 import com.umc.todait.feature.auth.data.dto.SignupRequestDto
 import com.umc.todait.feature.auth.data.dto.SignupResultDto
-import com.umc.todait.feature.auth.data.dto.SignupTermAgreementDto
 import com.umc.todait.feature.auth.data.dto.TermAgreementDto
 import com.umc.todait.feature.auth.data.dto.TokenRefreshRequestDto
 import com.umc.todait.feature.auth.data.dto.TokenRefreshResultDto
@@ -31,11 +33,19 @@ class AuthRepository @Inject constructor(
     suspend fun login(email: String, password: String): ApiResult<LoginResultDto> =
         safeApiCall { authService.login(LoginRequestDto(email = email, password = password)) }
 
+    /** 카카오 로그인. 네이티브 SDK로 받은 accessToken을 백엔드에 넘겨 서비스 토큰/온보딩 여부를 받는다. */
+    suspend fun loginWithKakao(accessToken: String): ApiResult<SocialLoginResultDto> =
+        safeApiCall { authService.loginWithKakao(KakaoLoginRequestDto(accessToken = accessToken)) }
+
+    /** 구글 로그인. Credential Manager로 받은 idToken을 백엔드에 넘겨 서비스 토큰/온보딩 여부를 받는다. */
+    suspend fun loginWithGoogle(idToken: String): ApiResult<SocialLoginResultDto> =
+        safeApiCall { authService.loginWithGoogle(GoogleLoginRequestDto(idToken = idToken)) }
+
     suspend fun signup(
         email: String,
         password: String,
         nickname: String,
-        termAgreements: List<SignupTermAgreementDto>,
+        termAgreements: List<TermAgreementDto>,
     ): ApiResult<SignupResultDto> = safeApiCall {
         authService.signup(
             SignupRequestDto(

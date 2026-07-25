@@ -65,7 +65,13 @@ fun CourseDetailScreen(
     val viewModel: CourseDetailViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
     var isEditing by remember { mutableStateOf(false) }
+    //var summaryEditing by remember { mutableStateOf(false) }
+    //var placeEditing by remember { mutableStateOf(false) }
     var showExitDialog by remember { mutableStateOf(false) }
+
+    var editingPlaces by remember {
+        mutableStateOf(setOf<Long>())
+    }
 
     LaunchedEffect(courseId) {
         viewModel.getCourseDetail(courseId)
@@ -100,7 +106,7 @@ fun CourseDetailScreen(
                     DetailHeader(
                         navController = navController,
                         onBackClick = {
-                            if (isEditing) {
+                            if (isEditing || editingPlaces.isNotEmpty()) {
                                 showExitDialog = true
                             } else {
                                 navController.popBackStack()
@@ -124,7 +130,15 @@ fun CourseDetailScreen(
                         itemsIndexed(uiState.places) { index, place ->
                             PlaceCard(
                                 place = place,
-                                number = index
+                                number = index,
+                                onEditingChanged = { placeId, editing ->
+                                    editingPlaces =
+                                        if (editing) {
+                                            editingPlaces + placeId
+                                        } else {
+                                            editingPlaces - placeId
+                                        }
+                                }
                             )
 
                             Spacer(

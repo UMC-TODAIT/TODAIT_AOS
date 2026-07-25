@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.umc.todait.R
+import com.umc.todait.core.network.toUiError
 import com.umc.todait.feature.mypage.data.repository.MyPageRepository
 
 @HiltViewModel
@@ -32,7 +33,10 @@ class SavedCoursesViewModel @Inject constructor(
 
     fun getSavedCourses() {
         _uiState.update {
-            it.copy(isLoading = true)
+            it.copy(
+                isLoading = true,
+                error = null
+            )
         }
 
         viewModelScope.launch {
@@ -50,7 +54,8 @@ class SavedCoursesViewModel @Inject constructor(
                 is ApiResult.Failure -> {
                     _uiState.update {
                         it.copy(
-                            isLoading = false
+                            isLoading = false,
+                            error = result.toUiError()
                         )
                     }
                 }

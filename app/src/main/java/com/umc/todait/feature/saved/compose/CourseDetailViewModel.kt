@@ -48,6 +48,7 @@ class CourseDetailViewModel @Inject constructor(
                             memo = data.memo ?: "",
 
                             places = data.places.map { place -> PlaceUiModel(
+                                placeId = place.placeId,
                                 isStartPlace = place.visitOrder == 1,
                                 name = place.name,
                                 address = place.address,

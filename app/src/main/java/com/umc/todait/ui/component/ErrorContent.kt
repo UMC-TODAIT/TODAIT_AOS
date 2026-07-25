@@ -1,7 +1,6 @@
 package com.umc.todait.ui.component
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import com.umc.todait.core.network.UiError
 import androidx.compose.ui.tooling.preview.Preview
 
@@ -25,15 +24,24 @@ fun ErrorContentPreview() {
 @Composable
 fun ErrorContent(
     error: UiError,
-    modifier: Modifier = Modifier,
     onRetry: () -> Unit,
-    onDismiss: () -> Unit= {}
+    onDismiss: () -> Unit = {}
 ) {
-    CommonDialog(
-        title = "일시적인 오류가 발생했습니다.",
-        cancelText = "취소",
-        confirmText = "다시시도",
-        onDismiss = onDismiss,
-        onConfirm = onRetry
-    )
+    if (error.isRetryable) {
+        CommonDialog(
+            title = error.message,
+            cancelText = "취소",
+            confirmText = "다시시도",
+            onDismiss = onDismiss,
+            onConfirm = onRetry
+        )
+    } else {
+        CommonDialog(
+            title = error.message,
+            cancelText = "취소",
+            confirmText = "확인",
+            onDismiss = onDismiss,
+            onConfirm = onDismiss
+        )
+    }
 }

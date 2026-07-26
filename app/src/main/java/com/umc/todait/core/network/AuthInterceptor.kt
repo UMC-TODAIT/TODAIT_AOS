@@ -87,15 +87,23 @@ class AuthInterceptor @Inject constructor(
      *
      * HTTP 403은 도메인별 소유권 오류(COURSE403 등)로도 내려오므로, 상태 코드만 보고 재발급하지 않고
      * body의 code가 AUTH403일 때만 트리거한다. 401은 인증 체계 오류 전용이라 상태 코드로도 판단한다.
+     *
+     * ⚠️ 단, 배포 서버는 토큰이 없거나 유효하지 않을 때 Spring Security 기본 동작으로
+     * **HTTP 403 + 빈 body**를 내려준다(공통 Wrapper가 아니다). 이 경우 body로 구분할 수 없으므로
+     * 인증 오류로 보고 재발급을 시도한다 — 실제로 도메인 403이었다면 재시도에서 같은 403이 오고 끝난다.
      */
     private fun isAuthExpiredResponse(response: Response): Boolean {
         if (response.code == 401) return true
         if (response.code != 403 && response.code != 200) return false
+
+        val json = runCatching { response.peekBody(PEEK_BODY_MAX_BYTES).string() }.getOrNull()
+        if (json.isNullOrBlank()) return response.code == 403
+
         return runCatching {
-            val json = response.peekBody(PEEK_BODY_MAX_BYTES).string()
             val parsed = gson.fromJson(json, BaseResponse::class.java)
             !parsed.isSuccess && (parsed.code == CODE_AUTH_401 || parsed.code == CODE_AUTH_403)
-        }.getOrDefault(false)
+            // 공통 Wrapper 형태가 아니면(파싱 실패) 403일 때만 인증 오류로 본다.
+        }.getOrDefault(response.code == 403)
     }
 
     private fun tryRefreshAccessToken(): String? = runCatching {

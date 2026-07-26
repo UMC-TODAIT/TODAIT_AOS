@@ -25,8 +25,6 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
@@ -40,7 +38,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -58,16 +55,16 @@ import com.umc.todait.R
 import com.umc.todait.core.network.UiError
 import com.umc.todait.ui.component.ErrorContent
 import com.umc.todait.ui.component.LoadingIndicator
+import com.umc.todait.ui.component.ScreenTopBar
 import com.umc.todait.ui.theme.Cream
 import com.umc.todait.ui.theme.Green700
 import com.umc.todait.ui.theme.Gray200
 import com.umc.todait.ui.theme.Gray500
-import com.umc.todait.ui.theme.Gray600
 import com.umc.todait.ui.theme.Gray900
-import com.umc.todait.ui.theme.Pink100
 import com.umc.todait.ui.theme.Pink700
 import com.umc.todait.ui.theme.PlaceCardGradientEnd
 import com.umc.todait.ui.theme.PlaceCardGradientStart
+import com.umc.todait.ui.theme.SearchIconCircle
 import com.umc.todait.ui.theme.TodaitTheme
 import com.umc.todait.ui.theme.White
 
@@ -154,7 +151,7 @@ private fun BasePlaceContent(
             .fillMaxSize()
             .background(Cream),
     ) {
-        BasePlaceTopBar(
+        ScreenTopBar(
             title = stringResource(R.string.base_place_title),
             onBack = onBack,
             // 헤더 체크 → 확정(선택 여부에 따라 시스템알럿1/2).
@@ -212,67 +209,7 @@ private fun BasePlaceContent(
 }
 
 /**
- * 상단 헤더(Pink100 배경). 좌측 뒤로가기, 가운데 타이틀, 우측 확인 버튼.
- */
-@Composable
-private fun BasePlaceTopBar(
-    title: String,
-    onBack: () -> Unit,
-    onConfirm: () -> Unit,
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Pink100)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-    ) {
-        CircleIconButton(
-            modifier = Modifier.align(Alignment.CenterStart),
-            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-            contentDescription = "뒤로가기",
-            onClick = onBack,
-        )
-        Text(
-            text = title,
-            modifier = Modifier.align(Alignment.Center),
-            style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Medium),
-            color = Gray900,
-        )
-        CircleIconButton(
-            modifier = Modifier.align(Alignment.CenterEnd),
-            imageVector = Icons.Filled.Check,
-            contentDescription = "확인",
-            onClick = onConfirm,
-        )
-    }
-}
-
-@Composable
-private fun CircleIconButton(
-    imageVector: ImageVector,
-    contentDescription: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier
-            .size(40.dp)
-            .clip(CircleShape)
-            .background(Gray600)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(
-            imageVector = imageVector,
-            contentDescription = contentDescription,
-            tint = White,
-            modifier = Modifier.size(20.dp),
-        )
-    }
-}
-
-/**
- * 검색창. 흰색 pill 형태 + 좌측 돋보기 아이콘 + placeholder.
+ * 검색창. 흰색 pill 형태 + 좌측 돋보기 아이콘(Gray-100 원 + 글리프) + placeholder.
  */
 @Composable
 private fun SearchBar(
@@ -290,16 +227,12 @@ private fun SearchBar(
         shadowElevation = 4.dp,
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp),
+            // Figma: 돋보기 원이 검색창 좌측에서 7dp, 원과 입력 텍스트 사이 24dp.
+            modifier = Modifier.padding(start = 7.dp, end = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(
-                imageVector = Icons.Filled.Search,
-                contentDescription = null,
-                tint = Gray900,
-                modifier = Modifier.size(20.dp),
-            )
-            Spacer(Modifier.width(10.dp))
+            SearchIcon()
+            Spacer(Modifier.width(24.dp))
             Box(modifier = Modifier.weight(1f)) {
                 if (query.isEmpty()) {
                     Text(
@@ -335,6 +268,26 @@ private fun SearchBar(
                 )
             }
         }
+    }
+}
+
+/**
+ * 검색창 좌측 돋보기. Figma(node 534:13530/534:13535): Gray-100 원 35dp 위에 18dp 글리프.
+ */
+@Composable
+private fun SearchIcon() {
+    Box(
+        modifier = Modifier
+            .size(35.dp)
+            .clip(CircleShape)
+            .background(SearchIconCircle),
+        contentAlignment = Alignment.Center,
+    ) {
+        Image(
+            painter = painterResource(R.drawable.ic_common_search),
+            contentDescription = null,
+            modifier = Modifier.size(18.dp),
+        )
     }
 }
 

@@ -3,6 +3,8 @@ package com.umc.todait.feature.course.data.repository
 import com.umc.todait.core.network.ApiResult
 import com.umc.todait.core.network.safeApiCall
 import com.umc.todait.feature.course.data.dto.PlaceDetailDto
+import com.umc.todait.feature.course.data.mock.MockCourse
+import com.umc.todait.feature.course.data.mock.USE_COURSE_MOCK
 import com.umc.todait.feature.course.data.service.PlaceService
 import javax.inject.Inject
 
@@ -19,7 +21,8 @@ class PlaceRepository @Inject constructor(
     /** 장소 카드 정보 */
     suspend fun getPlaceDetail(
         placeId: Long,
-    ): ApiResult<PlaceDetailDto> = safeApiCall {
-        placeService.getPlaceDetail(placeId = placeId)
+    ): ApiResult<PlaceDetailDto> {
+        if (USE_COURSE_MOCK) return ApiResult.Success(MockCourse.placeDetail(placeId))
+        return safeApiCall { placeService.getPlaceDetail(placeId = placeId) }
     }
 }

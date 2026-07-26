@@ -3,6 +3,8 @@ package com.umc.todait.feature.course.data.repository
 import com.umc.todait.core.network.ApiResult
 import com.umc.todait.core.network.safeApiCall
 import com.umc.todait.feature.course.data.dto.CourseDraftCreateResponseDto
+import com.umc.todait.feature.course.data.mock.MockCourse
+import com.umc.todait.feature.course.data.mock.USE_COURSE_MOCK
 import com.umc.todait.feature.course.data.service.CourseDraftService
 import javax.inject.Inject
 
@@ -17,7 +19,8 @@ class CourseDraftRepository @Inject constructor(
 ) {
 
     /** 임시 코스 생성 (POST /api/course-drafts) → courseDraftId 발급 */
-    suspend fun createCourseDraft(): ApiResult<CourseDraftCreateResponseDto> = safeApiCall {
-        courseDraftService.createCourseDraft()
+    suspend fun createCourseDraft(): ApiResult<CourseDraftCreateResponseDto> {
+        if (USE_COURSE_MOCK) return ApiResult.Success(MockCourse.courseDraft)
+        return safeApiCall { courseDraftService.createCourseDraft() }
     }
 }

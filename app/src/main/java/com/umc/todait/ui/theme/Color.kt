@@ -28,6 +28,7 @@ val White = Color(0xFFFFFFFF)
 val Cream = Color(0xFFFDFBF3)               // 화면 배경(웜 아이보리)
 val Pink100 = Color(0xFFFFE0DF)             // 상단 헤더 배경
 val Pink700 = Color(0xFFF4A7A5)             // 장소 카드 근접 배지 텍스트
+val SearchIconCircle = Color(0xFFEEEEEE)    // 검색창 돋보기 뒤 원형 배경 (Figma Gray-100)
 val PlaceCardGradientStart = Color(0xFFEABCD2) // 장소 카드 우측 그라데이션 시작(소프트 핑크)
 val PlaceCardGradientEnd = Color(0xFFD6B27F)   // 장소 카드 우측 그라데이션 끝(웜 탠)
 

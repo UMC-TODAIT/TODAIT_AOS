@@ -93,7 +93,8 @@ fun SearchPlaceDto.toUiModel(): PlaceUiModel = PlaceUiModel(
     address = roadAddress?.takeIf { it.isNotBlank() } ?: address,
     category = category.name,
     areaName = area.name,
-    imageUrl = imageUrl,
+    // 빈 문자열이면 이미지 없음으로 보고 카드 그라데이션으로 렌더한다.
+    imageUrl = imageUrl.takeIf { it.isNotBlank() },
     reasonText = null,
     latitude = latitude,
     longitude = longitude,

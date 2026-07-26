@@ -41,6 +41,7 @@ import com.umc.todait.feature.course.save.CourseSaveScreen
 import com.umc.todait.feature.course.place_detail.MenuFullScreen
 import com.umc.todait.feature.course.place_detail.PlaceDetailScreen
 import com.umc.todait.feature.home.HomeScreen
+import com.umc.todait.feature.home.coursedetail.RecommendedCourseDetailScreen
 import com.umc.todait.feature.saved.compose.CourseDetailScreen
 import com.umc.todait.feature.saved.compose.SavedCoursesScreen
 import com.umc.todait.ui.component.BottomBar
@@ -79,15 +80,15 @@ fun TodaitApp() {
                     currentRoute = currentRoute,
                     onTabClick = { tab ->
 
+                        // 탭을 누르면 항상 그 탭의 루트 화면으로 리셋한다(예: 코스 상세까지 들어갔다가
+                        // 다른 탭 갔다 "홈"을 다시 누르면 무조건 홈 루트로 — 마지막 화면 복원 아님).
+                        // 그래서 saveState/restoreState를 쓰지 않는다.
                         navController.navigate(tab.route){
                             popUpTo(
                                 navController.graph.findStartDestination().id
-                            ){
-                                saveState = true
-                            }
+                            )
 
                             launchSingleTop = true
-                            restoreState = true
                         }
 
                     }
@@ -99,7 +100,7 @@ fun TodaitApp() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination =  Screen.Login.route,
+            startDestination = Screen.Login.route,
             modifier = Modifier.padding(innerPadding),
         ) {
             // ---------- Auth ----------
@@ -246,11 +247,36 @@ fun TodaitApp() {
             composable(Screen.Home.route) {
                 HomeScreen(
                     onCourseClick = { courseId ->
-                        navController.navigate(Screen.CourseDetail.createRoute(courseId))
+                        navController.navigate(Screen.RecommendedCourseDetail.createRoute(courseId))
+                    },
+                    onPlaceClick = { placeId ->
+                        navController.navigate(Screen.PlaceDetail.createRoute(placeId))
                     },
                     // TODO: 알림 화면 없음(스코프 밖) — 생기면 연결.
                     onNotificationClick = {},
                     onProfileClick = { navController.navigate(Screen.MyPage.route) },
+                )
+            }
+            composable(
+                route = Screen.RecommendedCourseDetail.route,
+                arguments = listOf(
+                    navArgument(Screen.RecommendedCourseDetail.ARG_COURSE_ID) { type = NavType.LongType },
+                ),
+            ) {
+                RecommendedCourseDetailScreen(
+                    onBack = { navController.popBackStack() },
+                    onNavigateToPlaceDetail = { placeId ->
+                        navController.navigate(Screen.PlaceDetail.createRoute(placeId))
+                    },
+                    onNavigateToSavedCourses = {
+                        // "저장된 코스"로 이동은 하단 탭 전환과 동일하게 취급한다 — BottomBar.onTabClick과
+                        // 완전히 동일한 NavOptions를 써서 일관되게 유지한다(saveState/restoreState는 쓰지
+                        // 않는다: 탭 전환은 항상 그 탭의 루트 화면으로 리셋되는 게 맞다).
+                        navController.navigate(Screen.SavedCourses.route) {
+                            popUpTo(navController.graph.findStartDestination().id)
+                            launchSingleTop = true
+                        }
+                    },
                 )
             }
 

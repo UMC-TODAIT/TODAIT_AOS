@@ -34,10 +34,13 @@ class HomeRepository @Inject constructor(
         return safeApiCall { homeService.getRecommendedCourses(page = page, size = size) }
     }
 
-    // 상세/저장은 데이터 계층만 준비 — 화면 연결은 CourseDetailScreen(feature/saved) 조율 후 진행(TODO).
-    suspend fun getRecommendedCourseDetail(courseId: Long): ApiResult<RecommendedCourseDetailDto> =
-        safeApiCall { homeService.getRecommendedCourseDetail(courseId) }
+    suspend fun getRecommendedCourseDetail(courseId: Long): ApiResult<RecommendedCourseDetailDto> {
+        if (USE_MOCK) return ApiResult.Success(MockHome.courseDetail(courseId))
+        return safeApiCall { homeService.getRecommendedCourseDetail(courseId) }
+    }
 
-    suspend fun saveRecommendedCourse(courseId: Long): ApiResult<RecommendedCourseSaveResultDto> =
-        safeApiCall { homeService.saveRecommendedCourse(courseId) }
+    suspend fun saveRecommendedCourse(courseId: Long): ApiResult<RecommendedCourseSaveResultDto> {
+        if (USE_MOCK) return ApiResult.Success(MockHome.saveResult(courseId))
+        return safeApiCall { homeService.saveRecommendedCourse(courseId) }
+    }
 }

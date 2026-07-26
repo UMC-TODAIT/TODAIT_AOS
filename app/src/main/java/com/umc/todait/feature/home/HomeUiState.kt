@@ -29,8 +29,11 @@ data class CourseCardUiModel(
     @DrawableRes val decorationRes: Int,
 )
 
-/** moodTag.code(HIP/QUIET/ACTIVE/ROMANTIC/MODERN/CALM) → 카드 그라디언트. 코드가 없거나 매칭 안 되면 CALM으로 대체. */
-private val MOOD_GRADIENTS: Map<String, Pair<Color, Color>> = mapOf(
+/**
+ * moodTag.code(HIP/QUIET/ACTIVE/ROMANTIC/MODERN/CALM) → 카드 그라디언트. 코드가 없거나 매칭 안 되면 CALM으로 대체.
+ * internal — [com.umc.todait.feature.home.coursedetail](같은 feature 하위 패키지)에서도 재사용한다.
+ */
+internal val MOOD_GRADIENTS: Map<String, Pair<Color, Color>> = mapOf(
     "HIP" to (CourseHipGradientStart to CourseHipGradientEnd),
     "QUIET" to (CourseQuietGradientStart to CourseQuietGradientEnd),
     "ACTIVE" to (CourseActiveGradientStart to CourseActiveGradientEnd),
@@ -40,11 +43,10 @@ private val MOOD_GRADIENTS: Map<String, Pair<Color, Color>> = mapOf(
 )
 
 /**
- * 카드 배경 장식 도형. API가 도형을 내려주지 않아 courseId 순서로 기존 에셋을 순환 배정한다
- * (분위기별 고정 매핑 규칙 미확정 — 디자인 확인 필요).
+ * moodTag.code → 카드 장식 문양. 분위기별 고정(피그마 취향설정 카드 문양 에셋 재사용). 매칭 안 되면 CALM.
+ * internal — [com.umc.todait.feature.home.coursedetail]에서도 재사용한다.
  */
-/** moodTag.code → 카드 장식 문양. 분위기별 고정(피그마 취향설정 카드 문양 에셋 재사용). 매칭 안 되면 CALM. */
-private val MOOD_DECORATIONS: Map<String, Int> = mapOf(
+internal val MOOD_DECORATIONS: Map<String, Int> = mapOf(
     "HIP" to R.drawable.ic_mood_hip,
     "QUIET" to R.drawable.ic_mood_quiet,
     "ACTIVE" to R.drawable.ic_mood_active,
@@ -54,16 +56,14 @@ private val MOOD_DECORATIONS: Map<String, Int> = mapOf(
 )
 
 fun RecommendedCourseSummaryDto.toUiModel(): CourseCardUiModel {
-    val moodCode = representativeMoodTag?.code
+    // tags[0] = 대표 분위기(MOOD), tags[1] = 대표 장소 세부 카테고리(SUB_CATEGORY) — API 명세 순서 고정.
+    val moodCode = tags.firstOrNull { it.type == "MOOD" }?.code
     val (gradientStart, gradientEnd) = MOOD_GRADIENTS[moodCode]
         ?: (CourseCalmGradientStart to CourseCalmGradientEnd)
     return CourseCardUiModel(
         courseId = courseId,
         title = title,
-        hashtags = listOfNotNull(
-            representativeMoodTag?.name?.let { "#$it" },
-            representativePlaceCategory?.name?.let { "#${it.replace(" ", "")}" },
-        ),
+        hashtags = tags.map { "#${it.name.replace(" ", "")}" },
         gradientStart = gradientStart,
         gradientEnd = gradientEnd,
         imageUrl = representativeImageUrl,
@@ -93,8 +93,8 @@ fun HomeRecommendedPlaceDto.toUiModel(): RecommendedPlaceUiModel = RecommendedPl
     placeId = placeId,
     name = name,
     address = address,
-    imageUrl = representativeImageUrl,
-    recommendReason = recommendReason,
+    imageUrl = imageUrl,
+    recommendReason = recommendationReason,
 )
 
 data class HomeUiState(

@@ -68,6 +68,7 @@ import com.umc.todait.feature.home.MOOD_DECORATIONS
 import com.umc.todait.feature.home.MOOD_GRADIENTS
 import com.umc.todait.ui.component.CommonDialog
 import com.umc.todait.ui.component.CourseSaveDialog
+import com.umc.todait.ui.component.HeaderCircleButton
 import com.umc.todait.ui.theme.Cream
 import com.umc.todait.ui.theme.CourseCalmGradientEnd
 import com.umc.todait.ui.theme.CourseCalmGradientStart
@@ -239,18 +240,14 @@ private fun CourseDetailTopBar(title: String, onBack: () -> Unit) {
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 12.dp),
         ) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(White)
-                    .clickable(onClick = onBack),
-                contentAlignment = Alignment.Center,
+            HeaderCircleButton(
+                onClick = onBack,
+                modifier = Modifier.align(Alignment.CenterStart),
             ) {
                 Image(
-                    painter = painterResource(R.drawable.ic_back_button),
+                    painter = painterResource(R.drawable.ic_common_chevron_left),
                     contentDescription = stringResource(R.string.recommended_course_detail_back_content_description),
+                    modifier = Modifier.height(16.dp),
                 )
             }
             Text(

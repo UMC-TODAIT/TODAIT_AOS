@@ -54,6 +54,8 @@ import com.umc.todait.feature.course.base_place.PlaceUiModel
 import com.umc.todait.feature.course.compose.CourseMood
 import com.umc.todait.ui.component.CommonDialog
 import com.umc.todait.ui.component.CourseSaveDialog
+import com.umc.todait.ui.component.HeaderBackButton
+import com.umc.todait.ui.component.HeaderCheckButton
 import com.umc.todait.ui.component.HeaderCircleButton
 import com.umc.todait.ui.theme.CourseActiveGradientEnd
 import com.umc.todait.ui.theme.CourseActiveGradientStart
@@ -233,32 +235,22 @@ private fun CourseSaveTopBar(
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp, vertical = 11.dp),
         ) {
-            HeaderCircleButton(
+            HeaderBackButton(
                 modifier = Modifier.align(Alignment.CenterStart),
                 onClick = onBack,
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.ic_common_chevron_left),
-                    contentDescription = stringResource(R.string.course_save_back),
-                    modifier = Modifier.height(16.dp),
-                )
-            }
+                contentDescription = stringResource(R.string.course_save_back),
+            )
             Text(
                 text = title,
                 modifier = Modifier.align(Alignment.Center),
                 style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Medium),
                 color = Gray800,
             )
-            HeaderCircleButton(
+            HeaderCheckButton(
                 modifier = Modifier.align(Alignment.CenterEnd),
                 onClick = onSave,
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.ic_common_check),
-                    contentDescription = stringResource(R.string.course_save_confirm),
-                    modifier = Modifier.width(16.dp),
-                )
-            }
+                contentDescription = stringResource(R.string.course_save_confirm),
+            )
         }
         Box(
             modifier = Modifier
@@ -478,16 +470,11 @@ private fun TagBottomSheet(
                     style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.SemiBold),
                     color = Gray800,
                 )
-                HeaderCircleButton(
+                HeaderCheckButton(
                     modifier = Modifier.align(Alignment.CenterEnd),
                     onClick = onConfirm,
-                ) {
-                    Image(
-                        painter = painterResource(R.drawable.ic_common_check),
-                        contentDescription = stringResource(R.string.course_save_tag_sheet_confirm),
-                        modifier = Modifier.width(16.dp),
-                    )
-                }
+                    contentDescription = stringResource(R.string.course_save_tag_sheet_confirm),
+                )
             }
             Text(
                 text = stringResource(R.string.course_save_tag_sheet_subtitle),

@@ -37,6 +37,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
@@ -254,7 +255,12 @@ internal fun PhotoCarousel(
     }
 }
 
-/** 사진/에러 위에 얹는 반투명 원형 뒤로가기 버튼(좌상단). (내부 사진 화면과 공유) */
+/**
+ * 사진/에러 위에 얹는 반투명 원형 뒤로가기 버튼(좌상단). (내부 사진·메뉴 전체보기 화면과 공유)
+ *
+ * 글리프는 개편 시안의 ‹([R.drawable.ic_common_chevron_left])를 [HeaderBackButton] 과 동일하게 쓰지만,
+ * 사진 위에서는 Cream 원이 배경과 섞여 안 보이므로 원/아이콘 색만 반전해서 유지한다.
+ */
 @Composable
 internal fun OverlayBackButton(onBack: () -> Unit) {
     Box(
@@ -267,10 +273,10 @@ internal fun OverlayBackButton(onBack: () -> Unit) {
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+            painter = painterResource(R.drawable.ic_common_chevron_left),
             contentDescription = "뒤로가기",
             tint = White,
-            modifier = Modifier.size(20.dp),
+            modifier = Modifier.height(16.dp),
         )
     }
 }

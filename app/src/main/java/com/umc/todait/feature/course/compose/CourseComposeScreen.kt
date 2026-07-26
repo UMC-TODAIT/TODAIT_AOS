@@ -24,7 +24,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -55,6 +54,8 @@ import com.umc.todait.core.network.UiError
 import com.umc.todait.feature.course.base_place.BasePlaceSystemAlert
 import com.umc.todait.feature.course.base_place.PlaceUiModel
 import com.umc.todait.ui.component.ErrorContent
+import com.umc.todait.ui.component.HeaderBackButton
+import com.umc.todait.ui.component.HeaderCheckButton
 import com.umc.todait.ui.component.LoadingIndicator
 import com.umc.todait.ui.theme.CategoryTabTextSelected
 import com.umc.todait.ui.theme.CourseActiveGradientEnd
@@ -73,7 +74,6 @@ import com.umc.todait.ui.theme.Cream
 import com.umc.todait.ui.theme.DividerLine
 import com.umc.todait.ui.theme.Gray200
 import com.umc.todait.ui.theme.Gray500
-import com.umc.todait.ui.theme.Gray600
 import com.umc.todait.ui.theme.Gray800
 import com.umc.todait.ui.theme.Green700
 import com.umc.todait.ui.theme.Pink600
@@ -242,32 +242,18 @@ private fun CourseComposeTopBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            CircleIconButton(onClick = onBack, background = Gray600) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "뒤로가기",
-                    tint = White,
-                    modifier = Modifier.size(20.dp),
-                )
-            }
+            HeaderBackButton(onClick = onBack)
             Text(
                 text = title,
                 style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Medium),
                 color = Gray800,
             )
-            CircleIconButton(
+            // 담은 장소가 없으면(확정 불가) 흐리게 표시하고 클릭도 막는다.
+            HeaderCheckButton(
                 onClick = onConfirm,
                 enabled = confirmEnabled,
-                // Figma 기본 상태는 그레이 원형 체크. 미확정 시엔 연한 그레이로 비활성 표현.
-                background = if (confirmEnabled) Gray600 else Gray200,
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Check,
-                    contentDescription = "확정",
-                    tint = White,
-                    modifier = Modifier.size(20.dp),
-                )
-            }
+                contentDescription = "확정",
+            )
         }
         Box(
             modifier = Modifier
@@ -275,25 +261,6 @@ private fun CourseComposeTopBar(
                 .height(1.dp)
                 .background(DividerLine),
         )
-    }
-}
-
-@Composable
-private fun CircleIconButton(
-    onClick: () -> Unit,
-    enabled: Boolean = true,
-    background: Color = Gray600,
-    content: @Composable () -> Unit,
-) {
-    Box(
-        modifier = Modifier
-            .size(40.dp)
-            .clip(CircleShape)
-            .background(background)
-            .clickable(enabled = enabled, onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        content()
     }
 }
 

@@ -25,8 +25,6 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
@@ -40,7 +38,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -57,12 +54,13 @@ import coil.compose.AsyncImage
 import com.umc.todait.R
 import com.umc.todait.core.network.UiError
 import com.umc.todait.ui.component.ErrorContent
+import com.umc.todait.ui.component.HeaderBackButton
+import com.umc.todait.ui.component.HeaderCheckButton
 import com.umc.todait.ui.component.LoadingIndicator
 import com.umc.todait.ui.theme.Cream
 import com.umc.todait.ui.theme.Green700
 import com.umc.todait.ui.theme.Gray200
 import com.umc.todait.ui.theme.Gray500
-import com.umc.todait.ui.theme.Gray600
 import com.umc.todait.ui.theme.Gray900
 import com.umc.todait.ui.theme.Pink100
 import com.umc.todait.ui.theme.Pink700
@@ -226,10 +224,8 @@ private fun BasePlaceTopBar(
             .background(Pink100)
             .padding(horizontal = 16.dp, vertical = 8.dp),
     ) {
-        CircleIconButton(
+        HeaderBackButton(
             modifier = Modifier.align(Alignment.CenterStart),
-            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-            contentDescription = "뒤로가기",
             onClick = onBack,
         )
         Text(
@@ -238,35 +234,9 @@ private fun BasePlaceTopBar(
             style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Medium),
             color = Gray900,
         )
-        CircleIconButton(
+        HeaderCheckButton(
             modifier = Modifier.align(Alignment.CenterEnd),
-            imageVector = Icons.Filled.Check,
-            contentDescription = "확인",
             onClick = onConfirm,
-        )
-    }
-}
-
-@Composable
-private fun CircleIconButton(
-    imageVector: ImageVector,
-    contentDescription: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier
-            .size(40.dp)
-            .clip(CircleShape)
-            .background(Gray600)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(
-            imageVector = imageVector,
-            contentDescription = contentDescription,
-            tint = White,
-            modifier = Modifier.size(20.dp),
         )
     }
 }

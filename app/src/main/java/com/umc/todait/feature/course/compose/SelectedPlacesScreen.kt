@@ -20,8 +20,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -45,6 +43,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.todait.R
 import com.umc.todait.feature.course.base_place.PlaceUiModel
+import com.umc.todait.ui.component.HeaderBackButton
+import com.umc.todait.ui.component.HeaderCheckButton
 import com.umc.todait.ui.theme.Cream
 import com.umc.todait.ui.theme.DividerLine
 import com.umc.todait.ui.theme.Gray200
@@ -177,27 +177,13 @@ private fun SelectedPlacesTopBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            CircleButton(onClick = onBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "뒤로가기",
-                    tint = White,
-                    modifier = Modifier.size(20.dp),
-                )
-            }
+            HeaderBackButton(onClick = onBack)
             Text(
                 text = title,
                 style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Medium),
                 color = Gray800,
             )
-            CircleButton(onClick = onConfirm) {
-                Icon(
-                    imageVector = Icons.Filled.Check,
-                    contentDescription = "확정",
-                    tint = White,
-                    modifier = Modifier.size(20.dp),
-                )
-            }
+            HeaderCheckButton(onClick = onConfirm, contentDescription = "확정")
         }
         Box(
             modifier = Modifier
@@ -205,24 +191,6 @@ private fun SelectedPlacesTopBar(
                 .height(1.dp)
                 .background(DividerLine),
         )
-    }
-}
-
-@Composable
-private fun CircleButton(
-    onClick: () -> Unit,
-    background: Color = Gray600,
-    content: @Composable () -> Unit,
-) {
-    Box(
-        modifier = Modifier
-            .size(40.dp)
-            .clip(CircleShape)
-            .background(background)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        content()
     }
 }
 

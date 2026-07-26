@@ -75,8 +75,8 @@ import com.umc.todait.ui.theme.White
  * 구성(위→아래): 상단 사진 캐러셀(n/N) → 장소명·주소 → 추천/해시태그 칩 →
  * 영업 상태(영업중·라스트오더) → 메뉴 → 내부 사진. 모두 Figma 시안에 맞춰 배치한다.
  *
- * 영업 상태·메뉴는 PlaceDetailDto 에 필드가 없어 데이터가 있을 때만 노출한다.
- * (모델 필드는 준비돼 있어 BE 스펙 확정 시 매핑만 채우면 된다. [PlaceDetailUiModel] 참고)
+ * 영업 상태(businessStatus)·라스트오더·메뉴는 응답에 없을 수 있어(장소별 목업 데이터 보완 범위)
+ * 값이 있을 때만 해당 섹션을 노출한다.
  *
  * @param onSeeAllPhotos 내부 사진 [전체보기] → 사진 그리드 화면([InteriorPhotosScreen])으로 이동.
  * @param onSeeAllMenu 메뉴 [전체보기] → 메뉴 전체보기 화면으로 이동. (TODO: 화면 추가 시 연결)
@@ -187,7 +187,7 @@ private fun PlaceDetailBody(
             Spacer(Modifier.height(16.dp))
             SectionDivider()
             Spacer(Modifier.height(16.dp))
-            InteriorPhotoSection(imageUrls = place.imageUrls, onSeeAll = onSeeAllPhotos)
+            InteriorPhotoSection(imageUrls = place.interiorImageUrls, onSeeAll = onSeeAllPhotos)
 
             Spacer(Modifier.height(24.dp))
         }

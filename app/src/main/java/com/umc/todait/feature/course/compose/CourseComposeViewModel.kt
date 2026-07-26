@@ -37,23 +37,31 @@ class CourseComposeViewModel @Inject constructor(
     val uiState: StateFlow<CourseComposeUiState> = _uiState.asStateFlow()
 
     init {
-        // TODO(2차): 임시 코스는 원래 코스 생성 진입(기준 장소 확정) 시점에 만들어야 한다.
+        // 카테고리(탭)가 있어야 추천을 조회할 수 있어(placeCategoryCode 필요) 카테고리 로드 후 추천을 부른다.
+        // TODO(2차): 임시 코스는 원래 코스 생성 진입(분위기 선택) 시점에 만들어 플로우 전체가 공유해야 한다.
         //  base-place 저장 API 배포 전까지는 구성 화면 진입 시 발급해 courseDraftId 핸들을 확보한다.
-        createCourseDraft()
         loadCategories()
-        loadRecommendations()
     }
 
-    /** 임시 코스 생성(POST /api/course-drafts). 성공 시 courseDraftId 를 상태에 보관한다. */
-    private fun createCourseDraft() {
-        viewModelScope.launch {
-            when (val result = courseDraftRepository.createCourseDraft()) {
-                is ApiResult.Success ->
-                    _uiState.update { it.copy(courseDraftId = result.data.courseDraftId) }
-                // draft 발급 실패는 화면을 막지 않는다(추천/카테고리는 draft 없이도 조회). 로그만 남기고 2차에서 재시도 UX 보강.
-                is ApiResult.Failure -> Unit
+    /**
+     * 임시 코스 생성(POST /api/course-drafts). 성공 시 courseDraftId 를 상태에 보관한다.
+     * 이미 발급받았으면 그대로 재사용한다.
+     */
+    private suspend fun ensureCourseDraftId(): Long? {
+        _uiState.value.courseDraftId?.let { return it }
+        return when (val result = courseDraftRepository.createCourseDraft()) {
+            is ApiResult.Success -> result.data.courseDraftId.also { id ->
+                _uiState.update { it.copy(courseDraftId = id) }
             }
+
+            is ApiResult.Failure -> null
         }
+    }
+
+    /** 에러 화면의 [다시 시도]. 카테고리부터 다시 불러오고 이어서 추천을 조회한다. */
+    fun retry() {
+        _uiState.update { it.copy(recommendState = RecommendListState.Loading) }
+        loadCategories()
     }
 
     /** 카테고리 탭(장소 대분류) 로드(GET /api/place-categories). sortOrder 순으로 노출. */
@@ -71,22 +79,46 @@ class CourseComposeViewModel @Inject constructor(
                             selectedCategoryId = state.selectedCategoryId ?: categories.firstOrNull()?.id,
                         )
                     }
+                    if (categories.isEmpty()) {
+                        // 명세상 카테고리가 없어도 오류가 아니라 빈 배열로 내려온다 → 빈 상태로 처리.
+                        _uiState.update { it.copy(recommendState = RecommendListState.Empty(EMPTY_MESSAGE)) }
+                    } else {
+                        loadRecommendations()
+                    }
                 }
-                // 카테고리 로드 실패 시 탭만 비고 추천 목록은 그대로 노출.
-                is ApiResult.Failure -> Unit
+
+                // 카테고리(placeCategoryCode)가 없으면 추천을 조회할 수 없으므로 목록도 에러로 표시한다.
+                is ApiResult.Failure ->
+                    _uiState.update {
+                        it.copy(recommendState = RecommendListState.Error(result.toUiError().message))
+                    }
             }
         }
     }
 
-    /** 현재 선택된 카테고리 기준 추천 장소 조회. 재시도에서도 재사용한다. */
+    /**
+     * 현재 선택된 카테고리 기준 추천 장소 조회. 재시도에서도 재사용한다.
+     * (GET /api/course-drafts/{courseDraftId}/recommended-places?placeCategoryCode=)
+     */
     fun loadRecommendations() {
-        _uiState.update { it.copy(recommendState = RecommendListState.Loading) }
         viewModelScope.launch {
-            // TODO(BE 죠): 임시 코스 세션 확정 시 basePlaceId·courseDraftId 와 카테고리 파라미터 전달.
+            // 카테고리 로드 전이면 로드 완료 콜백에서 다시 호출된다.
+            val categoryCode = _uiState.value.selectedCategory?.code ?: return@launch
+
+            _uiState.update { it.copy(recommendState = RecommendListState.Loading) }
+            val draftId = ensureCourseDraftId()
+            if (draftId == null) {
+                _uiState.update {
+                    it.copy(recommendState = RecommendListState.Error(ERROR_DRAFT_REQUIRED))
+                }
+                return@launch
+            }
+
             val result = recommendationRepository.getRecommendedPlaces(
-                type = RECOMMENDATION_TYPE_COURSE,
+                courseDraftId = draftId,
+                placeCategoryCode = categoryCode,
             )
-            _uiState.update { state ->
+            _uiState.update { current ->
                 val next = when (result) {
                     is ApiResult.Success -> {
                         val places = result.data.places.map { it.toUiModel() }
@@ -100,7 +132,7 @@ class CourseComposeViewModel @Inject constructor(
                     is ApiResult.Failure ->
                         RecommendListState.Error(result.toUiError().message)
                 }
-                state.copy(recommendState = next)
+                current.copy(recommendState = next)
             }
         }
     }
@@ -118,7 +150,7 @@ class CourseComposeViewModel @Inject constructor(
      */
     fun onAddPlace(place: PlaceUiModel) {
         _uiState.update { state ->
-            if (state.selectedPlaces.any { it.placeId == place.placeId }) {
+            if (state.selectedPlaces.any { it.key == place.key }) {
                 state.copy(alert = CourseComposeAlert.Duplicate)
             } else {
                 state.copy(selectedPlaces = state.selectedPlaces + place)
@@ -129,7 +161,7 @@ class CourseComposeViewModel @Inject constructor(
     /** 선택한 장소에서 빼기. */
     fun onRemovePlace(place: PlaceUiModel) {
         _uiState.update { state ->
-            state.copy(selectedPlaces = state.selectedPlaces.filterNot { it.placeId == place.placeId })
+            state.copy(selectedPlaces = state.selectedPlaces.filterNot { it.key == place.key })
         }
     }
 
@@ -151,8 +183,7 @@ class CourseComposeViewModel @Inject constructor(
     }
 
     companion object {
-        // TODO(BE 죠): 코스 구성용 추천 type enum 확정값으로 교체.
-        private const val RECOMMENDATION_TYPE_COURSE = "COURSE"
         private const val EMPTY_MESSAGE = "추천할 수 있는 장소가 없어요."
+        private const val ERROR_DRAFT_REQUIRED = "코스 생성 정보를 불러오지 못했어요. 다시 시도해주세요."
     }
 }

@@ -107,9 +107,11 @@ fun CourseComposeScreen(
             // ✓ 는 canConfirm(담은 장소 ≥1)일 때만 활성 → 선택한 장소 화면으로 이동.
             onConfirm = onNavigateToSelected,
             onSelectCategory = viewModel::onSelectCategory,
-            onPlaceClick = { place -> onNavigateToDetail(place.placeId) },
+            onPlaceClick = { place ->
+                place.placeId?.takeIf { place.detailAvailable }?.let(onNavigateToDetail)
+            },
             onAddPlace = viewModel::onAddPlace,
-            onRetry = viewModel::loadRecommendations,
+            onRetry = viewModel::retry,
         )
 
         when (uiState.alert) {
@@ -156,7 +158,7 @@ private fun CourseComposeContent(
             onConfirm = onConfirm,
         )
 
-        val selectedIds = state.selectedPlaces.map { it.placeId }.toSet()
+        val selectedKeys = state.selectedPlaces.map { it.key }.toSet()
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -202,12 +204,12 @@ private fun CourseComposeContent(
                     }
 
                 is RecommendListState.Success ->
-                    itemsIndexed(recommend.places, key = { _, place -> place.placeId }) { index, place ->
+                    itemsIndexed(recommend.places, key = { _, place -> place.key }) { index, place ->
                         RecommendCard(
                             place = place,
-                            added = place.placeId in selectedIds,
-                            // 분위기별 카드 색상. place.moodTags 로 결정하되, 추천 API 는 분위기 태그를 안 줘서
-                            // 태그가 없으면 6종을 순번으로 부여(placeholder, 추천 응답에 분위기 필드 추가 시 교체 TODO).
+                            added = place.key in selectedKeys,
+                            // 분위기별 카드 색상. 추천 응답의 matchedMoodTags 로 결정하되,
+                            // 일치한 분위기가 없을 수 있어 그때는 6종을 순번으로 부여한다.
                             mood = CourseMood.fromTags(place.moodTags)
                                 ?: fallbackMoods[index % fallbackMoods.size],
                             onClick = { onPlaceClick(place) },
@@ -525,10 +527,10 @@ private fun PreviewMapPlaceholder(modifier: Modifier = Modifier) {
 }
 
 private val previewCategories = listOf(
-    PlaceCategoryUiModel(1, "카페"),
-    PlaceCategoryUiModel(2, "액티비티"),
-    PlaceCategoryUiModel(3, "식당"),
-    PlaceCategoryUiModel(4, "술"),
+    PlaceCategoryUiModel(1, "CAFE", "카페"),
+    PlaceCategoryUiModel(2, "ACTIVITY", "액티비티"),
+    PlaceCategoryUiModel(3, "RESTAURANT", "식당"),
+    PlaceCategoryUiModel(4, "BAR", "술"),
 )
 
 private val previewPlaces = listOf(

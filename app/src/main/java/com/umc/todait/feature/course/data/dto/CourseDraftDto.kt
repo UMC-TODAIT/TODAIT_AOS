@@ -12,7 +12,11 @@ import com.google.gson.annotations.SerializedName
  */
 data class CourseDraftCreateResponseDto(
     @SerializedName("courseDraftId") val courseDraftId: Long,
-    @SerializedName("status") val status: String,
+    // 생성 직후 정상값은 MOOD_SELECTING.
+    // (DB/Entity 는 status 지만 API JSON 은 임시 코스 상태임을 분명히 하려고 draftStatus 를 쓴다.)
+    @SerializedName("draftStatus") val draftStatus: String,
+    // 만료 정책 미확정 — 명세상 응답에서 빠지거나 null 로 올 수 있다.
     @SerializedName("expiresAt") val expiresAt: String?,
-    @SerializedName("createdAt") val createdAt: String?,
+    // ISO-8601 LocalDateTime.
+    @SerializedName("createdAt") val createdAt: String,
 )

@@ -1,7 +1,8 @@
 package com.umc.todait.feature.course.base_place
 
-import com.umc.todait.feature.course.data.dto.PlaceResponseDto
+import com.umc.todait.feature.course.data.dto.HotPlaceDto
 import com.umc.todait.feature.course.data.dto.RecommendedPlaceDto
+import com.umc.todait.feature.course.data.dto.SearchPlaceDto
 
 /**
  * 기준 장소 설정 화면의 UI 상태.
@@ -49,12 +50,16 @@ sealed interface PlaceListState {
 
 /**
  * 화면에 노출하는 장소 카드 모델.
- * DTO(PlaceResponseDto / RecommendedPlaceDto)를 화면 표현용으로 매핑한다. (컨벤션 §5: DTO는 data 안에서만)
+ * DTO(SearchPlaceDto / HotPlaceDto / RecommendedPlaceDto)를 화면 표현용으로 매핑한다.
+ * (컨벤션 §5: DTO는 data 안에서만)
  *
  * 명세 정책상 별점/평점/내부 점수는 담지 않으며, 신뢰도는 [reasonText](추천 이유)로만 표현한다.
+ *
+ * ⚠️ 검색 결과에는 내부 DB에 없는 카카오 장소도 섞여 내려온다. 그런 장소는 [placeId] 가 null 이고
+ * [externalPlaceId] 만 있으므로, 목록 key·선택 비교에는 [placeId] 대신 [key] 를 사용한다.
  */
 data class PlaceUiModel(
-    val placeId: Long,
+    val placeId: Long?,
     val name: String,
     val address: String,
     val category: String,
@@ -63,45 +68,71 @@ data class PlaceUiModel(
     val reasonText: String?,
     val latitude: Double,
     val longitude: Double,
-    // 분위기 태그(예: "로맨틱", "모던한"). "검색 결과 목록"에서만 내려오며, 없으면 빈 리스트.
+    // 분위기 태그(예: "로맨틱", "모던한"). 코스 구성 추천에서만 내려오며, 없으면 빈 리스트.
     // 코스 구성 카드의 분위기별 색상 결정에 쓰인다.
     val moodTags: List<String> = emptyList(),
-)
+    // 내부 DB 미등록 장소의 식별자(카카오 장소 ID). 기준 장소 설정 시 externalPlace 로 전달한다.
+    val externalPlaceId: String? = null,
+    // 장소 상세 화면으로 진입할 수 있는지. false 면 카드 탭을 무시한다.
+    val detailAvailable: Boolean = true,
+) {
+    /** 목록 key·선택 비교용 식별자. 내부 장소는 placeId, 미등록 장소는 외부 ID를 사용한다. */
+    val key: String get() = placeId?.toString() ?: "external:$externalPlaceId"
+}
 
 /**
  * 검색 결과 DTO → 화면 모델. 검색 결과에는 추천 이유가 없어 [reasonText] 는 null.
  *
- * 배포 스펙 매핑:
- * - category 는 [PlaceResponseDto.placeCategory] 객체의 name 을 쓴다(없으면 빈 문자열).
- * - imageUrl 은 defaultImageUrl.
- * - moodTags 는 객체 배열이라 name 만 추출한다.
- * - areaName 은 검색 응답에 없어 빈 문자열(지원 지역 검증은 GET /api/areas 연동 시 처리 — 2차).
+ * - category 는 서버가 내부 대분류로 변환해준 [SearchPlaceDto.category] 의 name.
+ * - areaName 은 지원 지역([SearchPlaceDto.area]) 이름 — 기준 장소 확정 시 지원 지역 검증에 쓴다.
+ * - 분위기 태그는 검색 응답에 없어 비운다.
  */
-fun PlaceResponseDto.toUiModel(): PlaceUiModel = PlaceUiModel(
+fun SearchPlaceDto.toUiModel(): PlaceUiModel = PlaceUiModel(
     placeId = placeId,
     name = name,
-    address = address,
-    category = placeCategory?.name.orEmpty(),
-    areaName = "",
-    imageUrl = defaultImageUrl,
+    address = roadAddress?.takeIf { it.isNotBlank() } ?: address,
+    category = category.name,
+    areaName = area.name,
+    imageUrl = imageUrl,
     reasonText = null,
     latitude = latitude,
     longitude = longitude,
-    moodTags = moodTags?.map { it.name }.orEmpty(),
+    externalPlaceId = externalPlaceId,
+    detailAvailable = detailAvailable,
 )
 
 /**
- * 추천 장소 DTO → 화면 모델. RecommendedPlaceDto 에는 areaName 이 없어 빈 문자열로 둔다.
- * 추천 응답에는 분위기 태그(mood) 필드가 없어([matchedMoodCount] 만 존재) moodTags 는 비운다.
+ * 주변 핫플 DTO → 화면 모델.
+ * 추천 문구([HotPlaceDto.recommendationReason])는 서버가 준 문자열을 그대로 노출한다.
+ * 분위기 태그는 이 응답에 없어([matchedMoodCount] 만 존재) 비운다.
+ */
+fun HotPlaceDto.toUiModel(): PlaceUiModel = PlaceUiModel(
+    placeId = placeId,
+    name = name,
+    address = roadAddress?.takeIf { it.isNotBlank() } ?: address,
+    category = category.name,
+    areaName = area.name,
+    imageUrl = imageUrl,
+    reasonText = recommendationReason,
+    latitude = latitude,
+    longitude = longitude,
+    detailAvailable = detailAvailable,
+)
+
+/**
+ * 카테고리별 추천 장소 DTO → 화면 모델.
+ * 추천 이유는 최대 2개가 우선순위 순으로 내려오며, 카드에는 첫 문구만 노출한다.
  */
 fun RecommendedPlaceDto.toUiModel(): PlaceUiModel = PlaceUiModel(
     placeId = placeId,
     name = name,
-    address = address,
-    category = category,
-    areaName = "",
+    address = roadAddress?.takeIf { it.isNotBlank() } ?: address,
+    category = category.name,
+    areaName = area.name,
     imageUrl = imageUrl,
-    reasonText = reasonText,
+    reasonText = recommendationReasons.firstOrNull(),
     latitude = latitude,
     longitude = longitude,
+    moodTags = matchedMoodTags.map { it.name },
+    detailAvailable = detailAvailable,
 )

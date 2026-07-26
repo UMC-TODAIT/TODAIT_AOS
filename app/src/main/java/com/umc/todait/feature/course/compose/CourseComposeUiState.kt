@@ -34,6 +34,10 @@ data class CourseComposeUiState(
 ) {
     /** 담은 장소가 하나라도 있어야 확정(다음 단계) 가능. */
     val canConfirm: Boolean get() = selectedPlaces.isNotEmpty()
+
+    /** 현재 선택된 카테고리 탭. 추천 조회에 필요한 code 를 여기서 얻는다. */
+    val selectedCategory: PlaceCategoryUiModel?
+        get() = categories.firstOrNull { it.id == selectedCategoryId }
 }
 
 /**
@@ -42,12 +46,15 @@ data class CourseComposeUiState(
  */
 data class PlaceCategoryUiModel(
     val id: Long,
+    // 대분류 코드(CAFE/RESTAURANT/ACTIVITY/BAR). 추천 조회 API 의 placeCategoryCode 로 전달한다.
+    val code: String,
     val name: String,
 )
 
 /** 장소 대분류 DTO → 화면 탭 모델. */
 fun PlaceCategoryResponseDto.toUiModel(): PlaceCategoryUiModel = PlaceCategoryUiModel(
     id = placeCategoryId,
+    code = code,
     name = name,
 )
 
@@ -59,8 +66,8 @@ fun PlaceCategoryResponseDto.toUiModel(): PlaceCategoryUiModel = PlaceCategoryUi
  * 그라데이션 색은 Figma "취향설정" 화면 기준으로 6종 전부 확정(색상 토큰은 Color.kt 참고).
  * 우측 하단 아이콘도 6종 각각 전용 에셋(ic_mood_*)으로 매칭한다.
  *
- * [PlaceUiModel.moodTags] 의 분위기 태그(code 또는 name)로 결정한다([fromTags]). 추천 API 응답에는
- * 분위기 태그가 없어(matchedMoodCount 만 존재) 태그가 비어 있을 때는 화면에서 fallback 을 부여한다.
+ * [PlaceUiModel.moodTags] 의 분위기 태그(code 또는 name)로 결정한다([fromTags]). 카테고리별 추천 응답의
+ * matchedMoodTags 가 비어 있을 수도 있어(일치 태그 없음) 그때는 화면에서 fallback 을 부여한다.
  */
 enum class CourseMood(val code: String, val label: String) {
     HIP("HIP", "힙한"),

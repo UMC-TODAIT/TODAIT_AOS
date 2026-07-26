@@ -15,11 +15,15 @@ import javax.inject.Singleton
 
 /**
  * 저장된 accessToken을 요청 헤더(Authorization: Bearer ...)에 자동으로 붙이고,
- * 인증 실패(AUTH401) 응답을 받으면 refreshToken으로 재발급을 한 번 시도한 뒤 원래 요청을 재시도한다.
+ * 인증 실패(AUTH401/AUTH403) 응답을 받으면 refreshToken으로 재발급을 한 번 시도한 뒤 원래 요청을 재시도한다.
  *
- * ⚠️ 공통 API 규약(global 도메인 명세) 기준, 서버는 인증 실패도 HTTP 상태 코드가 아니라
- * **HTTP 200 + body의 `isSuccess:false, code:"AUTH401"`**로 내려준다. 그래서 OkHttp의
- * response.code(HTTP 상태)만 보면 이 로직이 절대 안 걸린다 — 반드시 body를 들여다봐서 판단해야 한다.
+ * ⚠️ 공통 API 규약(global 도메인 명세) 기준:
+ * - AUTH401(HTTP 401) = 인증 정보 없음(헤더 누락 등)
+ * - AUTH403(HTTP 403) = **유효하지 않거나 만료된 accessToken** → 재발급 대상이 여기다
+ * - 도메인별 403(COURSE403 등) = 리소스 소유권 문제라 재발급해도 소용없으므로 트리거하지 않는다
+ *
+ * HTTP 상태 코드와 body의 code를 함께 확인한다 — 서버가 상태 코드를 정확히 내려주지 않는 경우에도
+ * body의 code로 판단할 수 있어야 하기 때문이다.
  *
  * 재발급도 실패하면(refreshToken 자체가 만료/폐기됨) 원래 응답을 그대로 반환한다 —
  * 재로그인 유도(로그인 화면 이동 등)는 이 Interceptor가 아니라 상위 레이어(예: 공통 에러 핸들러)에서 처리한다.
@@ -79,19 +83,18 @@ class AuthInterceptor @Inject constructor(
     }
 
     /**
-     * peekBody로 스트림을 소비하지 않고 body를 미리 들여다봐서 accessToken 만료(AUTH401)인지 판단한다.
-     * 혹시 나중에 서버가 진짜 HTTP 401을 내려주게 바뀌어도 대비해 response.code도 같이 확인한다.
+     * peekBody로 스트림을 소비하지 않고 body를 미리 들여다봐서 accessToken 만료(AUTH401/AUTH403)인지 판단한다.
      *
-     * 전역 공통 규약(global 도메인 명세) 기준:
-     * - AUTH401 = 인증 필요(헤더 없음 또는 만료/무효 토큰) → 재발급 트리거
-     * - AUTH403 = 권한 없음(로그인은 됐고 남의 리소스 접근) → 재발급해도 소용없으므로 트리거하지 않음
+     * HTTP 403은 도메인별 소유권 오류(COURSE403 등)로도 내려오므로, 상태 코드만 보고 재발급하지 않고
+     * body의 code가 AUTH403일 때만 트리거한다. 401은 인증 체계 오류 전용이라 상태 코드로도 판단한다.
      */
     private fun isAuthExpiredResponse(response: Response): Boolean {
         if (response.code == 401) return true
+        if (response.code != 403 && response.code != 200) return false
         return runCatching {
             val json = response.peekBody(PEEK_BODY_MAX_BYTES).string()
             val parsed = gson.fromJson(json, BaseResponse::class.java)
-            !parsed.isSuccess && parsed.code == "AUTH401"
+            !parsed.isSuccess && (parsed.code == CODE_AUTH_401 || parsed.code == CODE_AUTH_403)
         }.getOrDefault(false)
     }
 
@@ -107,7 +110,7 @@ class AuthInterceptor @Inject constructor(
         refreshClient.newCall(request).execute().use { res ->
             val json = res.body?.string() ?: return null
             val parsed = gson.fromJson(json, BaseResponse::class.java)
-            // 재발급 실패(AUTH401/403/410 등)도 HTTP 200으로 내려올 수 있으므로 isSuccess로 판단한다.
+            // 재발급 실패는 HTTP 4xx로 오지만, 상태 코드와 무관하게 body의 isSuccess로 판단한다.
             if (!parsed.isSuccess) return null
             @Suppress("UNCHECKED_CAST")
             val result = parsed.result as? Map<String, Any?>
@@ -118,5 +121,7 @@ class AuthInterceptor @Inject constructor(
 
     private companion object {
         const val PEEK_BODY_MAX_BYTES = 2048L
+        const val CODE_AUTH_401 = "AUTH401"
+        const val CODE_AUTH_403 = "AUTH403"
     }
 }

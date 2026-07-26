@@ -103,7 +103,10 @@ fun BasePlaceScreen(
             onSearch = viewModel::onSearch,
             onClearSearch = viewModel::onClearSearch,
             // 카드 본문 탭 → 장소 상세 화면 진입 (기획 문서 기준).
-            onPlaceClick = { place -> onNavigateToDetail(place.placeId) },
+            // 내부 DB에 없는 카카오 검색 결과(placeId 없음)나 detailAvailable=false 인 장소는 상세가 없다.
+            onPlaceClick = { place ->
+                place.placeId?.takeIf { place.detailAvailable }?.let(onNavigateToDetail)
+            },
             // 카드 우상단 '+' → 기준 장소 선택.
             onSelectPlace = viewModel::onSelectPlace,
             // 헤더 체크 → 확정 알럿.
@@ -198,7 +201,7 @@ private fun BasePlaceContent(
 
                     is PlaceListState.Success -> PlaceList(
                         places = listState.places,
-                        selectedPlaceId = state.selectedPlace?.placeId,
+                        selectedPlaceKey = state.selectedPlace?.key,
                         onPlaceClick = onPlaceClick,
                         onSelectPlace = onSelectPlace,
                     )
@@ -345,7 +348,8 @@ private val placeDecorations = listOf(
 @Composable
 private fun PlaceList(
     places: List<PlaceUiModel>,
-    selectedPlaceId: Long?,
+    // 내부 미등록 장소도 섞이므로 placeId 가 아니라 PlaceUiModel.key 로 비교한다.
+    selectedPlaceKey: String?,
     onPlaceClick: (PlaceUiModel) -> Unit,
     onSelectPlace: (PlaceUiModel) -> Unit,
 ) {
@@ -354,11 +358,11 @@ private fun PlaceList(
         contentPadding = PaddingValues(bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {
-        itemsIndexed(places, key = { _, place -> place.placeId }) { index, place ->
+        itemsIndexed(places, key = { _, place -> place.key }) { index, place ->
             PlaceCard(
                 place = place,
                 decorationRes = placeDecorations[index % placeDecorations.size],
-                isSelected = place.placeId == selectedPlaceId,
+                isSelected = place.key == selectedPlaceKey,
                 onClick = { onPlaceClick(place) },
                 onSelect = { onSelectPlace(place) },
             )

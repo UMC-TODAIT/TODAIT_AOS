@@ -54,9 +54,9 @@ import com.umc.todait.feature.course.base_place.PlaceUiModel
 import com.umc.todait.feature.course.compose.CourseMood
 import com.umc.todait.ui.component.CommonDialog
 import com.umc.todait.ui.component.CourseSaveDialog
-import com.umc.todait.ui.component.HeaderBackButton
 import com.umc.todait.ui.component.HeaderCheckButton
 import com.umc.todait.ui.component.HeaderCircleButton
+import com.umc.todait.ui.component.ScreenTopBar
 import com.umc.todait.ui.theme.CourseActiveGradientEnd
 import com.umc.todait.ui.theme.CourseActiveGradientStart
 import com.umc.todait.ui.theme.CourseCalmGradientEnd
@@ -178,10 +178,12 @@ private fun CourseSaveContent(
             .fillMaxSize()
             .background(Cream),
     ) {
-        CourseSaveTopBar(
+        ScreenTopBar(
             title = stringResource(R.string.course_save_title),
             onBack = onBack,
-            onSave = onSave,
+            backContentDescription = stringResource(R.string.course_save_back),
+            onConfirm = onSave,
+            confirmContentDescription = stringResource(R.string.course_save_confirm),
         )
 
         Column(
@@ -219,46 +221,6 @@ private fun CourseSaveContent(
             Spacer(Modifier.height(LABEL_GAP))
             CourseRoutePreview(places = places)
         }
-    }
-}
-
-/** 헤더: 좌측 뒤로가기, 가운데 타이틀, 우측 저장(✓). 아래 구분선까지 포함한다. */
-@Composable
-private fun CourseSaveTopBar(
-    title: String,
-    onBack: () -> Unit,
-    onSave: () -> Unit,
-) {
-    Column(modifier = Modifier.fillMaxWidth().background(Cream)) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 11.dp),
-        ) {
-            HeaderBackButton(
-                modifier = Modifier.align(Alignment.CenterStart),
-                onClick = onBack,
-                contentDescription = stringResource(R.string.course_save_back),
-            )
-            Text(
-                text = title,
-                modifier = Modifier.align(Alignment.Center),
-                style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Medium),
-                color = Gray800,
-            )
-            HeaderCheckButton(
-                modifier = Modifier.align(Alignment.CenterEnd),
-                onClick = onSave,
-                contentDescription = stringResource(R.string.course_save_confirm),
-            )
-        }
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = SCREEN_PADDING)
-                .height(1.dp)
-                .background(DividerLine),
-        )
     }
 }
 

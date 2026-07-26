@@ -1,6 +1,8 @@
 package com.umc.todait.feature.course.place_detail
 
 import com.umc.todait.feature.course.data.dto.PlaceDetailDto
+import com.umc.todait.feature.course.data.dto.PlaceMenuDto
+import java.text.DecimalFormat
 
 /**
  * 장소 상세 화면(와이어프레임: 장소카드클릭_기본)의 UI 상태.
@@ -24,10 +26,6 @@ sealed interface PlaceDetailState {
  * (컨벤션 §5: DTO 는 data 안에서만 사용)
  *
  * 명세 정책상 별점/평점/내부 점수는 담지 않는다.
- *
- * ⚠️ 디자인의 '영업중·라스트오더'([openStatus]/[lastOrderText])와 '메뉴'([menus]) 섹션은
- * 현재 PlaceDetailDto 에 필드가 없어 [toUiModel] 에서 비워둔다(각각 null / 빈 리스트).
- * BE 스펙 확정 시 매핑만 채우면 화면이 그대로 노출한다. (TODO(BE 죠))
  */
 data class PlaceDetailUiModel(
     val placeId: Long,
@@ -37,8 +35,10 @@ data class PlaceDetailUiModel(
     // 도로명 주소 우선, 없으면 지번 주소.
     val address: String,
     val phone: String?,
-    // 캐러셀에 노출할 이미지 URL. images(displayOrder 정렬) 우선, 없으면 defaultImageUrl.
+    // 캐러셀에 노출할 이미지 URL(MAIN 이미지). 비어 있으면 defaultImageUrl 로 대체한다.
     val imageUrls: List<String>,
+    // "내부 사진" 섹션 전용 이미지. 비어 있으면 섹션을 숨긴다.
+    val interiorImageUrls: List<String> = emptyList(),
     // 추천 이유(예: "현재 위치와 가까워요"). 없으면 null.
     val recommendReason: String?,
     // 분위기/음식 해시태그(예: "#낭만적인", "#디저트").
@@ -65,23 +65,38 @@ data class MenuUiItem(
 fun PlaceDetailDto.toUiModel(): PlaceDetailUiModel = PlaceDetailUiModel(
     placeId = placeId,
     name = name,
-    categoryLabel = listOfNotNull(category, subCategory?.takeIf { it.isNotBlank() })
+    categoryLabel = listOfNotNull(placeCategory.name, subCategory?.takeIf { it.isNotBlank() })
         .joinToString(" · "),
     address = roadAddress?.takeIf { it.isNotBlank() } ?: address,
     phone = phone,
-    imageUrls = images
-        .sortedBy { it.displayOrder }
-        .map { it.imageUrl }
-        .ifEmpty { listOfNotNull(defaultImageUrl?.takeIf { it.isNotBlank() }) },
-    recommendReason = recommendReason?.takeIf { it.isNotBlank() },
+    imageUrls = imageUrls.ifEmpty { listOfNotNull(defaultImageUrl?.takeIf { it.isNotBlank() }) },
+    interiorImageUrls = interiorImageUrls,
+    recommendReason = defaultRecommendReason?.takeIf { it.isNotBlank() },
     // 음식 카테고리 + 분위기 태그를 해시태그로. (중복 없이 순서 유지)
-    hashTags = (foodCategories + moodTags)
+    hashTags = (foodCategories.map { it.name } + moodTags.map { it.name })
         .map { it.trim() }
         .filter { it.isNotBlank() }
         .distinct()
         .map { "#$it" },
-    // TODO(BE 죠): 영업시간/메뉴 필드가 명세에 추가되면 openStatus·lastOrderText·menus 매핑.
-    openStatus = null,
-    lastOrderText = null,
-    menus = emptyList(),
+    openStatus = businessStatus?.toOpenStatusLabel(),
+    lastOrderText = lastOrderTime?.takeIf { it.isNotBlank() }?.let { "${it}에 라스트 오더" },
+    menus = menus.map { it.toUiItem() },
 )
+
+/** 서버가 계산해 내려주는 영업 상태(OPEN/CLOSED) → 화면 라벨. 알 수 없는 값이면 표시하지 않는다. */
+private fun String.toOpenStatusLabel(): String? = when (this) {
+    BUSINESS_STATUS_OPEN -> "영업중"
+    BUSINESS_STATUS_CLOSED -> "영업종료"
+    else -> null
+}
+
+/** 메뉴 DTO → 화면 아이템. 가격이 null 이면 가격 변동 메뉴라 "변동"으로 표시한다. */
+private fun PlaceMenuDto.toUiItem(): MenuUiItem = MenuUiItem(
+    name = name,
+    priceLabel = price?.let { "${PRICE_FORMAT.format(it)}원" } ?: "변동",
+    imageUrl = imageUrl,
+)
+
+private const val BUSINESS_STATUS_OPEN = "OPEN"
+private const val BUSINESS_STATUS_CLOSED = "CLOSED"
+private val PRICE_FORMAT = DecimalFormat("#,###")

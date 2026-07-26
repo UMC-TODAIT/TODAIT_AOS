@@ -96,11 +96,11 @@ fun SelectedPlacesScreen(
         val baseOffset = if (hasBase) 1 else 0
 
         val lazyListState = rememberLazyListState()
-        // 드래그로 위치가 바뀌면 placeId(key)로 selectedPlaces 인덱스를 찾아 onMovePlace 호출.
+        // 드래그로 위치가 바뀌면 PlaceUiModel.key 로 selectedPlaces 인덱스를 찾아 onMovePlace 호출.
         val reorderableState = rememberReorderableLazyListState(lazyListState) { from, to ->
             val selected = viewModel.uiState.value.selectedPlaces
-            val fromIdx = selected.indexOfFirst { it.placeId == from.key }
-            val toIdx = selected.indexOfFirst { it.placeId == to.key }
+            val fromIdx = selected.indexOfFirst { it.key == from.key }
+            val toIdx = selected.indexOfFirst { it.key == to.key }
             if (fromIdx in selected.indices && toIdx in selected.indices) {
                 viewModel.onMovePlace(fromIdx, toIdx)
             }
@@ -147,8 +147,8 @@ fun SelectedPlacesScreen(
                 }
             }
             // 담은 장소(드래그로 순서 변경). 배지 순번은 기준 장소가 있으면 2부터.
-            itemsIndexed(uiState.selectedPlaces, key = { _, place -> place.placeId }) { index, place ->
-                ReorderableItem(reorderableState, key = place.placeId) { isDragging ->
+            itemsIndexed(uiState.selectedPlaces, key = { _, place -> place.key }) { index, place ->
+                ReorderableItem(reorderableState, key = place.key) { isDragging ->
                     SelectedPlaceRow(
                         place = place,
                         isBase = false,

@@ -54,6 +54,7 @@ import com.umc.todait.feature.course.base_place.PlaceUiModel
 import com.umc.todait.feature.course.compose.CourseMood
 import com.umc.todait.ui.component.CommonDialog
 import com.umc.todait.ui.component.CourseSaveDialog
+import com.umc.todait.ui.component.HeaderCircleButton
 import com.umc.todait.ui.theme.CourseActiveGradientEnd
 import com.umc.todait.ui.theme.CourseActiveGradientStart
 import com.umc.todait.ui.theme.CourseCalmGradientEnd
@@ -266,26 +267,6 @@ private fun CourseSaveTopBar(
                 .height(1.dp)
                 .background(DividerLine),
         )
-    }
-}
-
-/** 시안의 헤더 버튼: Cream 원 + Gray-200 테두리 (node 1678:9035). */
-@Composable
-private fun HeaderCircleButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
-) {
-    Box(
-        modifier = modifier
-            .size(40.dp)
-            .clip(CircleShape)
-            .background(Cream)
-            .border(1.dp, Gray200, CircleShape)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        content()
     }
 }
 

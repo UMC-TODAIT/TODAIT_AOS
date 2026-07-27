@@ -44,7 +44,6 @@ import androidx.compose.ui.unit.sp
 import com.umc.todait.R
 import com.umc.todait.ui.theme.BgGradientBottom
 import com.umc.todait.ui.theme.BgGradientTop
-import com.umc.todait.ui.theme.Gray300
 import com.umc.todait.ui.theme.Gray500
 import com.umc.todait.ui.theme.Gray900
 import com.umc.todait.ui.theme.Pink600
@@ -198,20 +197,22 @@ private fun WelcomeIllustration(modifier: Modifier = Modifier) {
     }
 }
 
-/** 정적 인디케이터(장식용) — 상태에 따라 바뀌지 않는다. */
+/** 정적 인디케이터(장식용) — 상태에 따라 바뀌지 않는다. Pink-600을 점점 옅게 그라데이션처럼 표현한다. */
 @Composable
 private fun DotsIndicator(modifier: Modifier = Modifier) {
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        repeat(3) { index ->
+        DOT_ALPHAS.forEach { dotAlpha ->
             Box(
                 modifier = Modifier
                     .size(8.dp)
                     .clip(CircleShape)
-                    .background(if (index == 0) Pink600 else Gray300),
+                    .background(Pink600.copy(alpha = dotAlpha)),
             )
         }
     }
 }
+
+private val DOT_ALPHAS = listOf(1f, 0.6f, 0.35f)
 
 @Preview(showBackground = true)
 @Composable

@@ -8,6 +8,7 @@ import java.net.URLEncoder
  */
 sealed class Screen(val route: String) {
     // Auth (무즈/김규리)
+    data object Splash : Screen("splash")                       // 앱 최초 진입 — 저장된 토큰 확인 후 홈/로그인으로 자동 분기
     data object Login : Screen("login")
     data object EmailLogin : Screen("email_login")             // 첫화면 "이메일로 로그인/회원가입" 클릭 시
     data object TermsAgreement : Screen("terms_agreement/{flow}?token={token}") { // 로그인 화면(카카오/구글) 또는 이메일 로그인 화면(회원가입) 진입 시

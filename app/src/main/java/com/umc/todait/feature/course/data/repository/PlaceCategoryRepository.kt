@@ -3,6 +3,8 @@ package com.umc.todait.feature.course.data.repository
 import com.umc.todait.core.network.ApiResult
 import com.umc.todait.core.network.safeApiCall
 import com.umc.todait.feature.course.data.dto.PlaceCategoryListResponseDto
+import com.umc.todait.feature.course.data.mock.MockCourse
+import com.umc.todait.feature.course.data.mock.USE_COURSE_MOCK
 import com.umc.todait.feature.course.data.service.PlaceCategoryService
 import javax.inject.Inject
 
@@ -17,7 +19,8 @@ class PlaceCategoryRepository @Inject constructor(
 ) {
 
     /** 장소 대분류 목록 (GET /api/place-categories) */
-    suspend fun getPlaceCategories(): ApiResult<PlaceCategoryListResponseDto> = safeApiCall {
-        placeCategoryService.getPlaceCategories()
+    suspend fun getPlaceCategories(): ApiResult<PlaceCategoryListResponseDto> {
+        if (USE_COURSE_MOCK) return ApiResult.Success(MockCourse.placeCategories)
+        return safeApiCall { placeCategoryService.getPlaceCategories() }
     }
 }

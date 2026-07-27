@@ -130,3 +130,39 @@ com.umc.todait
 - **의존 방향**: `feature → core / ui / navigation` 단방향. feature 간 직접 참조 금지 (필요 시 core로 승격).
 - 한 화면에서만 쓰는 컴포저블은 해당 feature에, **2개 이상 화면에서 쓰이면 `ui/component`로 이동**.
 - DTO는 `data` 패키지 안에서만 사용하고 화면에는 UiModel로 매핑해 전달하는 것을 권장.
+
+## 6. API 응답 / JSON 규약
+
+API 명세서(Notion)의 **"공통 API 오류/빈 상태 처리"** 문서가 기준입니다. 아래는 앱에서 지켜야 할 요약입니다.
+
+### 6.1 공통 응답 구조
+
+성공·실패 모두 `isSuccess` / `code` / `message` / `result` 네 필드를 사용합니다. (`core/network/BaseResponse.kt`)
+
+| 구분 | isSuccess | code 예시 | result |
+| --- | --- | --- | --- |
+| 성공 | `true` | `COMMON200`, `COURSE201`, `PLACE200`, `RECOMMENDATION200` | 데이터 객체 |
+| 실패 | `false` | `AUTH401`, `COURSE404`, `PLACE_SEARCH400`, `KAKAO_API502` | **항상 `null`** |
+
+- **실패는 HTTP 4xx/5xx로 내려옵니다.** HTTP Status와 body의 `code`를 **함께** 확인합니다 — 같은 403이라도 `AUTH403`(토큰 만료 → 재발급)과 `COURSE403`(소유권 없음 → 안내)의 처리가 다릅니다.
+- `COMMON401` / `COMMON403`은 사용하지 않습니다. 인증은 `AUTH401`(인증 정보 없음) / `AUTH403`(토큰 무효·만료)입니다.
+- 429·502(외부 API 한도/연결 실패)와 500은 재시도 안내 대상입니다.
+
+### 6.2 필드 표기
+
+| 대상 | 규칙 | 예시 |
+| --- | --- | --- |
+| JSON 필드명 (Request/Response) | **camelCase** | `courseDraftId`, `placeCategoryCode`, `createdAt` |
+| DB 컬럼 | snake_case | `course_draft_id`, `created_at` |
+| Boolean | 상태가 드러나는 이름, 문자열 금지 | `isRegistered`, `hasNext`, `detailAvailable` |
+| 날짜·시간 | ISO-8601 문자열 | `"2026-07-25T15:30:00"` |
+
+- DB 컬럼명과 JSON 필드명이 항상 같지는 않습니다. (예: `course_draft.status` → `draftStatus`)
+- **DTO의 모든 프로퍼티에 `@SerializedName`을 명시합니다.** R8(난독화)을 켜면 어노테이션 없는 필드는 파싱이 깨집니다.
+
+### 6.3 null과 빈 배열
+
+- 목록 필드는 데이터가 없어도 **빈 배열 `[]`** 로 내려옵니다. `null`이 아닙니다.
+- **빈 배열은 에러 화면이 아니라 빈 상태(Empty) 화면으로 처리합니다.**
+- 단건 상세 리소스가 없으면 404 + 도메인 코드(`PLACE404` 등)로 내려옵니다.
+- 선택적 단일 값은 `null`이 올 수 있습니다. (`memo`, `roadAddress`, `distanceMeters`, 가격 변동 메뉴의 `price` 등)

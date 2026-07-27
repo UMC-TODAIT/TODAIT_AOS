@@ -11,9 +11,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -28,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -145,9 +143,15 @@ private fun EmailLoginContent(
                 trailingIcon = {
                     IconButton(onClick = onTogglePasswordVisibility) {
                         Icon(
-                            imageVector = if (uiState.isPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                            painter = painterResource(
+                                if (uiState.isPasswordVisible) {
+                                    R.drawable.ic_common_password_visible
+                                } else {
+                                    R.drawable.ic_common_password_hidden
+                                },
+                            ),
                             contentDescription = stringResource(R.string.signup_password_visibility_toggle_content_description),
-                            tint = Gray500,
+                            tint = Color.Unspecified,
                         )
                     }
                 },
@@ -195,7 +199,7 @@ private fun EmailLoginContent(
                 color = Pink800,
                 textDecoration = TextDecoration.Underline,
                 modifier = Modifier
-                    .align(Alignment.Start)
+                    .align(Alignment.CenterHorizontally)
                     .clickable(onClick = onSignupClick)
                     .padding(start = 4.dp)
             )

@@ -46,7 +46,7 @@ class SavedCoursesViewModel @Inject constructor(
                         it.copy(
                             isLoading = false,
                             recentCourses = result.data.recentCourses.map { it.toUiModel() },
-                            popularCourses= result.data.popularCourses.map { it.toUiModel() },
+                            popularCourses = result.data.frequentlyViewedCourses.map { it.toUiModel() },
                         )
                     }
                 }

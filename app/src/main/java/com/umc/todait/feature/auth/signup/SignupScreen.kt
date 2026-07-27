@@ -1,5 +1,6 @@
 package com.umc.todait.feature.auth.signup
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -20,8 +21,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -51,6 +50,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.todait.R
+import com.umc.todait.ui.component.HeaderCircleButton
 import com.umc.todait.ui.theme.DisabledButtonGray
 import com.umc.todait.ui.theme.DisabledConfirmGray
 import com.umc.todait.ui.theme.Error
@@ -373,16 +373,14 @@ private fun SignupTopBar(onBackClick: () -> Unit) {
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             contentAlignment = Alignment.Center,
         ) {
-            IconButton(
+            HeaderCircleButton(
                 onClick = onBackClick,
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .size(40.dp),
+                modifier = Modifier.align(Alignment.CenterStart),
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_back_button),
+                Image(
+                    painter = painterResource(R.drawable.ic_common_chevron_left),
                     contentDescription = stringResource(R.string.signup_back_content_description),
-                    tint = Color.Unspecified,
+                    modifier = Modifier.height(16.dp),
                 )
             }
             Text(
@@ -456,9 +454,11 @@ private fun InlinePillButton(text: String, enabled: Boolean, onClick: () -> Unit
 private fun PasswordVisibilityToggle(visible: Boolean, onToggle: () -> Unit) {
     IconButton(onClick = onToggle) {
         Icon(
-            imageVector = if (visible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+            painter = painterResource(
+                if (visible) R.drawable.ic_common_password_visible else R.drawable.ic_common_password_hidden,
+            ),
             contentDescription = stringResource(R.string.signup_password_visibility_toggle_content_description),
-            tint = Gray500,
+            tint = Color.Unspecified,
         )
     }
 }

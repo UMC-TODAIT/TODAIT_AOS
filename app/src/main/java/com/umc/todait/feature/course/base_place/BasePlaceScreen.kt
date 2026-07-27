@@ -25,8 +25,6 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
@@ -40,7 +38,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -58,16 +55,16 @@ import com.umc.todait.R
 import com.umc.todait.core.network.UiError
 import com.umc.todait.ui.component.ErrorContent
 import com.umc.todait.ui.component.LoadingIndicator
+import com.umc.todait.ui.component.ScreenTopBar
 import com.umc.todait.ui.theme.Cream
 import com.umc.todait.ui.theme.Green700
 import com.umc.todait.ui.theme.Gray200
 import com.umc.todait.ui.theme.Gray500
-import com.umc.todait.ui.theme.Gray600
 import com.umc.todait.ui.theme.Gray900
-import com.umc.todait.ui.theme.Pink100
 import com.umc.todait.ui.theme.Pink700
 import com.umc.todait.ui.theme.PlaceCardGradientEnd
 import com.umc.todait.ui.theme.PlaceCardGradientStart
+import com.umc.todait.ui.theme.SearchIconCircle
 import com.umc.todait.ui.theme.TodaitTheme
 import com.umc.todait.ui.theme.White
 
@@ -103,7 +100,10 @@ fun BasePlaceScreen(
             onSearch = viewModel::onSearch,
             onClearSearch = viewModel::onClearSearch,
             // 카드 본문 탭 → 장소 상세 화면 진입 (기획 문서 기준).
-            onPlaceClick = { place -> onNavigateToDetail(place.placeId) },
+            // 내부 DB에 없는 카카오 검색 결과(placeId 없음)나 detailAvailable=false 인 장소는 상세가 없다.
+            onPlaceClick = { place ->
+                place.placeId?.takeIf { place.detailAvailable }?.let(onNavigateToDetail)
+            },
             // 카드 우상단 '+' → 기준 장소 선택.
             onSelectPlace = viewModel::onSelectPlace,
             // 헤더 체크 → 확정 알럿.
@@ -151,7 +151,7 @@ private fun BasePlaceContent(
             .fillMaxSize()
             .background(Cream),
     ) {
-        BasePlaceTopBar(
+        ScreenTopBar(
             title = stringResource(R.string.base_place_title),
             onBack = onBack,
             // 헤더 체크 → 확정(선택 여부에 따라 시스템알럿1/2).
@@ -198,7 +198,7 @@ private fun BasePlaceContent(
 
                     is PlaceListState.Success -> PlaceList(
                         places = listState.places,
-                        selectedPlaceId = state.selectedPlace?.placeId,
+                        selectedPlaceKey = state.selectedPlace?.key,
                         onPlaceClick = onPlaceClick,
                         onSelectPlace = onSelectPlace,
                     )
@@ -209,67 +209,7 @@ private fun BasePlaceContent(
 }
 
 /**
- * 상단 헤더(Pink100 배경). 좌측 뒤로가기, 가운데 타이틀, 우측 확인 버튼.
- */
-@Composable
-private fun BasePlaceTopBar(
-    title: String,
-    onBack: () -> Unit,
-    onConfirm: () -> Unit,
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Pink100)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-    ) {
-        CircleIconButton(
-            modifier = Modifier.align(Alignment.CenterStart),
-            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-            contentDescription = "뒤로가기",
-            onClick = onBack,
-        )
-        Text(
-            text = title,
-            modifier = Modifier.align(Alignment.Center),
-            style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Medium),
-            color = Gray900,
-        )
-        CircleIconButton(
-            modifier = Modifier.align(Alignment.CenterEnd),
-            imageVector = Icons.Filled.Check,
-            contentDescription = "확인",
-            onClick = onConfirm,
-        )
-    }
-}
-
-@Composable
-private fun CircleIconButton(
-    imageVector: ImageVector,
-    contentDescription: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier
-            .size(40.dp)
-            .clip(CircleShape)
-            .background(Gray600)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(
-            imageVector = imageVector,
-            contentDescription = contentDescription,
-            tint = White,
-            modifier = Modifier.size(20.dp),
-        )
-    }
-}
-
-/**
- * 검색창. 흰색 pill 형태 + 좌측 돋보기 아이콘 + placeholder.
+ * 검색창. 흰색 pill 형태 + 좌측 돋보기 아이콘(Gray-100 원 + 글리프) + placeholder.
  */
 @Composable
 private fun SearchBar(
@@ -287,16 +227,12 @@ private fun SearchBar(
         shadowElevation = 4.dp,
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp),
+            // Figma: 돋보기 원이 검색창 좌측에서 7dp, 원과 입력 텍스트 사이 24dp.
+            modifier = Modifier.padding(start = 7.dp, end = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(
-                imageVector = Icons.Filled.Search,
-                contentDescription = null,
-                tint = Gray900,
-                modifier = Modifier.size(20.dp),
-            )
-            Spacer(Modifier.width(10.dp))
+            SearchIcon()
+            Spacer(Modifier.width(24.dp))
             Box(modifier = Modifier.weight(1f)) {
                 if (query.isEmpty()) {
                     Text(
@@ -335,6 +271,26 @@ private fun SearchBar(
     }
 }
 
+/**
+ * 검색창 좌측 돋보기. Figma(node 534:13530/534:13535): Gray-100 원 35dp 위에 18dp 글리프.
+ */
+@Composable
+private fun SearchIcon() {
+    Box(
+        modifier = Modifier
+            .size(35.dp)
+            .clip(CircleShape)
+            .background(SearchIconCircle),
+        contentAlignment = Alignment.Center,
+    ) {
+        Image(
+            painter = painterResource(R.drawable.ic_common_search),
+            contentDescription = null,
+            modifier = Modifier.size(18.dp),
+        )
+    }
+}
+
 // 카드 우측 하단 파스텔 장식(3종)을 순서대로 순환 적용한다. (Figma 목업의 장식 실루엣)
 private val placeDecorations = listOf(
     R.drawable.ic_place_deco_cloud,
@@ -345,7 +301,8 @@ private val placeDecorations = listOf(
 @Composable
 private fun PlaceList(
     places: List<PlaceUiModel>,
-    selectedPlaceId: Long?,
+    // 내부 미등록 장소도 섞이므로 placeId 가 아니라 PlaceUiModel.key 로 비교한다.
+    selectedPlaceKey: String?,
     onPlaceClick: (PlaceUiModel) -> Unit,
     onSelectPlace: (PlaceUiModel) -> Unit,
 ) {
@@ -354,11 +311,11 @@ private fun PlaceList(
         contentPadding = PaddingValues(bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {
-        itemsIndexed(places, key = { _, place -> place.placeId }) { index, place ->
+        itemsIndexed(places, key = { _, place -> place.key }) { index, place ->
             PlaceCard(
                 place = place,
                 decorationRes = placeDecorations[index % placeDecorations.size],
-                isSelected = place.placeId == selectedPlaceId,
+                isSelected = place.key == selectedPlaceKey,
                 onClick = { onPlaceClick(place) },
                 onSelect = { onSelectPlace(place) },
             )

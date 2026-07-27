@@ -3,7 +3,6 @@ package com.umc.todait.feature.course.compose
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -20,8 +19,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -35,7 +32,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -45,12 +41,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.todait.R
 import com.umc.todait.feature.course.base_place.PlaceUiModel
+import com.umc.todait.ui.component.ScreenTopBar
 import com.umc.todait.ui.theme.Cream
-import com.umc.todait.ui.theme.DividerLine
 import com.umc.todait.ui.theme.Gray200
 import com.umc.todait.ui.theme.Gray500
 import com.umc.todait.ui.theme.Gray600
-import com.umc.todait.ui.theme.Gray800
 import com.umc.todait.ui.theme.Gray900
 import com.umc.todait.ui.theme.Pink100
 import com.umc.todait.ui.theme.TodaitTheme
@@ -85,10 +80,11 @@ fun SelectedPlacesScreen(
             .fillMaxSize()
             .background(Cream),
     ) {
-        SelectedPlacesTopBar(
+        ScreenTopBar(
             title = stringResource(R.string.course_compose_title),
             onBack = onBack,
             onConfirm = onNavigateToSave,
+            confirmContentDescription = "확정",
         )
 
         // 기준 장소(있으면)는 고정, 담은 장소들만 드래그로 순서 변경.
@@ -96,11 +92,11 @@ fun SelectedPlacesScreen(
         val baseOffset = if (hasBase) 1 else 0
 
         val lazyListState = rememberLazyListState()
-        // 드래그로 위치가 바뀌면 placeId(key)로 selectedPlaces 인덱스를 찾아 onMovePlace 호출.
+        // 드래그로 위치가 바뀌면 PlaceUiModel.key 로 selectedPlaces 인덱스를 찾아 onMovePlace 호출.
         val reorderableState = rememberReorderableLazyListState(lazyListState) { from, to ->
             val selected = viewModel.uiState.value.selectedPlaces
-            val fromIdx = selected.indexOfFirst { it.placeId == from.key }
-            val toIdx = selected.indexOfFirst { it.placeId == to.key }
+            val fromIdx = selected.indexOfFirst { it.key == from.key }
+            val toIdx = selected.indexOfFirst { it.key == to.key }
             if (fromIdx in selected.indices && toIdx in selected.indices) {
                 viewModel.onMovePlace(fromIdx, toIdx)
             }
@@ -147,8 +143,8 @@ fun SelectedPlacesScreen(
                 }
             }
             // 담은 장소(드래그로 순서 변경). 배지 순번은 기준 장소가 있으면 2부터.
-            itemsIndexed(uiState.selectedPlaces, key = { _, place -> place.placeId }) { index, place ->
-                ReorderableItem(reorderableState, key = place.placeId) { isDragging ->
+            itemsIndexed(uiState.selectedPlaces, key = { _, place -> place.key }) { index, place ->
+                ReorderableItem(reorderableState, key = place.key) { isDragging ->
                     SelectedPlaceRow(
                         place = place,
                         isBase = false,
@@ -160,69 +156,6 @@ fun SelectedPlacesScreen(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun SelectedPlacesTopBar(
-    title: String,
-    onBack: () -> Unit,
-    onConfirm: () -> Unit,
-) {
-    Column(modifier = Modifier.fillMaxWidth().background(Cream)) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            CircleButton(onClick = onBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "뒤로가기",
-                    tint = White,
-                    modifier = Modifier.size(20.dp),
-                )
-            }
-            Text(
-                text = title,
-                style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Medium),
-                color = Gray800,
-            )
-            CircleButton(onClick = onConfirm) {
-                Icon(
-                    imageVector = Icons.Filled.Check,
-                    contentDescription = "확정",
-                    tint = White,
-                    modifier = Modifier.size(20.dp),
-                )
-            }
-        }
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(DividerLine),
-        )
-    }
-}
-
-@Composable
-private fun CircleButton(
-    onClick: () -> Unit,
-    background: Color = Gray600,
-    content: @Composable () -> Unit,
-) {
-    Box(
-        modifier = Modifier
-            .size(40.dp)
-            .clip(CircleShape)
-            .background(background)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        content()
     }
 }
 

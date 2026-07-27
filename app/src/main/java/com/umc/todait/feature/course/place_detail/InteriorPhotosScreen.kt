@@ -74,7 +74,8 @@ fun InteriorPhotosScreen(
             }
 
             is PlaceDetailState.Success -> InteriorPhotosBody(
-                imageUrls = detail.place.imageUrls,
+                // 상단 캐러셀은 MAIN 이미지, 이 화면은 INTERIOR 이미지 전용이다.
+                imageUrls = detail.place.interiorImageUrls,
                 onBack = onBack,
             )
         }

@@ -1,5 +1,6 @@
 package com.umc.todait.feature.auth.terms
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,7 +24,6 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,7 +32,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -43,6 +42,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.todait.R
 import com.umc.todait.feature.auth.data.dto.TermAgreementDto
+import com.umc.todait.ui.component.HeaderCircleButton
 import com.umc.todait.ui.theme.DisabledButtonGray
 import com.umc.todait.ui.theme.Gray300
 import com.umc.todait.ui.theme.Gray500
@@ -174,16 +174,14 @@ private fun TermsAgreementTopBar(onBackClick: () -> Unit) {
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             contentAlignment = Alignment.Center,
         ) {
-            IconButton(
+            HeaderCircleButton(
                 onClick = onBackClick,
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .size(40.dp),
+                modifier = Modifier.align(Alignment.CenterStart),
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_back_button),
+                Image(
+                    painter = painterResource(R.drawable.ic_common_chevron_left),
                     contentDescription = stringResource(R.string.terms_agreement_back_content_description),
-                    tint = Color.Unspecified,
+                    modifier = Modifier.height(16.dp),
                 )
             }
             Text(
@@ -196,14 +194,13 @@ private fun TermsAgreementTopBar(onBackClick: () -> Unit) {
     }
 }
 
-/** 약관 항목 하나를 감싸는 카드(테두리+둥근모서리). 전체동의/개별 약관 모두 같은 스타일을 쓴다. */
+/** 약관 항목 하나를 감싸는 카드(배경 없이 테두리+둥근모서리만). 전체동의/개별 약관 모두 같은 스타일을 쓴다. */
 @Composable
 private fun TermCard(content: @Composable () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(White)
             .border(1.dp, Gray300, RoundedCornerShape(16.dp))
             .padding(horizontal = 16.dp, vertical = 16.dp),
     ) {

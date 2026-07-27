@@ -2,7 +2,9 @@ package com.umc.todait.feature.course.data.repository
 
 import com.umc.todait.core.network.ApiResult
 import com.umc.todait.core.network.safeApiCall
-import com.umc.todait.feature.course.data.dto.PlaceSearchResponseDto
+import com.umc.todait.feature.course.data.dto.PlaceSearchResultDto
+import com.umc.todait.feature.course.data.mock.MockCourse
+import com.umc.todait.feature.course.data.mock.USE_COURSE_MOCK
 import com.umc.todait.feature.course.data.service.SearchService
 import javax.inject.Inject
 
@@ -16,10 +18,11 @@ class SearchRepository @Inject constructor(
     private val searchService: SearchService,
 ) {
 
-    /** 장소명 검색 (GET /api/places/search?keyword=) */
-    suspend fun searchPlacesByName(
-        keyword: String,
-    ): ApiResult<PlaceSearchResponseDto> = safeApiCall {
-        searchService.searchPlacesByName(keyword = keyword)
+    /** 기준 장소 검색 (GET /api/places/search?query=) */
+    suspend fun searchPlaces(
+        query: String,
+    ): ApiResult<PlaceSearchResultDto> {
+        if (USE_COURSE_MOCK) return ApiResult.Success(MockCourse.searchResult(query))
+        return safeApiCall { searchService.searchPlaces(query = query) }
     }
 }

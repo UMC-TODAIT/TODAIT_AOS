@@ -1,0 +1,10 @@
+<!-- 회원가입 완료 화면 장식 문양(왼쪽 아래 별모양). 피그마 정확한 asset로 교체(#60). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="81dp"
+    android:height="81dp"
+    android:viewportWidth="81"
+    android:viewportHeight="81">
+    <path
+        android:pathData="M46.9746,25.9551L66.4033,8.74414L75.0557,18.5117L57.6533,33.9268H80.9014V46.9756H57.6553L75.0557,62.3906L66.4033,72.1572L46.9746,54.9453V80.9014H33.9258V54.9463L14.498,72.1572L5.8457,62.3906L23.2461,46.9756H0V33.9268H23.2471L5.8457,18.5117L14.498,8.74414L33.9258,25.9541V0H46.9746V25.9551Z"
+        android:fillColor="#FFFEE6" />
+</vector>

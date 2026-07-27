@@ -29,6 +29,7 @@ import com.umc.todait.feature.auth.login.LoginScreen
 import com.umc.todait.feature.auth.onboarding.SignupProvider
 import com.umc.todait.feature.auth.onboarding.SocialNicknameScreen
 import com.umc.todait.feature.auth.signup.SignupScreen
+import com.umc.todait.feature.auth.signupcomplete.SignupCompleteScreen
 import com.umc.todait.feature.auth.terms.TermDetailScreen
 import com.umc.todait.feature.auth.terms.TermsAgreementScreen
 import com.umc.todait.feature.auth.terms.TermsFlow
@@ -99,7 +100,7 @@ fun TodaitApp() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination =  Screen.Login.route,
+            startDestination = Screen.Login.route,
             modifier = Modifier.padding(innerPadding),
         ) {
             // ---------- Auth ----------
@@ -212,11 +213,8 @@ fun TodaitApp() {
             ) {
                 SignupScreen(
                     onBackClick = { navController.popBackStack() },
-                    // TODO: SignupCompleteScreen 구현되면 원래대로 Screen.SignupComplete로 되돌리기
-                    //  (README 흐름: 가입완료 → 일정 시간 경과 → 홈). 지금은 SignupComplete가
-                    //  PlaceholderScreen이라 에뮬레이터에서 홈까지 못 가서 임시로 홈 직행.
                     onSignupComplete = {
-                        navController.navigate(Screen.Home.route) {
+                        navController.navigate(Screen.SignupComplete.route) {
                             popUpTo(Screen.Login.route) { inclusive = true }
                         }
                     },
@@ -232,15 +230,22 @@ fun TodaitApp() {
             ) {
                 SocialNicknameScreen(
                     onBackClick = { navController.popBackStack() },
-                    // TODO: 위와 동일 — SignupCompleteScreen 구현되면 되돌리기.
                     onNavigateToComplete = {
-                        navController.navigate(Screen.Home.route) {
+                        navController.navigate(Screen.SignupComplete.route) {
                             popUpTo(Screen.Login.route) { inclusive = true }
                         }
                     },
                 )
             }
-            composable(Screen.SignupComplete.route) { PlaceholderScreen("회원가입 완료") }
+            composable(Screen.SignupComplete.route) {
+                SignupCompleteScreen(
+                    onNavigateToHome = {
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.SignupComplete.route) { inclusive = true }
+                        }
+                    },
+                )
+            }
 
             // ---------- Home ----------
             composable(Screen.Home.route) {

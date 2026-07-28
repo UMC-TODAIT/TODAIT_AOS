@@ -45,6 +45,12 @@
     <string name="signup_complete_button">가입 완료</string>
     <string name="signup_password_visibility_toggle_content_description">비밀번호 표시 전환</string>
 
+    <!-- Signup complete (회원가입 완료) -->
+    <string name="signup_complete_welcome">환영합니다!</string>
+    <string name="signup_complete_brand">투데잇</string>
+    <string name="signup_complete_message">님\n가입이 완료되었습니다.</string>
+    <string name="signup_complete_navigating">잠시 후 홈 화면으로 이동합니다...</string>
+
     <!-- Social signup nickname (소셜 간편가입 닉네임 설정) -->
     <string name="social_nickname_title">닉네임 설정</string>
     <string name="social_nickname_back_content_description">뒤로가기</string>

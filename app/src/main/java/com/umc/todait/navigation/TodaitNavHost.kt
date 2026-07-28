@@ -26,6 +26,7 @@ import com.umc.todait.feature.mypage.compose.MyPageScreen
 import com.umc.todait.feature.mypage.compose.NoticeScreen
 import com.umc.todait.feature.auth.login.EmailLoginScreen
 import com.umc.todait.feature.auth.login.LoginScreen
+import com.umc.todait.feature.auth.splash.SplashScreen
 import com.umc.todait.feature.auth.onboarding.SignupProvider
 import com.umc.todait.feature.auth.onboarding.SocialNicknameScreen
 import com.umc.todait.feature.auth.signup.SignupScreen
@@ -101,11 +102,25 @@ fun TodaitApp() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Login.route,
+            startDestination = Screen.Splash.route,
             modifier = Modifier.padding(innerPadding),
         ) {
             // ---------- Auth ----------
-            // 플로우: 로그인/이메일 로그인 → 약관 동의 → 회원가입(이메일) / 닉네임 설정(소셜) → 가입 완료
+            // 플로우: 스플래시(토큰 확인) → 로그인/이메일 로그인 → 약관 동의 → 회원가입(이메일) / 닉네임 설정(소셜) → 가입 완료
+            composable(Screen.Splash.route) {
+                SplashScreen(
+                    onNavigateToHome = {
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.Splash.route) { inclusive = true }
+                        }
+                    },
+                    onNavigateToLogin = {
+                        navController.navigate(Screen.Login.route) {
+                            popUpTo(Screen.Splash.route) { inclusive = true }
+                        }
+                    },
+                )
+            }
             composable(Screen.Login.route) {
                 val context = LocalContext.current
                 val socialViewModel: SocialLoginViewModel = hiltViewModel()

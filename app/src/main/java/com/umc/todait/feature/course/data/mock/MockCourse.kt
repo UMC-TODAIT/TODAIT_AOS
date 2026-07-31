@@ -1,5 +1,6 @@
 package com.umc.todait.feature.course.data.mock
 
+import com.umc.todait.core.mock.MockImages
 import com.umc.todait.feature.course.data.dto.AreaSummaryDto
 import com.umc.todait.feature.course.data.dto.BasePlaceSummaryDto
 import com.umc.todait.feature.course.data.dto.CourseDraftCreateResponseDto
@@ -41,8 +42,9 @@ internal const val USE_COURSE_MOCK = true
  * - 카테고리별 추천 카드의 matchedMoodTags 로 분위기 6종 색상을 모두 노출
  * - 장소 상세에 메뉴(가격 변동 포함)·내부 사진·영업중/라스트오더 포함
  *
- * ⚠️ 이미지 URL 은 로컬에 목업 사진 에셋이 없어 빈 문자열/빈 배열로 둔다.
- * 카드·캐러셀은 이미지가 없을 때의 그라데이션·플레이스홀더로 렌더된다. (MockHome 과 동일한 방식)
+ * 이미지 URL 은 피그마 예시 사진을 담은 [MockImages] 의 asset 경로를 쓴다. 서버 이미지처럼 Coil 이
+ * 그대로 로드하므로 화면 코드는 손대지 않는다. 단 **메뉴 한 건은 imageUrl = null** 로 남겨
+ * 사진 없는 메뉴의 플레이스홀더 렌더도 함께 확인할 수 있게 했다.
  */
 object MockCourse {
 
@@ -106,6 +108,7 @@ object MockCourse {
                 rank = 1,
                 matchedMoodCount = 2,
                 reason = "선택한 분위기와 잘 어울려요.",
+                imageUrl = MockImages.CAFE_MATCHA_LATTE,
             ),
             hotPlace(
                 placeId = 22,
@@ -117,6 +120,7 @@ object MockCourse {
                 rank = 2,
                 matchedMoodCount = 1,
                 reason = "원하는 음식 취향과 잘 맞아요.",
+                imageUrl = MockImages.CAFE_ICED_COFFEE,
             ),
             hotPlace(
                 placeId = 23,
@@ -128,6 +132,7 @@ object MockCourse {
                 rank = 3,
                 matchedMoodCount = 1,
                 reason = "홍대 추천 장소예요.",
+                imageUrl = MockImages.RESTAURANT_KOREAN,
             ),
             hotPlace(
                 placeId = 24,
@@ -139,6 +144,7 @@ object MockCourse {
                 rank = 4,
                 matchedMoodCount = 0,
                 reason = "성수 추천 장소예요.",
+                imageUrl = MockImages.BAR_COCKTAIL,
             ),
         ),
     )
@@ -167,7 +173,7 @@ object MockCourse {
                 category = categoryRestaurant,
                 subCategory = "양식",
                 isRegistered = true,
-                imageUrl = "",
+                imageUrl = MockImages.CAFE_MATCHA_LATTE,
                 imageType = "PLACE_IMAGE",
                 detailAvailable = true,
             ),
@@ -185,7 +191,7 @@ object MockCourse {
                 category = categoryCafe,
                 subCategory = "디저트 카페",
                 isRegistered = true,
-                imageUrl = "",
+                imageUrl = MockImages.CAFE_ICED_COFFEE,
                 imageType = "PLACE_IMAGE",
                 detailAvailable = true,
             ),
@@ -203,7 +209,8 @@ object MockCourse {
                 category = categoryCafe,
                 subCategory = "카페",
                 isRegistered = false,
-                imageUrl = "",
+                // 내부 미등록 장소라 대표 사진이 없다 → 카테고리 기본 이미지가 내려오는 케이스.
+                imageUrl = MockImages.SHOP_STOREFRONT,
                 imageType = "CATEGORY_DEFAULT",
                 detailAvailable = false,
             ),
@@ -228,27 +235,27 @@ object MockCourse {
         }
         val places = when (placeCategoryCode) {
             "RESTAURANT" -> listOf(
-                recommendedPlace(31, "쥬노이", "서울 마포구 신촌로 42-5", areaHongdae, category, "한식", 1, listOf(moodActive), 380),
-                recommendedPlace(32, "이밥", "서울 마포구 연희로 33", areaYeonnam, category, "한식", 2, listOf(moodCalm), 640),
+                recommendedPlace(31, "쥬노이", "서울 마포구 신촌로 42-5", areaHongdae, category, "한식", 1, listOf(moodActive), 380, MockImages.RESTAURANT_KOREAN),
+                recommendedPlace(32, "이밥", "서울 마포구 연희로 33", areaYeonnam, category, "한식", 2, listOf(moodCalm), 640, MockImages.SHOP_STOREFRONT),
             )
 
             "ACTIVITY" -> listOf(
-                recommendedPlace(41, "라임아트 서울", "서울 마포구 북촌로 10", areaHongdae, category, "전시", 1, listOf(moodModern), 720),
-                recommendedPlace(42, "성수 방탈출", "서울 성동구 아차산로 17", areaSeongsu, category, "방탈출", 2, listOf(moodActive, moodHip), 1400),
+                recommendedPlace(41, "라임아트 서울", "서울 마포구 북촌로 10", areaHongdae, category, "전시", 1, listOf(moodModern), 720, MockImages.ACTIVITY_WORKSHOP),
+                recommendedPlace(42, "성수 방탈출", "서울 성동구 아차산로 17", areaSeongsu, category, "방탈출", 2, listOf(moodActive, moodHip), 1400, MockImages.SHOP_STOREFRONT),
             )
 
             "BAR" -> listOf(
-                recommendedPlace(51, "더바이브올스", "서울 성동구 연무장길 33", areaSeongsu, category, "와인바", 1, listOf(moodRomantic), 900),
-                recommendedPlace(52, "연남 이자카야", "서울 마포구 연남로 25", areaYeonnam, category, "이자카야", 2, listOf(moodHip), 1100),
+                recommendedPlace(51, "더바이브올스", "서울 성동구 연무장길 33", areaSeongsu, category, "와인바", 1, listOf(moodRomantic), 900, MockImages.BAR_COCKTAIL),
+                recommendedPlace(52, "연남 이자카야", "서울 마포구 연남로 25", areaYeonnam, category, "이자카야", 2, listOf(moodHip), 1100, MockImages.RESTAURANT_KOREAN),
             )
 
             else -> listOf(
                 recommendedPlace(
                     61, "Everyday HappyBirthDay", "서울 마포구 연희로 33", areaYeonnam, category, "디저트 카페",
-                    1, listOf(moodRomantic, moodCalm), 420,
+                    1, listOf(moodRomantic, moodCalm), 420, MockImages.CAFE_MATCHA_LATTE,
                 ),
-                recommendedPlace(62, "코이크", "서울 마포구 동교로39길 8", areaYeonnam, category, "디저트 카페", 2, listOf(moodQuiet), 560),
-                recommendedPlace(63, "겸사서울", "서울 마포구 성미산로 184", areaHongdae, category, "브런치 카페", 3, listOf(moodModern), 980),
+                recommendedPlace(62, "코이크", "서울 마포구 동교로39길 8", areaYeonnam, category, "디저트 카페", 2, listOf(moodQuiet), 560, MockImages.CAFE_ICED_COFFEE),
+                recommendedPlace(63, "겸사서울", "서울 마포구 성미산로 184", areaHongdae, category, "브런치 카페", 3, listOf(moodModern), 980, MockImages.RESTAURANT_KOREAN),
             )
         }
         return RecommendedPlaceResultDto(
@@ -274,20 +281,33 @@ object MockCourse {
         longitude = 126.923456,
         phone = "02-1234-5678",
         subCategory = "디저트 카페",
-        defaultImageUrl = null,
+        defaultImageUrl = MockImages.CAFE_MATCHA_LATTE,
         businessStatus = "OPEN",
         lastOrderTime = "20:30",
         placeCategory = categoryCafe,
         primaryFoodCategory = foodDessert,
         foodCategories = listOf(foodDessert, foodWestern),
         moodTags = listOf(moodRomantic, moodCalm),
-        imageUrls = emptyList(),
-        interiorImageUrls = emptyList(),
+        // 상단 캐러셀용 대표 사진. 2장 이상이라 "n / m" 인디케이터·스와이프가 함께 확인된다.
+        imageUrls = listOf(
+            MockImages.CAFE_MATCHA_LATTE,
+            MockImages.CAFE_ICED_COFFEE,
+            MockImages.RESTAURANT_KOREAN,
+        ),
+        // 내부 사진 섹션(2열 메이슨리)용. 홀·짝 컬럼이 모두 채워지도록 짝수로 둔다.
+        interiorImageUrls = listOf(
+            MockImages.SHOP_STOREFRONT,
+            MockImages.CAFE_ICED_COFFEE,
+            MockImages.CAFE_MATCHA_LATTE,
+            MockImages.RESTAURANT_KOREAN,
+            MockImages.ACTIVITY_WORKSHOP,
+            MockImages.BAR_COCKTAIL,
+        ),
         menus = listOf(
-            PlaceMenuDto(placeMenuId = 1, name = "과일 소르베", price = 13000, imageUrl = null),
-            // price = null → 화면에 "변동" 으로 표시된다.
+            PlaceMenuDto(placeMenuId = 1, name = "과일 소르베", price = 13000, imageUrl = MockImages.CAFE_MATCHA_LATTE),
+            // price = null → 화면에 "변동" 으로 표시된다. 사진 없는 메뉴(imageUrl = null) 케이스도 겸한다.
             PlaceMenuDto(placeMenuId = 2, name = "생과일 파르페", price = null, imageUrl = null),
-            PlaceMenuDto(placeMenuId = 3, name = "애몽 소다", price = 7500, imageUrl = null),
+            PlaceMenuDto(placeMenuId = 3, name = "애몽 소다", price = 7500, imageUrl = MockImages.CAFE_ICED_COFFEE),
         ),
         defaultRecommendReason = "감성적인 분위기와 디저트가 잘 어울리는 장소입니다.",
     )
@@ -304,6 +324,7 @@ object MockCourse {
         rank: Int,
         matchedMoodCount: Int,
         reason: String,
+        imageUrl: String,
     ) = HotPlaceDto(
         placeId = placeId,
         name = name,
@@ -314,7 +335,7 @@ object MockCourse {
         area = area,
         category = category,
         subCategory = subCategory,
-        imageUrl = null,
+        imageUrl = imageUrl,
         rank = rank,
         // locationAvailable = false 인 응답이라 거리 관련 필드는 명세대로 null 이다.
         distanceMeters = null,
@@ -335,6 +356,7 @@ object MockCourse {
         rank: Int,
         moodTags: List<MoodTagSummaryDto>,
         distanceMeters: Int,
+        imageUrl: String,
     ) = RecommendedPlaceDto(
         placeId = placeId,
         name = name,
@@ -345,7 +367,7 @@ object MockCourse {
         area = area,
         category = category,
         subCategory = subCategory,
-        imageUrl = null,
+        imageUrl = imageUrl,
         rank = rank,
         distanceMeters = distanceMeters,
         matchedMoodCount = moodTags.size,

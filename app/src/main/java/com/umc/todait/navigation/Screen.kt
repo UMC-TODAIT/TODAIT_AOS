@@ -45,8 +45,14 @@ sealed class Screen(val route: String) {
 
     // Course 생성 플로우
     data object MoodSelect : Screen("course/mood")            // 무즈/김규리
-    data object FoodSelect : Screen("course/food")            // 무즈/김규리
-    data object BasePlace : Screen("course/base_place")       // 티아/강서윤
+    data object FoodSelect : Screen("course/food/{courseDraftId}") { // 무즈/김규리 — 분위기 선택에서 발급된 임시 코스 핸들을 이어받는다.
+        const val ARG_COURSE_DRAFT_ID = "courseDraftId"
+        fun createRoute(courseDraftId: Long) = "course/food/$courseDraftId"
+    }
+    data object BasePlace : Screen("course/base_place/{courseDraftId}") { // 티아/강서윤 — 음식 선택에서 발급된 임시 코스 핸들을 이어받는다.
+        const val ARG_COURSE_DRAFT_ID = "courseDraftId"
+        fun createRoute(courseDraftId: Long) = "course/base_place/$courseDraftId"
+    }
     data object PlaceDetail : Screen("course/place/{placeId}") { // 티아/강서윤 — 장소 카드 탭
         const val ARG_PLACE_ID = "placeId"
         fun createRoute(placeId: Long) = "course/place/$placeId"

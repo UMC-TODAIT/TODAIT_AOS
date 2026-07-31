@@ -81,6 +81,16 @@
     <string name="terms_agreement_check_content_description">동의</string>
     <string name="terms_agreement_detail_content_description">약관 상세 보기</string>
 
+    <!-- Mood select (분위기 선택) -->
+    <string name="mood_select_title">취향 설정</string>
+    <string name="mood_select_headline">오늘 어떤 분위기를 원하시나요?</string>
+    <string name="mood_select_subtitle">원하는 분위기를 최소 %1$d개 이상 선택해주세요.</string>
+
+    <!-- Food select (음식 선택) -->
+    <string name="food_select_title">취향 설정</string>
+    <string name="food_select_headline">어떤 음식을 드시고 싶으신가요?</string>
+    <string name="food_select_subtitle">음식 취향을 최소 %1$d개 이상 선택해주세요.</string>
+
     <!-- Base place (기준 장소 설정) -->
     <string name="base_place_title">기준 장소 설정</string>
     <string name="base_place_search_hint">원하는 장소를 검색해보세요</string>

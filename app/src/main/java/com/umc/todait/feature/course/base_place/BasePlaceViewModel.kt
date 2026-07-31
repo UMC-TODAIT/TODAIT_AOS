@@ -1,12 +1,13 @@
 package com.umc.todait.feature.course.base_place
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.umc.todait.core.network.ApiResult
 import com.umc.todait.core.network.toUiError
-import com.umc.todait.feature.course.data.repository.CourseDraftRepository
 import com.umc.todait.feature.course.data.repository.RecommendationRepository
 import com.umc.todait.feature.course.data.repository.SearchRepository
+import com.umc.todait.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,17 +30,19 @@ import javax.inject.Inject
 class BasePlaceViewModel @Inject constructor(
     private val searchRepository: SearchRepository,
     private val recommendationRepository: RecommendationRepository,
-    private val courseDraftRepository: CourseDraftRepository,
+    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
+
+    // 분위기·음식 선택 화면에서 발급되어 코스 생성 플로우 전체가 공유하는 임시 코스 핸들.
+    private val courseDraftId: Long = checkNotNull(savedStateHandle[Screen.BasePlace.ARG_COURSE_DRAFT_ID]) {
+        "courseDraftId 인자가 필요합니다."
+    }
 
     private val _uiState = MutableStateFlow(BasePlaceUiState())
     val uiState: StateFlow<BasePlaceUiState> = _uiState.asStateFlow()
 
     private val _effect = Channel<BasePlaceEffect>(Channel.BUFFERED)
     val effect = _effect.receiveAsFlow()
-
-    // 주변 핫플 조회에 필요한 임시 코스 핸들.
-    private var courseDraftId: Long? = null
 
     init {
         loadNearbyHotPlaces()
@@ -55,13 +58,7 @@ class BasePlaceViewModel @Inject constructor(
     fun loadNearbyHotPlaces() {
         _uiState.update { it.copy(listState = PlaceListState.Loading) }
         viewModelScope.launch {
-            val draftId = ensureCourseDraftId()
-            if (draftId == null) {
-                _uiState.update { it.copy(listState = PlaceListState.Error(ERROR_DRAFT_REQUIRED)) }
-                return@launch
-            }
-
-            val result = recommendationRepository.getHotPlaces(courseDraftId = draftId)
+            val result = recommendationRepository.getHotPlaces(courseDraftId = courseDraftId)
             _uiState.update { state ->
                 when (result) {
                     is ApiResult.Success -> {
@@ -79,20 +76,6 @@ class BasePlaceViewModel @Inject constructor(
                         state.copy(listState = PlaceListState.Error(result.toUiError().message))
                 }
             }
-        }
-    }
-
-    /**
-     * 임시 코스 핸들 확보.
-     *
-     * TODO(2차): 임시 코스는 원래 코스 생성 진입(분위기 선택) 시점에 만들어 플로우 전체가 공유해야 한다.
-     *  분위기/음식 저장 API 연동 전까지는 이 화면에서 발급해 hot-places 호출 핸들을 확보한다.
-     */
-    private suspend fun ensureCourseDraftId(): Long? {
-        courseDraftId?.let { return it }
-        return when (val result = courseDraftRepository.createCourseDraft()) {
-            is ApiResult.Success -> result.data.courseDraftId.also { courseDraftId = it }
-            is ApiResult.Failure -> null
         }
     }
 
@@ -204,7 +187,6 @@ class BasePlaceViewModel @Inject constructor(
         // 명세 문구(와이어프레임 1.2 예외 상황). core/network 의 UiError.kt 와 동일하게 로직 레이어 상수로 둔다.
         private const val ERROR_UNSUPPORTED_AREA = "현재는 홍대, 연남, 성수 지역만 코스 생성을 지원해요."
         private const val ERROR_NO_COORDINATE = "장소 정보를 불러올 수 없습니다. 다른 장소를 선택해주세요."
-        private const val ERROR_DRAFT_REQUIRED = "코스 생성 정보를 불러오지 못했어요. 다시 시도해주세요."
         private const val EMPTY_NEARBY_MESSAGE = "지금 추천할 수 있는 주변 핫플이 없어요."
         // 검색 결과 없음(와이어프레임: 검색 결과 없음 화면). 디자인상 검색어를 포함하지 않는 일반 문구.
         private const val EMPTY_SEARCH_MESSAGE = "검색 결과가 없어요"

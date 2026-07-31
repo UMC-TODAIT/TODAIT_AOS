@@ -4,7 +4,13 @@ import com.umc.todait.core.mock.MockImages
 import com.umc.todait.feature.course.data.dto.AreaSummaryDto
 import com.umc.todait.feature.course.data.dto.BasePlaceSummaryDto
 import com.umc.todait.feature.course.data.dto.CourseDraftCreateResponseDto
+import com.umc.todait.feature.course.data.dto.CourseDraftFoodCategorySaveResponseDto
+import com.umc.todait.feature.course.data.dto.CourseDraftMoodTagSaveResponseDto
+import com.umc.todait.feature.course.data.dto.FoodCategoryDto
+import com.umc.todait.feature.course.data.dto.FoodCategoryListResponseDto
 import com.umc.todait.feature.course.data.dto.FoodCategorySummaryDto
+import com.umc.todait.feature.course.data.dto.MoodTagDto
+import com.umc.todait.feature.course.data.dto.MoodTagListResponseDto
 import com.umc.todait.feature.course.data.dto.HotPlaceDto
 import com.umc.todait.feature.course.data.dto.HotPlaceResultDto
 import com.umc.todait.feature.course.data.dto.MoodTagSummaryDto
@@ -66,8 +72,20 @@ object MockCourse {
     private val moodModern = MoodTagSummaryDto(moodTagId = 5, code = "MODERN", name = "모던한")
     private val moodCalm = MoodTagSummaryDto(moodTagId = 6, code = "CALM", name = "차분한")
 
-    private val foodDessert = FoodCategorySummaryDto(foodCategoryId = 6, code = "DESSERT", name = "디저트")
+    private val foodKorean = FoodCategorySummaryDto(foodCategoryId = 1, code = "KOREAN", name = "한식")
+    private val foodJapanese = FoodCategorySummaryDto(foodCategoryId = 2, code = "JAPANESE", name = "일식")
     private val foodWestern = FoodCategorySummaryDto(foodCategoryId = 3, code = "WESTERN", name = "양식")
+    private val foodChinese = FoodCategorySummaryDto(foodCategoryId = 4, code = "CHINESE", name = "중식")
+    private val foodSnack = FoodCategorySummaryDto(foodCategoryId = 5, code = "SNACK", name = "분식")
+    private val foodDessert = FoodCategorySummaryDto(foodCategoryId = 6, code = "DESSERT", name = "디저트")
+
+    // 분위기 6종 전체 목록(코드 → 요약) — mood-tags 저장 mock 응답 구성에 사용.
+    private val allMoods =
+        listOf(moodHip, moodQuiet, moodActive, moodRomantic, moodModern, moodCalm)
+
+    // 음식 6종 전체 목록(코드 → 요약) — food-categories 저장 mock 응답 구성에 사용.
+    private val allFoods =
+        listOf(foodKorean, foodJapanese, foodWestern, foodChinese, foodSnack, foodDessert)
 
     // ---------- 임시 코스 (POST /api/course-drafts) ----------
 
@@ -76,6 +94,50 @@ object MockCourse {
         draftStatus = "MOOD_SELECTING",
         expiresAt = null,
         createdAt = "2026-07-26T15:30:00",
+    )
+
+    // ---------- 기준 데이터 조회 (GET /api/mood-tags, GET /api/food-categories) ----------
+
+    /** 분위기 태그 목록. moodTagId·code·name 은 API 명세 확정본과 동일하다. */
+    val moodTags = MoodTagListResponseDto(
+        moodTags = listOf(
+            MoodTagDto(1, "HIP", "힙한", "트렌디하고 감각적인 분위기", 1),
+            MoodTagDto(2, "QUIET", "조용한", "차분하고 대화하기 좋은 분위기", 2),
+            MoodTagDto(3, "ACTIVE", "활발한", "밝고 에너지 있는 분위기", 3),
+            MoodTagDto(4, "ROMANTIC", "로맨틱", "데이트에 어울리는 감성적인 분위기", 4),
+            MoodTagDto(5, "MODERN", "모던한", "깔끔하고 세련된 분위기", 5),
+            MoodTagDto(6, "CALM", "차분한", "편안하고 안정적인 분위기", 6),
+        ),
+    )
+
+    /** 음식 카테고리 목록. 분위기 태그와 달리 명세 미확정이라 id 는 sortOrder 순서를 따른다고 가정한다. */
+    val foodCategories = FoodCategoryListResponseDto(
+        foodCategories = listOf(
+            FoodCategoryDto(1, "KOREAN", "한식", null, 1),
+            FoodCategoryDto(2, "JAPANESE", "일식", null, 2),
+            FoodCategoryDto(3, "WESTERN", "양식", null, 3),
+            FoodCategoryDto(4, "CHINESE", "중식", null, 4),
+            FoodCategoryDto(5, "SNACK", "분식", null, 5),
+            FoodCategoryDto(6, "DESSERT", "디저트", null, 6),
+        ),
+    )
+
+    // ---------- 분위기 태그 저장 (PUT /api/course-drafts/{id}/mood-tags) ----------
+
+    /** [moodTagIds] 로 들어온 id 에 해당하는 요약을 그대로 돌려준다(서버가 저장 후 echo 하는 형태). */
+    fun moodTagsSaveResult(moodTagIds: List<Long>) = CourseDraftMoodTagSaveResponseDto(
+        courseDraftId = courseDraft.courseDraftId,
+        draftStatus = "FOOD_SELECTING",
+        moodTags = allMoods.filter { it.moodTagId in moodTagIds },
+    )
+
+    // ---------- 음식 카테고리 저장 (PUT /api/course-drafts/{id}/food-categories) ----------
+
+    /** [foodCategoryIds] 로 들어온 id 에 해당하는 요약을 그대로 돌려준다. */
+    fun foodCategoriesSaveResult(foodCategoryIds: List<Long>) = CourseDraftFoodCategorySaveResponseDto(
+        courseDraftId = courseDraft.courseDraftId,
+        draftStatus = "BASE_PLACE_SELECTING",
+        foodCategories = allFoods.filter { it.foodCategoryId in foodCategoryIds },
     )
 
     // ---------- 카테고리 탭 (GET /api/place-categories) ----------

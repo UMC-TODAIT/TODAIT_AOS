@@ -3,6 +3,40 @@ package com.umc.todait.feature.course.data.dto
 import com.google.gson.annotations.SerializedName
 
 /**
+ * 분위기 태그 선택 저장 요청(PUT /api/course-drafts/{courseDraftId}/mood-tags).
+ * 최소 2개~최대 6개. 이미 저장된 값 전체를 교체한다(부분 추가 아님).
+ */
+data class MoodTagSaveRequestDto(
+    @SerializedName("moodTagIds") val moodTagIds: List<Long>,
+)
+
+/**
+ * 분위기 태그 선택 저장 result. 최초 저장 시 draftStatus 가 FOOD_SELECTING 으로 전이한다.
+ */
+data class CourseDraftMoodTagSaveResponseDto(
+    @SerializedName("courseDraftId") val courseDraftId: Long,
+    @SerializedName("draftStatus") val draftStatus: String?,
+    @SerializedName("moodTags") val moodTags: List<MoodTagSummaryDto>,
+)
+
+/**
+ * 음식 카테고리 선택 저장 요청(PUT /api/course-drafts/{courseDraftId}/food-categories).
+ * 최소 1개. 이미 저장된 값 전체를 교체한다(부분 추가 아님).
+ */
+data class FoodCategorySaveRequestDto(
+    @SerializedName("foodCategoryIds") val foodCategoryIds: List<Long>,
+)
+
+/**
+ * 음식 카테고리 선택 저장 result. 최초 저장 시 draftStatus 가 BASE_PLACE_SELECTING 으로 전이한다.
+ */
+data class CourseDraftFoodCategorySaveResponseDto(
+    @SerializedName("courseDraftId") val courseDraftId: Long,
+    @SerializedName("draftStatus") val draftStatus: String?,
+    @SerializedName("foodCategories") val foodCategories: List<FoodCategorySummaryDto>,
+)
+
+/**
  * "임시 코스 생성"(POST /api/course-drafts)의 result. (BaseResponse<CourseDraftCreateResponseDto>)
  *
  * 코스 생성 진입 시 발급되는 임시 코스(course-draft) 핸들. 이후 기준/선택 장소 저장·순서 변경·

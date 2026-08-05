@@ -110,15 +110,15 @@ object MockCourse {
         ),
     )
 
-    /** 음식 카테고리 목록. 분위기 태그와 달리 명세 미확정이라 id 는 sortOrder 순서를 따른다고 가정한다. */
+    /** 음식 카테고리 목록. foodCategoryId·code·name 은 API 명세 확정본과 동일하다. */
     val foodCategories = FoodCategoryListResponseDto(
         foodCategories = listOf(
-            FoodCategoryDto(1, "KOREAN", "한식", null, 1),
-            FoodCategoryDto(2, "JAPANESE", "일식", null, 2),
-            FoodCategoryDto(3, "WESTERN", "양식", null, 3),
-            FoodCategoryDto(4, "CHINESE", "중식", null, 4),
-            FoodCategoryDto(5, "SNACK", "분식", null, 5),
-            FoodCategoryDto(6, "DESSERT", "디저트", null, 6),
+            FoodCategoryDto(1, "KOREAN", "한식", "한식 음식 카테고리", 1),
+            FoodCategoryDto(2, "JAPANESE", "일식", "일식 음식 카테고리", 2),
+            FoodCategoryDto(3, "WESTERN", "양식", "양식 음식 카테고리", 3),
+            FoodCategoryDto(4, "CHINESE", "중식", "중식 음식 카테고리", 4),
+            FoodCategoryDto(5, "SNACK", "분식", "분식 음식 카테고리", 5),
+            FoodCategoryDto(6, "DESSERT", "디저트", "디저트 음식 카테고리", 6),
         ),
     )
 

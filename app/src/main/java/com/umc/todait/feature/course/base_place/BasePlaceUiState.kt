@@ -1,5 +1,6 @@
 package com.umc.todait.feature.course.base_place
 
+import com.umc.todait.feature.course.data.dto.ExternalPlaceDto
 import com.umc.todait.feature.course.data.dto.HotPlaceDto
 import com.umc.todait.feature.course.data.dto.RecommendedPlaceDto
 import com.umc.todait.feature.course.data.dto.SearchPlaceDto
@@ -25,6 +26,8 @@ data class BasePlaceUiState(
     val alert: BasePlaceAlert? = null,
     // 확정 알럿 안에서 노출할 예외 안내 문구(지원 지역 외/좌표 없음 등).
     val confirmError: String? = null,
+    // 기준 장소 설정 API 호출 중. 확정 알럿의 [확인] 중복 탭을 막는다.
+    val isConfirming: Boolean = false,
 ) {
     /** 검색어가 없으면 추천 섹션, 있으면 검색 결과 섹션. */
     val isSearching: Boolean get() = searchQuery.isNotBlank()
@@ -75,6 +78,21 @@ data class PlaceUiModel(
     val externalPlaceId: String? = null,
     // 장소 상세 화면으로 진입할 수 있는지. false 면 카드 탭을 무시한다.
     val detailAvailable: Boolean = true,
+    // --- 아래는 화면에 그리지 않고 "기준 장소 설정"(PATCH .../base-place) 요청에만 쓰는 값들이다. ---
+    // 지번 주소. 화면 표시용 [address] 는 도로명 우선이라 원본을 따로 들고 있어야 한다(요청의 address 는 지번).
+    val jibunAddress: String = "",
+    val roadAddress: String? = null,
+    // 지원 지역 코드(HONGDAE/YEONNAM/SEONGSU). 서버 응답 값을 그대로 되돌려 보낸다.
+    val areaCode: String = "",
+    // 장소 대분류 코드(CAFE/RESTAURANT/ACTIVITY/BAR). 서버 응답 값을 그대로 되돌려 보낸다.
+    val categoryCode: String = "",
+    val subCategory: String? = null,
+    val phone: String? = null,
+    // 카카오 장소 상세 페이지 URL.
+    val sourceUrl: String? = null,
+    // 임시 코스에 담긴 뒤 서버가 부여한 연결 행 ID(course_draft_place.id).
+    // 순서 변경 API 는 placeId 가 아니라 이 값을 쓴다. 담기 전이면 null.
+    val courseDraftPlaceId: Long? = null,
 ) {
     /** 목록 key·선택 비교용 식별자. 내부 장소는 placeId, 미등록 장소는 외부 ID를 사용한다. */
     val key: String get() = placeId?.toString() ?: "external:$externalPlaceId"
@@ -100,7 +118,45 @@ fun SearchPlaceDto.toUiModel(): PlaceUiModel = PlaceUiModel(
     longitude = longitude,
     externalPlaceId = externalPlaceId,
     detailAvailable = detailAvailable,
+    jibunAddress = address,
+    roadAddress = roadAddress,
+    areaCode = area.code,
+    categoryCode = category.code,
+    subCategory = subCategory,
+    phone = phone,
+    sourceUrl = sourceUrl,
 )
+
+/**
+ * 화면 모델 → 기준 장소 설정 요청의 externalPlace.
+ *
+ * 내부 DB 미등록 장소([PlaceUiModel.placeId] 가 null)일 때만 쓴다. 등록된 장소는 placeId 로 보낸다.
+ * areaCode·categoryCode 는 앱이 주소/카테고리를 변환한 값이 아니라 **검색 API 응답 값 그대로**다.
+ *
+ * 필수값(sourcePlaceId·areaCode·categoryCode)이 비어 있으면 서버가 400 을 주므로 null 을 돌려준다.
+ */
+fun PlaceUiModel.toExternalPlaceDto(): ExternalPlaceDto? {
+    val sourcePlaceId = externalPlaceId?.takeIf { it.isNotBlank() } ?: return null
+    if (areaCode.isBlank() || categoryCode.isBlank()) return null
+    return ExternalPlaceDto(
+        dataSourceCode = DATA_SOURCE_KAKAO,
+        sourcePlaceId = sourcePlaceId,
+        name = name,
+        // 명세상 address 는 지번 주소다. 화면 표시용 address(도로명 우선)를 그대로 보내면 안 된다.
+        address = jibunAddress.takeIf { it.isNotBlank() } ?: address,
+        roadAddress = roadAddress,
+        latitude = latitude,
+        longitude = longitude,
+        areaCode = areaCode,
+        categoryCode = categoryCode,
+        subCategory = subCategory,
+        phone = phone,
+        sourceUrl = sourceUrl,
+    )
+}
+
+/** 외부 장소 데이터 출처 코드. MVP 는 카카오만 허용한다. */
+private const val DATA_SOURCE_KAKAO = "KAKAO"
 
 /**
  * 주변 핫플 DTO → 화면 모델.
@@ -118,6 +174,11 @@ fun HotPlaceDto.toUiModel(): PlaceUiModel = PlaceUiModel(
     latitude = latitude,
     longitude = longitude,
     detailAvailable = detailAvailable,
+    jibunAddress = address,
+    roadAddress = roadAddress,
+    areaCode = area.code,
+    categoryCode = category.code,
+    subCategory = subCategory,
 )
 
 /**
@@ -136,4 +197,9 @@ fun RecommendedPlaceDto.toUiModel(): PlaceUiModel = PlaceUiModel(
     longitude = longitude,
     moodTags = matchedMoodTags.map { it.name },
     detailAvailable = detailAvailable,
+    jibunAddress = address,
+    roadAddress = roadAddress,
+    areaCode = area.code,
+    categoryCode = category.code,
+    subCategory = subCategory,
 )

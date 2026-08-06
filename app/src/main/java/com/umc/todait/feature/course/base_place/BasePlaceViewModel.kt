@@ -171,23 +171,70 @@ class BasePlaceViewModel @Inject constructor(
     }
 
     /**
-     * 확정 알럿 [확인]. 지원 지역/좌표를 검증하고 통과하면 코스 구성하기로 이동한다.
-     * (임시 코스 세션 저장·기준 장소 주변 추천 조회는 세션 API 연동 시 처리 — 아래 TODO)
+     * 확정 알럿 [확인]. 지원 지역/좌표를 검증한 뒤 기준 장소를 임시 코스에 저장하고
+     * (PATCH /api/course-drafts/{courseDraftId}/base-place) 코스 구성하기로 이동한다.
+     *
+     * 저장에 성공하면 임시 코스 상태가 BASE_PLACE_SELECTING → PLACE_SELECTING 으로 넘어가,
+     * 다음 화면의 카테고리별 추천 조회가 가능해진다.
      */
     fun onConfirmSelection() {
-        val place = _uiState.value.selectedPlace ?: return
+        val state = _uiState.value
+        val place = state.selectedPlace ?: return
+        if (state.isConfirming) return
+
         when {
-            !place.hasCoordinate() ->
+            !place.hasCoordinate() -> {
                 _uiState.update { it.copy(confirmError = ERROR_NO_COORDINATE) }
+                return
+            }
 
             // 추천 장소는 지원 지역 내에서만 내려오므로 areaName 이 비어 있으면(추천 출처) 검증을 건너뛴다.
-            place.areaName.isNotBlank() && place.areaName !in SUPPORTED_AREAS ->
+            place.areaName.isNotBlank() && place.areaName !in SUPPORTED_AREAS -> {
                 _uiState.update { it.copy(confirmError = ERROR_UNSUPPORTED_AREA) }
+                return
+            }
+        }
 
-            else -> {
-                // TODO(BE 죠): 기준 장소(위도/경도/카테고리/지역)를 임시 코스 세션에 저장 후 이동.
-                _uiState.update { it.copy(alert = null, confirmError = null) }
-                viewModelScope.launch { _effect.send(BasePlaceEffect.NavigateToCompose) }
+        _uiState.update { it.copy(isConfirming = true, confirmError = null) }
+        viewModelScope.launch {
+            val draftId = ensureCourseDraftId()
+            if (draftId == null) {
+                _uiState.update { it.copy(isConfirming = false, confirmError = ERROR_DRAFT_REQUIRED) }
+                return@launch
+            }
+
+            val result = if (place.placeId != null) {
+                // 내부 DB 에 이미 있는 장소(주변 핫플·운영자 등록·등록된 카카오 장소).
+                courseDraftRepository.setBasePlace(courseDraftId = draftId, placeId = place.placeId)
+            } else {
+                // 내부 미등록 카카오 검색 장소 → externalPlace 로 보내면 서버가 place 를 만들어 준다.
+                val externalPlace = place.toExternalPlaceDto()
+                if (externalPlace == null) {
+                    _uiState.update { it.copy(isConfirming = false, confirmError = ERROR_NO_PLACE_INFO) }
+                    return@launch
+                }
+                courseDraftRepository.setBasePlaceFromExternal(
+                    courseDraftId = draftId,
+                    externalPlace = externalPlace,
+                )
+            }
+
+            when (result) {
+                is ApiResult.Success -> {
+                    _uiState.update { it.copy(alert = null, confirmError = null, isConfirming = false) }
+                    _effect.send(
+                        BasePlaceEffect.NavigateToCompose(
+                            courseDraftId = draftId,
+                            // 카카오 검색 장소를 새로 등록한 경우에도 서버가 만든 내부 placeId 가 온다.
+                            basePlaceId = result.data.basePlace.placeId,
+                        ),
+                    )
+                }
+
+                is ApiResult.Failure ->
+                    _uiState.update {
+                        it.copy(isConfirming = false, confirmError = result.toUiError().message)
+                    }
             }
         }
     }
@@ -204,6 +251,8 @@ class BasePlaceViewModel @Inject constructor(
         // 명세 문구(와이어프레임 1.2 예외 상황). core/network 의 UiError.kt 와 동일하게 로직 레이어 상수로 둔다.
         private const val ERROR_UNSUPPORTED_AREA = "현재는 홍대, 연남, 성수 지역만 코스 생성을 지원해요."
         private const val ERROR_NO_COORDINATE = "장소 정보를 불러올 수 없습니다. 다른 장소를 선택해주세요."
+        // 미등록 장소인데 externalPlace 필수값(외부 ID·지역·카테고리)이 비어 서버로 보낼 수 없는 경우.
+        private const val ERROR_NO_PLACE_INFO = "이 장소는 기준 장소로 설정할 수 없어요. 다른 장소를 선택해주세요."
         private const val ERROR_DRAFT_REQUIRED = "코스 생성 정보를 불러오지 못했어요. 다시 시도해주세요."
         private const val EMPTY_NEARBY_MESSAGE = "지금 추천할 수 있는 주변 핫플이 없어요."
         // 검색 결과 없음(와이어프레임: 검색 결과 없음 화면). 디자인상 검색어를 포함하지 않는 일반 문구.
@@ -214,5 +263,14 @@ class BasePlaceViewModel @Inject constructor(
 
 /** 화면 밖으로 나가는 일회성 효과(네비게이션 등). */
 sealed interface BasePlaceEffect {
-    data object NavigateToCompose : BasePlaceEffect
+    /**
+     * 기준 장소 저장 성공 → 코스 구성하기로 이동.
+     *
+     * 코스 구성 이후 단계(추천 조회·순서 설정·저장)가 모두 [courseDraftId] 를 경로 변수로 쓰므로
+     * 여기서 확정된 임시 코스 핸들과 기준 장소 id 를 함께 넘긴다.
+     */
+    data class NavigateToCompose(
+        val courseDraftId: Long,
+        val basePlaceId: Long,
+    ) : BasePlaceEffect
 }

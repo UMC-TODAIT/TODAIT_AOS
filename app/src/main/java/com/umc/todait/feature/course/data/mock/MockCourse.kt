@@ -2,9 +2,17 @@ package com.umc.todait.feature.course.data.mock
 
 import com.umc.todait.core.mock.MockImages
 import com.umc.todait.feature.course.data.dto.AreaSummaryDto
+import com.umc.todait.feature.course.data.dto.BasePlaceResultDto
+import com.umc.todait.feature.course.data.dto.BasePlaceSetResponseDto
 import com.umc.todait.feature.course.data.dto.BasePlaceSummaryDto
 import com.umc.todait.feature.course.data.dto.CourseDraftCreateResponseDto
+import com.umc.todait.feature.course.data.dto.CourseDraftPlaceDto
+import com.umc.todait.feature.course.data.dto.CourseDraftSavingEnterResponseDto
+import com.umc.todait.feature.course.data.dto.ExternalPlaceDto
 import com.umc.todait.feature.course.data.dto.FoodCategorySummaryDto
+import com.umc.todait.feature.course.data.dto.OrderingEntryResponseDto
+import com.umc.todait.feature.course.data.dto.PlaceOrderItemDto
+import com.umc.todait.feature.course.data.dto.PlaceOrderUpdateResponseDto
 import com.umc.todait.feature.course.data.dto.HotPlaceDto
 import com.umc.todait.feature.course.data.dto.HotPlaceResultDto
 import com.umc.todait.feature.course.data.dto.MoodTagSummaryDto
@@ -76,6 +84,98 @@ object MockCourse {
         draftStatus = "MOOD_SELECTING",
         expiresAt = null,
         createdAt = "2026-07-26T15:30:00",
+    )
+
+    // ---------- 기준 장소 설정 (PATCH /api/course-drafts/{id}/base-place) ----------
+
+    /** 내부 등록 장소(placeId)로 기준 장소를 설정한 경우. 상태가 PLACE_SELECTING 으로 전이한다. */
+    fun basePlaceSetResult(placeId: Long) = BasePlaceSetResponseDto(
+        courseDraftId = courseDraft.courseDraftId,
+        status = "PLACE_SELECTING",
+        basePlace = BasePlaceResultDto(
+            placeId = placeId,
+            name = "애몽",
+            address = "서울 마포구 연남동 227-15",
+            roadAddress = "서울 마포구 연남로3길 13",
+            latitude = 37.561234,
+            longitude = 126.923456,
+            area = areaYeonnam,
+            category = categoryRestaurant,
+            subCategory = "양식",
+            sourceType = "OPERATOR",
+            // 기존 내부 place 재사용.
+            isNewPlace = false,
+        ),
+    )
+
+    /**
+     * 내부 미등록 카카오 장소(externalPlace)로 기준 장소를 설정한 경우.
+     * 서버가 place 를 새로 만들어 내부 placeId 를 발급하므로 [BasePlaceResultDto.isNewPlace] 가 true 다.
+     */
+    fun basePlaceSetResult(externalPlace: ExternalPlaceDto) = BasePlaceSetResponseDto(
+        courseDraftId = courseDraft.courseDraftId,
+        status = "PLACE_SELECTING",
+        basePlace = BasePlaceResultDto(
+            placeId = NEW_PLACE_ID,
+            name = externalPlace.name,
+            address = externalPlace.address,
+            roadAddress = externalPlace.roadAddress,
+            latitude = externalPlace.latitude,
+            longitude = externalPlace.longitude,
+            area = areaOf(externalPlace.areaCode),
+            category = categoryOf(externalPlace.categoryCode),
+            subCategory = externalPlace.subCategory,
+            sourceType = externalPlace.dataSourceCode,
+            isNewPlace = true,
+        ),
+    )
+
+    // ---------- 순서 설정/저장 화면 진입 (PATCH .../ordering, .../saving) ----------
+
+    /**
+     * 임시 코스에 담긴 장소 목록 mock.
+     *
+     * 기준 장소(애몽, placeId 21)와 카페 추천 카드 3개(61·62·63)를 담은 상태를 가정한다.
+     * courseDraftPlaceId 는 `100 + placeId` 규칙으로 만들어 순서 변경 요청까지 이어서 확인할 수 있게 했다.
+     */
+    private val draftPlaces = listOf(
+        draftPlace(21, "애몽", "서울 마포구 연남로3길 13", 1, "BASE"),
+        draftPlace(61, "Everyday HappyBirthDay", "서울 마포구 연희로 33", 2, "SELECTED"),
+        draftPlace(62, "코이크", "서울 마포구 동교로39길 8", 3, "SELECTED"),
+        draftPlace(63, "겸사서울", "서울 마포구 성미산로 184", 4, "SELECTED"),
+    )
+
+    /** 순서 설정 화면 진입 result. 상태가 ORDERING 으로 전이하고 장소를 visitOrder 오름차순으로 준다. */
+    fun orderingEntry(courseDraftId: Long) = OrderingEntryResponseDto(
+        courseDraftId = courseDraftId,
+        draftStatus = "ORDERING",
+        totalPlaceCount = draftPlaces.size,
+        selectedPlaceCount = draftPlaces.count { !it.isBase },
+        places = draftPlaces,
+    )
+
+    /**
+     * 순서 변경 result. 요청으로 들어온 [placeOrders] 를 그대로 반영해
+     * 기준 장소를 포함한 전체 목록을 visitOrder 오름차순으로 돌려준다(서버 동작과 동일).
+     */
+    fun placeOrderUpdateResult(courseDraftId: Long, placeOrders: List<PlaceOrderItemDto>): PlaceOrderUpdateResponseDto {
+        val orderById = placeOrders.associate { it.courseDraftPlaceId to it.visitOrder }
+        val reordered = draftPlaces
+            .map { place ->
+                orderById[place.courseDraftPlaceId]
+                    ?.let { place.copy(visitOrder = it) }
+                    ?: place
+            }
+            .sortedBy { it.visitOrder }
+        return PlaceOrderUpdateResponseDto(courseDraftId = courseDraftId, places = reordered)
+    }
+
+    /** 저장 화면 진입 result. 상태가 SAVING 으로 전이하고 경로 미리보기 목록을 준다. */
+    fun savingEntry(courseDraftId: Long) = CourseDraftSavingEnterResponseDto(
+        courseDraftId = courseDraftId,
+        draftStatus = "SAVING",
+        totalPlaceCount = draftPlaces.size,
+        routePreview = draftPlaces,
     )
 
     // ---------- 카테고리 탭 (GET /api/place-categories) ----------
@@ -381,4 +481,50 @@ object MockCourse {
         alreadySelected = false,
         detailAvailable = true,
     )
+
+    /**
+     * 임시 코스 장소(course_draft_place) 한 건. [visitOrder] 1번은 기준 장소(BASE) 전용이다.
+     * courseDraftPlaceId 는 place.id 와 헷갈리지 않도록 [DRAFT_PLACE_ID_OFFSET] 을 더해 만든다.
+     */
+    private fun draftPlace(
+        placeId: Long,
+        name: String,
+        roadAddress: String,
+        visitOrder: Int,
+        placeRole: String,
+    ) = CourseDraftPlaceDto(
+        courseDraftPlaceId = DRAFT_PLACE_ID_OFFSET + placeId,
+        placeId = placeId,
+        placeRole = placeRole,
+        visitOrder = visitOrder,
+        name = name,
+        address = roadAddress,
+        roadAddress = roadAddress,
+        latitude = 37.561234 + visitOrder * 0.001,
+        longitude = 126.923456 + visitOrder * 0.001,
+        // 기준 장소는 항상 1번 고정이라 드래그·삭제가 모두 막힌다.
+        draggable = placeRole != CourseDraftPlaceDto.PLACE_ROLE_BASE,
+        deletable = placeRole != CourseDraftPlaceDto.PLACE_ROLE_BASE,
+    )
+
+    /** 지원 지역 코드 → 요약. 알 수 없는 코드는 연남으로 둔다(mock 전용 fallback). */
+    private fun areaOf(code: String): AreaSummaryDto = when (code) {
+        "HONGDAE" -> areaHongdae
+        "SEONGSU" -> areaSeongsu
+        else -> areaYeonnam
+    }
+
+    /** 장소 대분류 코드 → 요약. 알 수 없는 코드는 카페로 둔다(mock 전용 fallback). */
+    private fun categoryOf(code: String): PlaceCategorySummaryDto = when (code) {
+        "RESTAURANT" -> categoryRestaurant
+        "ACTIVITY" -> categoryActivity
+        "BAR" -> categoryBar
+        else -> categoryCafe
+    }
+
+    // 카카오 검색 장소를 새로 등록했을 때 서버가 발급했다고 가정하는 내부 place.id.
+    private const val NEW_PLACE_ID = 900L
+
+    // courseDraftPlaceId 생성 규칙(= 100 + place.id). placeId 와 구분되는 값임을 드러내려고 둔다.
+    private const val DRAFT_PLACE_ID_OFFSET = 100L
 }

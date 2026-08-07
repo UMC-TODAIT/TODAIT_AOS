@@ -24,6 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,6 +41,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.todait.R
+import com.umc.todait.feature.course.base_place.BasePlaceSystemAlert
 import com.umc.todait.feature.course.base_place.PlaceUiModel
 import com.umc.todait.ui.component.ScreenTopBar
 import com.umc.todait.ui.theme.Cream
@@ -75,86 +77,109 @@ fun SelectedPlacesScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Cream),
-    ) {
-        ScreenTopBar(
-            title = stringResource(R.string.course_compose_title),
-            onBack = onBack,
-            onConfirm = onNavigateToSave,
-            confirmContentDescription = "확정",
-        )
+    // 코스 저장 화면으로는 순서 저장(PATCH .../places/order) + 저장 단계 전환(PATCH .../saving)이
+    // 성공한 뒤에만 넘어간다.
+    LaunchedEffect(viewModel) {
+        viewModel.effect.collect { effect ->
+            when (effect) {
+                CourseComposeEffect.NavigateToSave -> onNavigateToSave()
+                CourseComposeEffect.NavigateToSelected -> Unit
+            }
+        }
+    }
 
-        // 기준 장소(있으면)는 고정, 담은 장소들만 드래그로 순서 변경.
-        val hasBase = uiState.basePlace != null
-        val baseOffset = if (hasBase) 1 else 0
+    Box(modifier = modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Cream),
+        ) {
+            ScreenTopBar(
+                title = stringResource(R.string.course_compose_title),
+                onBack = onBack,
+                onConfirm = viewModel::onOrderConfirmed,
+                confirmContentDescription = "확정",
+            )
 
-        val lazyListState = rememberLazyListState()
-        // 드래그로 위치가 바뀌면 PlaceUiModel.key 로 selectedPlaces 인덱스를 찾아 onMovePlace 호출.
-        val reorderableState = rememberReorderableLazyListState(lazyListState) { from, to ->
-            val selected = viewModel.uiState.value.selectedPlaces
-            val fromIdx = selected.indexOfFirst { it.key == from.key }
-            val toIdx = selected.indexOfFirst { it.key == to.key }
-            if (fromIdx in selected.indices && toIdx in selected.indices) {
-                viewModel.onMovePlace(fromIdx, toIdx)
+            // 기준 장소(있으면)는 고정, 담은 장소들만 드래그로 순서 변경.
+            val hasBase = uiState.basePlace != null
+            val baseOffset = if (hasBase) 1 else 0
+
+            val lazyListState = rememberLazyListState()
+            // 드래그로 위치가 바뀌면 PlaceUiModel.key 로 selectedPlaces 인덱스를 찾아 onMovePlace 호출.
+            val reorderableState = rememberReorderableLazyListState(lazyListState) { from, to ->
+                val selected = viewModel.uiState.value.selectedPlaces
+                val fromIdx = selected.indexOfFirst { it.key == from.key }
+                val toIdx = selected.indexOfFirst { it.key == to.key }
+                if (fromIdx in selected.indices && toIdx in selected.indices) {
+                    viewModel.onMovePlace(fromIdx, toIdx)
+                }
+            }
+
+            LazyColumn(
+                state = lazyListState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 24.dp),
+            ) {
+                item {
+                    CourseMap(
+                        basePlace = uiState.basePlace,
+                        selectedPlaces = uiState.selectedPlaces,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(220.dp),
+                    )
+                }
+                item {
+                    Column(modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 8.dp)) {
+                        Text(
+                            text = stringResource(R.string.course_compose_selected_section, uiState.selectedPlaces.size),
+                            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold),
+                            color = Gray900,
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = stringResource(R.string.course_compose_selected_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Gray600,
+                        )
+                    }
+                }
+                // 기준 장소(고정, 드래그 불가).
+                uiState.basePlace?.let { base ->
+                    item(key = "base_place") {
+                        SelectedPlaceRow(
+                            place = base,
+                            isBase = true,
+                            order = 1,
+                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
+                        )
+                    }
+                }
+                // 담은 장소(드래그로 순서 변경). 배지 순번은 기준 장소가 있으면 2부터.
+                itemsIndexed(uiState.selectedPlaces, key = { _, place -> place.key }) { index, place ->
+                    ReorderableItem(reorderableState, key = place.key) { isDragging ->
+                        SelectedPlaceRow(
+                            place = place,
+                            isBase = false,
+                            order = index + 1 + baseOffset,
+                            isDragging = isDragging,
+                            handleModifier = Modifier.draggableHandle(),
+                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
+                        )
+                    }
+                }
             }
         }
 
-        LazyColumn(
-            state = lazyListState,
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 24.dp),
-        ) {
-            item {
-                CourseMap(
-                    basePlace = uiState.basePlace,
-                    selectedPlaces = uiState.selectedPlaces,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(220.dp),
-                )
-            }
-            item {
-                Column(modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 8.dp)) {
-                    Text(
-                        text = stringResource(R.string.course_compose_selected_section, uiState.selectedPlaces.size),
-                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold),
-                        color = Gray900,
-                    )
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        text = stringResource(R.string.course_compose_selected_desc),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Gray600,
-                    )
-                }
-            }
-            // 기준 장소(고정, 드래그 불가).
-            uiState.basePlace?.let { base ->
-                item(key = "base_place") {
-                    SelectedPlaceRow(
-                        place = base,
-                        isBase = true,
-                        order = 1,
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
-                    )
-                }
-            }
-            // 담은 장소(드래그로 순서 변경). 배지 순번은 기준 장소가 있으면 2부터.
-            itemsIndexed(uiState.selectedPlaces, key = { _, place -> place.key }) { index, place ->
-                ReorderableItem(reorderableState, key = place.key) { isDragging ->
-                    SelectedPlaceRow(
-                        place = place,
-                        isBase = false,
-                        order = index + 1 + baseOffset,
-                        isDragging = isDragging,
-                        handleModifier = Modifier.draggableHandle(),
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
-                    )
-                }
-            }
+        // 순서 저장/저장 화면 진입 실패 안내.
+        uiState.submitError?.let { message ->
+            BasePlaceSystemAlert(
+                title = stringResource(R.string.course_compose_submit_error_title),
+                description = message,
+                onConfirm = viewModel::onDismissSubmitError,
+                onCancel = viewModel::onDismissSubmitError,
+            )
         }
     }
 }

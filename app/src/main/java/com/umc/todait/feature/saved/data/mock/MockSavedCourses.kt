@@ -16,10 +16,9 @@ object SavedCoursesMock {
                 name = "로맨틱"
             ),
 
-            representativeFoodCategory = FoodCategoryDto(
-                foodCategoryId = 1,
-                code = "WESTERN",
-                name = "양식"
+            representativePlaceCategory = PlaceCategoryDto(
+                code = "RESTAURANT",
+                name = "맛집"
             ),
 
             previewPlaces = listOf(
@@ -46,8 +45,7 @@ object SavedCoursesMock {
                 name = "차분한"
             ),
 
-            representativeFoodCategory = FoodCategoryDto(
-                foodCategoryId = 2,
+            representativePlaceCategory = PlaceCategoryDto(
                 code = "KOREAN",
                 name = "한식"
             ),
@@ -67,6 +65,6 @@ object SavedCoursesMock {
 
     val savedCourses = SavedCoursesResponseDto(
         recentCourses = courseList,
-        frequentlyViewedCourses = courseList
+        popularCourses = courseList
     )
 }

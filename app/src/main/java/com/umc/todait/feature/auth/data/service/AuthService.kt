@@ -17,6 +17,7 @@ import com.umc.todait.feature.auth.data.dto.SignupResultDto
 import com.umc.todait.feature.auth.data.dto.SocialLoginResultDto
 import com.umc.todait.feature.auth.data.dto.TokenRefreshRequestDto
 import com.umc.todait.feature.auth.data.dto.TokenRefreshResultDto
+import com.umc.todait.feature.mypage.data.dto.LogoutRequestDto
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -95,5 +96,7 @@ interface AuthService {
      * accessToken 자체는 서버가 무효화하지 않으므로, 호출부가 로컬 토큰을 반드시 지워야 한다.
      */
     @POST("api/auth/logout")
-    suspend fun logout(@Header("Authorization") bearerAccessToken: String): BaseResponse<Unit>
+    suspend fun logout(
+        @Body request: LogoutRequestDto
+    ): BaseResponse<Unit>
 }

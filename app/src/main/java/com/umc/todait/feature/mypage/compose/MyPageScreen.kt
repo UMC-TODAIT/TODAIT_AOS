@@ -30,6 +30,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.umc.todait.ui.component.ErrorContent
 import com.umc.todait.ui.component.LoadingIndicator
+import android.content.Intent
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.net.toUri
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.umc.todait.navigation.Screen
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
@@ -45,6 +50,7 @@ fun MyPageScreen(
     viewModel: MyPageViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
     when {
         uiState.isLoading -> {
@@ -115,7 +121,24 @@ fun MyPageScreen(
 
                 SettingsCard(
                     onNoticeClick = {
-                        navController.navigate("notice")
+                        val intent = Intent(
+                            Intent.ACTION_VIEW,
+                            "https://tranquil-paw-d58.notion.site/39dd2aae5cbb80d6a7f7ea326777ab10".toUri()
+                        ).apply {
+                            setPackage("com.android.chrome")
+                        }
+
+                        context.startActivity(intent)
+                    },
+                    onCustomerCenterClick = {
+                        val intent = Intent(
+                            Intent.ACTION_VIEW,
+                            "https://tranquil-paw-d58.notion.site/3b4d2aae5cbb80b2a29ce870dc70da14".toUri()
+                        ).apply {
+                            setPackage("com.android.chrome")
+                        }
+
+                        context.startActivity(intent)
                     },
                     onLogoutClick = {
                         showLogoutDialog = true
@@ -127,9 +150,14 @@ fun MyPageScreen(
                         title = "로그아웃하시겠습니까?",
                         onConfirm = {
                             showLogoutDialog = false
+                            viewModel.logout()
 
-                            // TODO 로그아웃 API 호출
-                            // TODO 로그인 화면 이동
+                            navController.navigate(Screen.Login.route) {
+                                popUpTo(navController.graph.startDestinationId) {
+                                    inclusive = true
+                                }
+                                launchSingleTop = true
+                            }
                         },
                         onDismiss = {
                             showLogoutDialog = false
@@ -207,7 +235,8 @@ fun ProfileCard(
 @Composable
 fun SettingsCard(
     onNoticeClick: () -> Unit,
-    onLogoutClick: () -> Unit
+    onLogoutClick: () -> Unit,
+    onCustomerCenterClick: () -> Unit,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -217,17 +246,17 @@ fun SettingsCard(
         )
     ) {
         Column {
-            SettingItem(
-                icon = {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_my_page_notice),
-                        contentDescription = null,
-                        tint = Color.Unspecified
-                    )
-                },
-                title = "공지사항 및 고객센터",
-                onClick = onNoticeClick
-            )
+                SettingItem(
+                    icon = {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_my_page_notice),
+                            contentDescription = null,
+                            tint = Color.Unspecified
+                        )
+                    },
+                    title = "공지사항",
+                    onClick = onNoticeClick
+                )
 
             Image(
                 painter = painterResource(R.drawable.divider_my_page),
@@ -238,18 +267,39 @@ fun SettingsCard(
                     .height(1.dp)
             )
 
-            SettingItem(
-                icon = {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_my_page_logout),
-                        contentDescription = null,
-                        tint = Color.Unspecified
-                    )
-                },
-                title = "로그아웃",
-                onClick = onLogoutClick
+                SettingItem(
+                    icon = {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_mypage_center),
+                            contentDescription = null,
+                            tint = Color.Unspecified
+                        )
+                    },
+                    title = "고객센터",
+                    onClick = onCustomerCenterClick
+                )
+
+            Image(
+                painter = painterResource(R.drawable.divider_my_page),
+                contentDescription = null,
+                modifier = Modifier
+                    .padding(horizontal = 18.dp)
+                    .fillMaxWidth()
+                    .height(1.dp)
             )
-        }
+
+                SettingItem(
+                    icon = {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_my_page_logout),
+                            contentDescription = null,
+                            tint = Color.Unspecified
+                        )
+                    },
+                    title = "로그아웃",
+                    onClick = onLogoutClick
+                )
+            }
     }
 }
 

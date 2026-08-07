@@ -42,8 +42,8 @@ class CourseDetailViewModel @Inject constructor(
                             moodTag = data.representativeMoodTag?.name,
                             moodTagCode = data.representativeMoodTag?.code,
 
-                            foodTag = data.representativeFoodCategory?.name,
-                            foodTagCode = data.representativeFoodCategory?.code,
+                            foodTag = data.representativePlaceCategory?.name,
+                            foodTagCode = data.representativePlaceCategory?.code,
 
                             memo = data.memo ?: "",
 

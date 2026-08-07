@@ -1,5 +1,6 @@
 package com.umc.todait.feature.saved.data.repository
 
+import android.util.Log
 import com.umc.todait.core.network.ApiResult
 import com.umc.todait.core.network.safeApiCall
 import com.umc.todait.feature.saved.data.dto.CourseDetailResponseDto
@@ -8,7 +9,7 @@ import com.umc.todait.feature.saved.data.mock.MockCourseDetail
 import com.umc.todait.feature.saved.data.mock.SavedCoursesMock
 import com.umc.todait.feature.saved.data.service.SavedService
 import javax.inject.Inject
-private const val USE_MOCK = true
+private const val USE_MOCK = false
 class SavedRepository @Inject constructor(
     private val savedService: SavedService,
 ) {

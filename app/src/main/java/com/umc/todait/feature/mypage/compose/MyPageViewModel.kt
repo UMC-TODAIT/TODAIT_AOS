@@ -2,8 +2,10 @@ package com.umc.todait.feature.mypage.compose
 
 import androidx.lifecycle.viewModelScope
 import com.umc.todait.core.base.BaseViewModel
+import com.umc.todait.core.datastore.TokenDataStore
 import com.umc.todait.core.network.ApiResult
 import com.umc.todait.core.network.toUiError
+import com.umc.todait.feature.auth.data.repository.AuthRepository
 import com.umc.todait.feature.mypage.data.repository.MyPageRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,6 +18,8 @@ import javax.inject.Inject
 @HiltViewModel
 class MyPageViewModel @Inject constructor(
     private val repository: MyPageRepository,
+    private val authRepository: AuthRepository,
+    private val tokenDataStore: TokenDataStore,
 ) : BaseViewModel() {
 
     private val _uiState = MutableStateFlow(MyPageUiState())
@@ -43,6 +47,7 @@ class MyPageViewModel @Inject constructor(
                             nickname = result.data.nickname,
                             email = result.data.email,
                             profileImageUrl = result.data.profileImageUrl,
+                            savedCourseCount = result.data.savedCourseCount
                         )
                     }
                 }
@@ -63,6 +68,16 @@ class MyPageViewModel @Inject constructor(
             it.copy(
                 error = null
             )
+        }
+    }
+
+    fun logout() {
+        viewModelScope.launch {
+            val refreshToken = tokenDataStore.getRefreshToken() ?: return@launch
+
+            authRepository.logout(refreshToken)
+
+            tokenDataStore.clearTokens()
         }
     }
 }

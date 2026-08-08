@@ -115,10 +115,10 @@ cd TODAIT_AOS
 | 음식 선택 화면 | `FoodSelectScreen` | 분위기 2개 이상 선택 → [다음] | 무즈/김규리 | UI  ❌<br>API ❌ |
 | 기준 장소 설정 화면 | `BasePlaceScreen` | 음식 1개 이상 선택 → [다음] | 티아/강서윤 | UI ✅<br>API ⚠️ |
 | 장소 상세 화면 | `PlaceDetailScreen` | 기준 장소 설정 화면에서 장소 카드 탭 | 티아/강서윤 | UI ✅<br>API ⚠️ |
-| 기준 장소 확인 모달 | `BasePlaceConfirmDialog` | 기준 장소 설정 화면에서 장소 선택 후 [확인] | 티아/강서윤 | UI ✅<br>API ❌  |
+| 기준 장소 확인 모달 | `BasePlaceConfirmDialog` | 기준 장소 설정 화면에서 장소 선택 후 [확인] | 티아/강서윤 | UI ✅<br>API ⚠️ |
 | 코스 구성하기 화면 | `CourseComposeScreen` | 기준 장소 확인 모달 [확인] | 티아/강서윤 | UI ✅<br>API ⚠️ |
-| 선택한 장소 화면 | `SelectedPlacesScreen` | 코스 구성하기 [선택 완료] (기준 장소 포함 2개 이상) | 티아/강서윤 | UI ✅<br>API ❌  |
-| 코스 저장 화면 | `CourseSaveScreen` | 선택한 장소 [완료] | 티아/강서윤 | UI ✅<br>API ❌  |
+| 선택한 장소 화면 | `SelectedPlacesScreen` | 코스 구성하기 [선택 완료] (기준 장소 포함 2개 이상) | 티아/강서윤 | UI ✅<br>API ⚠️ |
+| 코스 저장 화면 | `CourseSaveScreen` | 선택한 장소 [완료] | 티아/강서윤 | UI ✅<br>API ⚠️ |
 | 저장된 코스 화면 | `SavedCoursesScreen` | 코스 저장 성공 후 / 하단 탭 [저장된 코스] | 지니/황지희 | UI ✅<br>API ❌  |
 | 코스 상세 정보 화면 | `CourseDetailScreen` | 저장된 코스 카드 탭 / 홈 인기 코스 카드 탭 | 지니/황지희 | UI ✅<br>API ❌  |
 | 마이페이지 화면 | `MyPageScreen` | 하단 탭 [마이페이지] | 지니/황지희 | UI ✅<br>API ❌  |

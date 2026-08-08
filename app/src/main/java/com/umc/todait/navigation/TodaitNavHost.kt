@@ -15,7 +15,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.navigation
+// androidx.navigation.navigation 이 아니라 compose 버전을 써야 그래프에 arguments 를 선언할 수 있다.
+import androidx.navigation.compose.navigation
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import com.google.gson.Gson
@@ -51,8 +52,10 @@ import com.umc.todait.ui.component.PlaceholderScreen
 import com.umc.todait.ui.component.TopBar
 import com.umc.todait.ui.theme.Cream
 
-// 코스 구성 플로우 중첩 그래프 라우트. 이 그래프 스코프로 CourseComposeViewModel 을 두 화면이 공유한다.
-private const val COURSE_COMPOSE_GRAPH = "course/compose_graph"
+// 코스 구성 플로우 중첩 그래프 라우트. 이 그래프 스코프로 CourseComposeViewModel 을 세 화면이 공유한다.
+// 경로 변수(courseDraftId/basePlaceId)는 그래프 back stack entry 의 arguments 로 들어가
+// 그래프 스코프 ViewModel 의 SavedStateHandle 에서 읽힌다.
+private val COURSE_COMPOSE_GRAPH = Screen.CourseComposeGraph.route
 
 /**
  * 앱 루트 컴포저블: 하단 탭바 + NavHost.
@@ -305,8 +308,11 @@ fun TodaitApp() {
             composable(Screen.FoodSelect.route) { PlaceholderScreen("음식 선택") }
             composable(Screen.BasePlace.route) {
                 BasePlaceScreen(
-                    onNavigateToCompose = {
-                        navController.navigate(Screen.CourseCompose.route)
+                    // 기준 장소가 서버에 저장된 뒤에만 넘어온다(PATCH .../base-place 성공).
+                    onNavigateToCompose = { courseDraftId, basePlaceId ->
+                        navController.navigate(
+                            Screen.CourseComposeGraph.createRoute(courseDraftId, basePlaceId),
+                        )
                     },
                     onNavigateToDetail = { placeId ->
                         navController.navigate(Screen.PlaceDetail.createRoute(placeId))
@@ -356,10 +362,15 @@ fun TodaitApp() {
             navigation(
                 startDestination = Screen.CourseCompose.route,
                 route = COURSE_COMPOSE_GRAPH,
+                arguments = listOf(
+                    navArgument(Screen.CourseComposeGraph.ARG_COURSE_DRAFT_ID) { type = NavType.LongType },
+                    navArgument(Screen.CourseComposeGraph.ARG_BASE_PLACE_ID) { type = NavType.LongType },
+                ),
             ) {
                 composable(Screen.CourseCompose.route) { entry ->
                     val graphEntry = remember(entry) { navController.getBackStackEntry(COURSE_COMPOSE_GRAPH) }
                     val viewModel: CourseComposeViewModel = hiltViewModel(graphEntry)
+                    // 화면 이동은 단계 전환 API(ordering) 성공 후에만 일어나므로 effect 로 받는다.
                     CourseComposeScreen(
                         viewModel = viewModel,
                         onNavigateToDetail = { placeId ->

@@ -46,7 +46,7 @@ class SavedCoursesViewModel @Inject constructor(
                         it.copy(
                             isLoading = false,
                             recentCourses = result.data.recentCourses.map { it.toUiModel() },
-                            popularCourses = result.data.frequentlyViewedCourses.map { it.toUiModel() },
+                            popularCourses = result.data.popularCourses.map { it.toUiModel() },
                         )
                     }
                 }
@@ -70,70 +70,68 @@ class SavedCoursesViewModel @Inject constructor(
     }
 
     private fun getNickname() {
-        _uiState.update {
-            it.copy(
-                nickname = "투데잇"
-            )
+        viewModelScope.launch {
+            when (val result = myPageRepository.getMyPage()) {
 
-            /*
-            실제 API 연결 시
-            viewModelScope.launch {
-                when(val result = myPageRepository.getMyPage()){
-                    is ApiResult.Success -> {
-                        _uiState.update {
-                            it.copy(
-                                nickname = result.data.nickname,
-                                error = null
-                            )
-                        }
+                is ApiResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            nickname = result.data.nickname,
+                            error = null
+                        )
                     }
+                }
 
-                    is ApiResult.Failure -> {
-                         isLoading = false,
-                         error = result.toUiError()
+                is ApiResult.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = result.toUiError()
+                        )
                     }
                 }
             }
-             */
         }
     }
-}
-private fun SavedCourseDto.toUiModel(): CourseUiModel {
-    return CourseUiModel(
-        id = courseId,
 
-        backgroundImage = getBackgroundImage(representativeMoodTag?.code),
-        topImage = getTopImage(representativeMoodTag?.code),
+    private fun SavedCourseDto.toUiModel(): CourseUiModel {
+        return CourseUiModel(
+            id = courseId,
 
-        title = title,
-        date = savedDate,
+            backgroundImage = getBackgroundImage(representativeMoodTag?.code),
+            topImage = getTopImage(representativeMoodTag?.code),
 
-        moodTag = representativeMoodTag?.name,
-        foodTag = representativeFoodCategory?.name,
+            title = title,
+            date = savedDate,
 
-        places = previewPlaces.map { it.name }
-    )
-}
-private fun getBackgroundImage(code: String?): Int {
-    return when (code) {
-        "ROMANTIC" -> R.drawable.bg_saved_courses_romantic
-        "QUIET" -> R.drawable.bg_saved_courses_quiet
-        "MODERN" -> R.drawable.bg_saved_courses_modern
-        "HIP" -> R.drawable.bg_saved_courses_hip
-        "ACTIVE" -> R.drawable.bg_saved_courses_active
-        "CALM" -> R.drawable.bg_saved_courses_calm
-        else -> R.drawable.bg_saved_courses_romantic
+            moodTag = representativeMoodTag?.name,
+            foodTag = representativePlaceCategory?.name,
+
+            places = previewPlaces.map { it.name }
+        )
     }
-}
 
-private fun getTopImage(code: String?): Int {
-    return when (code) {
-        "ROMANTIC" -> R.drawable.ic_mood_romantic
-        "QUIET" -> R.drawable.ic_mood_quiet
-        "MODERN" -> R.drawable.ic_mood_modern
-        "HIP" -> R.drawable.ic_mood_hip
-        "ACTIVE" -> R.drawable.ic_mood_active
-        "CALM" -> R.drawable.ic_mood_calm
-        else -> R.drawable.ic_mood_romantic
+    private fun getBackgroundImage(code: String?): Int {
+        return when (code) {
+            "ROMANTIC" -> R.drawable.bg_saved_courses_romantic
+            "QUIET" -> R.drawable.bg_saved_courses_quiet
+            "MODERN" -> R.drawable.bg_saved_courses_modern
+            "HIP" -> R.drawable.bg_saved_courses_hip
+            "ACTIVE" -> R.drawable.bg_saved_courses_active
+            "CALM" -> R.drawable.bg_saved_courses_calm
+            else -> R.drawable.bg_saved_courses_romantic
+        }
+    }
+
+    private fun getTopImage(code: String?): Int {
+        return when (code) {
+            "ROMANTIC" -> R.drawable.ic_mood_romantic
+            "QUIET" -> R.drawable.ic_mood_quiet
+            "MODERN" -> R.drawable.ic_mood_modern
+            "HIP" -> R.drawable.ic_mood_hip
+            "ACTIVE" -> R.drawable.ic_mood_active
+            "CALM" -> R.drawable.ic_mood_calm
+            else -> R.drawable.ic_mood_romantic
+        }
     }
 }

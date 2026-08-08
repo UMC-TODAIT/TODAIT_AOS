@@ -9,9 +9,11 @@ import com.google.gson.annotations.SerializedName
  * 저장된 코스가 없어도 null 이 아니라 빈 배열([])로 내려온다.
  */
 data class SavedCoursesResponseDto(
-    @SerializedName("recentCourses") val recentCourses: List<SavedCourseDto>,
-    // 화면의 "자주 본 코스" 섹션. 명세 필드명은 frequentlyViewedCourses 다.
-    @SerializedName("frequentlyViewedCourses") val frequentlyViewedCourses: List<SavedCourseDto>,
+    @SerializedName("recentCourses")
+    val recentCourses: List<SavedCourseDto>,
+
+    @SerializedName("popularCourses")
+    val popularCourses: List<SavedCourseDto>
 )
 
 data class SavedCourseDto(
@@ -20,7 +22,7 @@ data class SavedCourseDto(
     // ISO-8601 날짜 문자열(yyyy-MM-dd).
     @SerializedName("savedDate") val savedDate: String,
     @SerializedName("representativeMoodTag") val representativeMoodTag: MoodTagDto?,
-    @SerializedName("representativeFoodCategory") val representativeFoodCategory: FoodCategoryDto?,
+    @SerializedName("representativePlaceCategory") val representativePlaceCategory: PlaceCategoryDto?,
     @SerializedName("previewPlaces") val previewPlaces: List<PreviewPlaceDto>,
     @SerializedName("remainingPlaceCount") val remainingPlaceCount: Int,
     @SerializedName("placeCount") val placeCount: Int,
@@ -33,8 +35,7 @@ data class MoodTagDto(
     @SerializedName("name") val name: String,
 )
 
-data class FoodCategoryDto(
-    @SerializedName("foodCategoryId") val foodCategoryId: Long,
+data class PlaceCategoryDto(
     @SerializedName("code") val code: String,
     @SerializedName("name") val name: String,
 )

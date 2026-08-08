@@ -13,8 +13,7 @@ data class CourseDetailResponseDto(
     @SerializedName("savedDate") val savedDate: String,
 
     @SerializedName("representativeMoodTag") val representativeMoodTag: DetailMoodTagDto?,
-    @SerializedName("representativeFoodCategory") val representativeFoodCategory: DetailFoodCategoryDto?,
-
+    @SerializedName("representativePlaceCategory") val representativePlaceCategory: DetailPlaceCategoryDto?,
     @SerializedName("memo") val memo: String?,
     @SerializedName("placeCount") val placeCount: Int,
     @SerializedName("viewCount") val viewCount: Int,
@@ -29,8 +28,7 @@ data class DetailMoodTagDto(
     @SerializedName("name") val name: String
 )
 
-data class DetailFoodCategoryDto(
-    @SerializedName("foodCategoryId") val foodCategoryId: Long,
+data class DetailPlaceCategoryDto(
     @SerializedName("code") val code: String,
     @SerializedName("name") val name: String
 )

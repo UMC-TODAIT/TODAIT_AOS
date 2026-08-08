@@ -52,6 +52,17 @@ fun MyPageScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
+    LaunchedEffect(uiState.isLogoutCompleted) {
+        if (uiState.isLogoutCompleted) {
+            navController.navigate(Screen.Login.route) {
+                popUpTo(navController.graph.id) {
+                    inclusive = true
+                }
+                launchSingleTop = true
+            }
+        }
+    }
+
     when {
         uiState.isLoading -> {
             LoadingIndicator()
@@ -124,20 +135,14 @@ fun MyPageScreen(
                         val intent = Intent(
                             Intent.ACTION_VIEW,
                             "https://tranquil-paw-d58.notion.site/39dd2aae5cbb80d6a7f7ea326777ab10".toUri()
-                        ).apply {
-                            setPackage("com.android.chrome")
-                        }
-
+                        )
                         context.startActivity(intent)
                     },
                     onCustomerCenterClick = {
                         val intent = Intent(
                             Intent.ACTION_VIEW,
                             "https://tranquil-paw-d58.notion.site/3b4d2aae5cbb80b2a29ce870dc70da14".toUri()
-                        ).apply {
-                            setPackage("com.android.chrome")
-                        }
-
+                        )
                         context.startActivity(intent)
                     },
                     onLogoutClick = {
@@ -151,13 +156,6 @@ fun MyPageScreen(
                         onConfirm = {
                             showLogoutDialog = false
                             viewModel.logout()
-
-                            navController.navigate(Screen.Login.route) {
-                                popUpTo(navController.graph.startDestinationId) {
-                                    inclusive = true
-                                }
-                                launchSingleTop = true
-                            }
                         },
                         onDismiss = {
                             showLogoutDialog = false

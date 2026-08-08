@@ -73,11 +73,17 @@ class MyPageViewModel @Inject constructor(
 
     fun logout() {
         viewModelScope.launch {
-            val refreshToken = tokenDataStore.getRefreshToken() ?: return@launch
+            try {
+                tokenDataStore.getRefreshToken()?.let { refreshToken ->
+                    authRepository.logout(refreshToken)
+                }
+            } finally {
+                tokenDataStore.clearTokens()
 
-            authRepository.logout(refreshToken)
-
-            tokenDataStore.clearTokens()
+                _uiState.update {
+                    it.copy(isLogoutCompleted = true)
+                }
+            }
         }
     }
 }

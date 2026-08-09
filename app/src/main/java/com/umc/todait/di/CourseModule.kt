@@ -5,6 +5,7 @@ import com.umc.todait.feature.course.data.service.PlaceCategoryService
 import com.umc.todait.feature.course.data.service.PlaceService
 import com.umc.todait.feature.course.data.service.RecommendationService
 import com.umc.todait.feature.course.data.service.SearchService
+import com.umc.todait.feature.course.data.service.TaxonomyService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -47,4 +48,9 @@ object CourseModule {
     @Singleton
     fun provideCourseDraftService(retrofit: Retrofit): CourseDraftService =
         retrofit.create(CourseDraftService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideTaxonomyService(retrofit: Retrofit): TaxonomyService =
+        retrofit.create(TaxonomyService::class.java)
 }

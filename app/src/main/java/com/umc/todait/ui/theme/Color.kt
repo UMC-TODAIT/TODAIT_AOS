@@ -84,6 +84,35 @@ val CourseModernGradientEnd = Color(0xFF7CA2BA)
 val CourseCalmGradientStart = Color(0xFFB8DCC4)
 val CourseCalmGradientEnd = Color(0xFF99C6CE)
 
+// ─────────────────────────────────────────────────────────────────────────────
+// 취향 설정 — 음식 카테고리별 그라데이션 (세로 방향, 위 Start → 아래 End)
+// HEX는 Figma "취향설정" 음식 선택 카드에서 추출한 확정값(6종 전부 확정).
+// ─────────────────────────────────────────────────────────────────────────────
+
+// 한식
+val FoodKoreanGradientStart = Color(0xFFD6D2BC)
+val FoodKoreanGradientEnd = Color(0xFFD7D8AE)
+
+// 일식
+val FoodJapaneseGradientStart = Color(0xFFC3D1A5)
+val FoodJapaneseGradientEnd = Color(0xFFE7F4CE)
+
+// 양식
+val FoodWesternGradientStart = Color(0xFFB7D4EA)
+val FoodWesternGradientEnd = Color(0xFFD2B3B3)
+
+// 중식
+val FoodChineseGradientStart = Color(0xFFE5A0A0)
+val FoodChineseGradientEnd = Color(0xFFE6DCB6)
+
+// 분식
+val FoodSnackGradientStart = Color(0xFFDFCAE9)
+val FoodSnackGradientEnd = Color(0xFFB1948F)
+
+// 디저트
+val FoodDessertGradientStart = Color(0xFFEBBCD3)
+val FoodDessertGradientEnd = Color(0xFFD5B17A)
+
 // 홈 "취향 기반 추천 장소" 카드 배경 그라디언트 (Figma 지정값, 카드 순서대로 초록/민트 번갈아 적용)
 val HomePlaceGreenStart = Color(0xFFC4D3B7)
 val HomePlaceGreenEnd = Color(0xFFDFD9BC)

@@ -98,9 +98,16 @@ fun HomeRecommendedPlaceDto.toUiModel(): RecommendedPlaceUiModel = RecommendedPl
 )
 
 data class HomeUiState(
+    /**
+     * 상단 인사말·섹션 제목에 넣을 닉네임(GET /api/members/me). 조회 전이거나 실패하면 빈 문자열이다.
+     * 인사말은 닉네임이 없으면 어색해지므로 화면에서 [hasNickname] 으로 노출 여부를 가른다.
+     */
+    val nickname: String = "",
     val coursesState: CoursesState = CoursesState.Loading,
     val placesState: HomePlacesState = HomePlacesState.Loading,
-)
+) {
+    val hasNickname: Boolean get() = nickname.isNotBlank()
+}
 
 /** "취향 기반 추천 장소" 섹션 상태. */
 sealed interface HomePlacesState {

@@ -28,6 +28,8 @@ enum class NicknameStatus { IDLE, AVAILABLE, UNAVAILABLE }
  */
 data class SocialNicknameUiState(
     val provider: SignupProvider = SignupProvider.KAKAO,
+    /** 소셜 로그인 응답의 프로필 사진 URL. null이면 투데잇 기본 이미지를 표시한다. */
+    val profileImageUrl: String? = null,
     val nickname: String = "",
     val status: NicknameStatus = NicknameStatus.IDLE,
     val isChecking: Boolean = false,

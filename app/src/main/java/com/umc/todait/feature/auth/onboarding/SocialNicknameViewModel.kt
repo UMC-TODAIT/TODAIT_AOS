@@ -46,6 +46,10 @@ class SocialNicknameViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(
         SocialNicknameUiState(
             provider = SignupProvider.fromRoute(savedStateHandle[Screen.SocialNickname.ARG_PROVIDER]),
+            // 경로 인자는 값이 없을 때 빈 문자열로 오므로 null 로 정규화해 화면 분기를 단순하게 둔다.
+            profileImageUrl = savedStateHandle
+                .get<String>(Screen.SocialNickname.ARG_PROFILE_IMAGE_URL)
+                ?.takeIf { it.isNotBlank() },
         ),
     )
     val uiState: StateFlow<SocialNicknameUiState> = _uiState.asStateFlow()

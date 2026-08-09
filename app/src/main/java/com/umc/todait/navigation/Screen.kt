@@ -65,6 +65,18 @@ sealed class Screen(val route: String) {
         const val ARG_PLACE_ID = "placeId"
         fun createRoute(placeId: Long) = "course/place/$placeId/menus"
     }
+    /**
+     * 코스 구성 플로우(구성하기 → 선택한 장소 → 코스 저장) 중첩 그래프. 티아/강서윤
+     *
+     * 세 화면이 CourseComposeViewModel 을 공유하므로, 이후 단계 API 가 모두 쓰는 임시 코스 핸들과
+     * 기준 장소 id 를 **그래프 경로 변수**로 받아 그래프 스코프 ViewModel 이 한 번에 읽는다.
+     */
+    data object CourseComposeGraph : Screen("course/compose_graph/{courseDraftId}/{basePlaceId}") {
+        const val ARG_COURSE_DRAFT_ID = "courseDraftId"
+        const val ARG_BASE_PLACE_ID = "basePlaceId"
+        fun createRoute(courseDraftId: Long, basePlaceId: Long) =
+            "course/compose_graph/$courseDraftId/$basePlaceId"
+    }
     data object CourseCompose : Screen("course/compose")      // 티아/강서윤
     data object SelectedPlaces : Screen("course/selected")    // 티아/강서윤
     data object CourseSave : Screen("course/save")            // 티아/강서윤

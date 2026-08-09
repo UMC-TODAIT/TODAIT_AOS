@@ -97,12 +97,22 @@ fun CourseComposeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    // 순서 설정 화면으로는 ordering 단계 전환(PATCH .../ordering)이 성공한 뒤에만 넘어간다.
+    LaunchedEffect(viewModel) {
+        viewModel.effect.collect { effect ->
+            when (effect) {
+                CourseComposeEffect.NavigateToSelected -> onNavigateToSelected()
+                CourseComposeEffect.NavigateToSave -> Unit
+            }
+        }
+    }
+
     Box(modifier = modifier.fillMaxSize()) {
         CourseComposeContent(
             state = uiState,
             onBack = onBack,
-            // ✓ 는 canConfirm(담은 장소 ≥1)일 때만 활성 → 선택한 장소 화면으로 이동.
-            onConfirm = onNavigateToSelected,
+            // ✓ 는 canConfirm(담은 장소 ≥1)일 때만 활성 → 순서 설정 단계로 전환 요청.
+            onConfirm = viewModel::onSelectionConfirmed,
             onSelectCategory = viewModel::onSelectCategory,
             onPlaceClick = { place ->
                 place.placeId?.takeIf { place.detailAvailable }?.let(onNavigateToDetail)
@@ -120,6 +130,16 @@ fun CourseComposeScreen(
             )
 
             null -> Unit
+        }
+
+        // 단계 전환 실패(권한/상태 충돌 등) 안내. 확인만 있는 단일 알럿으로 띄운다.
+        uiState.submitError?.let { message ->
+            BasePlaceSystemAlert(
+                title = stringResource(R.string.course_compose_submit_error_title),
+                description = message,
+                onConfirm = viewModel::onDismissSubmitError,
+                onCancel = viewModel::onDismissSubmitError,
+            )
         }
     }
 }
@@ -470,6 +490,7 @@ private fun CourseComposeContentPreview() {
     TodaitTheme {
         CourseComposeContent(
             state = CourseComposeUiState(
+                courseDraftId = 15,
                 categories = previewCategories,
                 selectedCategoryId = previewCategories.first().id,
                 recommendState = RecommendListState.Success(previewPlaces),
@@ -492,6 +513,7 @@ private fun CourseComposeContentEmptySelectionPreview() {
     TodaitTheme {
         CourseComposeContent(
             state = CourseComposeUiState(
+                courseDraftId = 15,
                 categories = previewCategories,
                 selectedCategoryId = previewCategories.first().id,
                 recommendState = RecommendListState.Success(previewPlaces),

@@ -7,7 +7,7 @@ import com.umc.todait.feature.mypage.data.mock.MockMyPage
 import com.umc.todait.feature.mypage.data.service.MyPageService
 import javax.inject.Inject
 
-private const val USE_MOCK = true
+private const val USE_MOCK = false
 class MyPageRepository @Inject constructor(
     private val myPageService: MyPageService,
 ) {

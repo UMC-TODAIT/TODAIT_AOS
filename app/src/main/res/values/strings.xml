@@ -113,6 +113,8 @@
     <!-- 이미 담은 장소를 다시 담으려 할 때 (중복선택 알럿) -->
     <string name="course_compose_duplicate_title">이미 선택한 장소에요.</string>
     <string name="course_compose_duplicate_desc">다른 장소를 선택해주세요.</string>
+    <!-- 다음 단계 전환 API(ordering/places-order/saving) 실패 시 -->
+    <string name="course_compose_submit_error_title">다음 단계로 이동하지 못했어요.</string>
 
     <!-- Course save (코스 저장) -->
     <string name="course_save_title">코스 저장</string>

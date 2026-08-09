@@ -2,7 +2,7 @@ package com.umc.todait.feature.saved.data.mock
 
 import com.umc.todait.feature.saved.data.dto.CourseDetailResponseDto
 import com.umc.todait.feature.saved.data.dto.DetailCoursePlaceDto
-import com.umc.todait.feature.saved.data.dto.DetailFoodCategoryDto
+import com.umc.todait.feature.saved.data.dto.DetailPlaceCategoryDto
 import com.umc.todait.feature.saved.data.dto.DetailMoodTagDto
 
 object MockCourseDetail {
@@ -17,8 +17,7 @@ object MockCourseDetail {
             name = "로맨틱"
         ),
 
-        representativeFoodCategory = DetailFoodCategoryDto(
-            foodCategoryId = 1,
+        representativePlaceCategory = DetailPlaceCategoryDto(
             code = "WESTERN",
             name = "양식"
         ),

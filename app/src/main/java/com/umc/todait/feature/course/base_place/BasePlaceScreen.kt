@@ -76,7 +76,8 @@ import com.umc.todait.ui.theme.White
  */
 @Composable
 fun BasePlaceScreen(
-    onNavigateToCompose: () -> Unit,
+    // 기준 장소 저장 성공 시 (courseDraftId, basePlaceId) 를 받아 코스 구성 플로우로 넘긴다.
+    onNavigateToCompose: (courseDraftId: Long, basePlaceId: Long) -> Unit,
     onNavigateToDetail: (Long) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
@@ -87,7 +88,8 @@ fun BasePlaceScreen(
     LaunchedEffect(viewModel) {
         viewModel.effect.collect { effect ->
             when (effect) {
-                BasePlaceEffect.NavigateToCompose -> onNavigateToCompose()
+                is BasePlaceEffect.NavigateToCompose ->
+                    onNavigateToCompose(effect.courseDraftId, effect.basePlaceId)
             }
         }
     }

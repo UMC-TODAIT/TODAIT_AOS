@@ -2,6 +2,7 @@ package com.umc.todait.feature.course.compose
 
 import com.umc.todait.feature.course.base_place.PlaceUiModel
 import com.umc.todait.feature.course.data.dto.PlaceCategoryResponseDto
+import com.umc.todait.feature.course.data.dto.PlaceDetailDto
 
 /**
  * 코스 구성하기 플로우(#26, 와이어프레임 "코스구성하기_수정버전")의 공유 UI 상태.
@@ -18,10 +19,10 @@ import com.umc.todait.feature.course.data.dto.PlaceCategoryResponseDto
  * 드래그 순서 변경 제스처/카테고리별 추천 필터/임시 코스 세션 연동은 TODO 로 남겨 후속 확장한다.
  */
 data class CourseComposeUiState(
-    // 기준 장소(코스 출발점). 임시 코스 세션 API 연동 전이라 현재는 null 가능.
+    // 임시 코스(course-draft) 핸들. 기준 장소 설정 화면에서 확정돼 경로 변수로 넘어온다.
+    val courseDraftId: Long,
+    // 기준 장소(코스 출발점). 상세 조회 전이거나 실패하면 null.
     val basePlace: PlaceUiModel? = null,
-    // 임시 코스(course-draft) 핸들. 진입 시 POST /api/course-drafts 로 발급. null 이면 미발급/실패.
-    val courseDraftId: Long? = null,
     // 카테고리 탭(장소 대분류). GET /api/place-categories 로 로드. 비어 있으면 탭 미표시.
     val categories: List<PlaceCategoryUiModel> = emptyList(),
     // 현재 선택된 카테고리 id. null 이면 미선택.
@@ -31,6 +32,10 @@ data class CourseComposeUiState(
     val selectedPlaces: List<PlaceUiModel> = emptyList(),
     // 노출 중인 시스템 알럿(중복 선택 등). null 이면 닫힘.
     val alert: CourseComposeAlert? = null,
+    // 다음 단계 전환 API(ordering / places-order / saving) 호출 중. 헤더 ✓ 중복 탭을 막는다.
+    val isSubmitting: Boolean = false,
+    // 단계 전환 실패 안내 문구. null 이면 없음.
+    val submitError: String? = null,
 ) {
     /** 담은 장소가 하나라도 있어야 확정(다음 단계) 가능. */
     val canConfirm: Boolean get() = selectedPlaces.isNotEmpty()
@@ -56,6 +61,28 @@ fun PlaceCategoryResponseDto.toUiModel(): PlaceCategoryUiModel = PlaceCategoryUi
     id = placeCategoryId,
     code = code,
     name = name,
+)
+
+/**
+ * 장소 상세 DTO → 기준 장소 화면 모델.
+ * 기준 장소는 지도 1번 핀과 경로 미리보기 첫 줄에만 쓰여 추천 이유·분위기 태그가 필요 없다.
+ */
+fun PlaceDetailDto.toBasePlaceUiModel(): PlaceUiModel = PlaceUiModel(
+    placeId = placeId,
+    name = name,
+    address = roadAddress?.takeIf { it.isNotBlank() } ?: address,
+    category = placeCategory.name,
+    // 상세 응답에는 지원 지역 정보가 없다. 지역 검증은 기준 장소 설정 시 이미 끝났으므로 비워 둔다.
+    areaName = "",
+    imageUrl = imageUrls.firstOrNull() ?: defaultImageUrl,
+    reasonText = null,
+    latitude = latitude,
+    longitude = longitude,
+    jibunAddress = address,
+    roadAddress = roadAddress,
+    categoryCode = placeCategory.code,
+    subCategory = subCategory,
+    phone = phone,
 )
 
 /**

@@ -20,6 +20,7 @@ import com.umc.todait.feature.auth.data.dto.TermAgreementDto
 import com.umc.todait.feature.auth.data.dto.TokenRefreshRequestDto
 import com.umc.todait.feature.auth.data.dto.TokenRefreshResultDto
 import com.umc.todait.feature.auth.data.service.AuthService
+import com.umc.todait.feature.mypage.data.dto.LogoutRequestDto
 import javax.inject.Inject
 
 /**
@@ -111,6 +112,10 @@ class AuthRepository @Inject constructor(
      * accessToken을 서버가 무효화하지 않으므로, 호출부(ViewModel)가 성공 여부와 무관하게
      * TokenDataStore.clearTokens()로 로컬 토큰을 반드시 지워야 한다.
      */
-    suspend fun logout(accessToken: String): ApiResult<Unit> =
-        safeApiCall { authService.logout(bearerAccessToken = "Bearer $accessToken") }
+    suspend fun logout(refreshToken: String): ApiResult<Unit> =
+        safeApiCall {
+            authService.logout(
+                LogoutRequestDto(refreshToken = refreshToken)
+            )
+        }
 }

@@ -8,7 +8,8 @@ import com.google.gson.annotations.SerializedName
  */
 data class MyPageResultDto(
     @SerializedName("memberId") val memberId: Long,
-    @SerializedName("email") val email: String,
+    // 소셜 회원이 카카오 이메일 제공에 동의하지 않으면 서버가 null 을 내려준다(명세상 정상 응답).
+    @SerializedName("email") val email: String?,
     @SerializedName("nickname") val nickname: String,
     @SerializedName("profileImageUrl") val profileImageUrl: String?,
     @SerializedName("savedCourseCount") val savedCourseCount: Int

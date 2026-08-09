@@ -150,4 +150,7 @@
     <string name="recommended_course_detail_save_button">코스 저장</string>
     <string name="recommended_course_detail_load_error">코스 정보를 불러오지 못했어요.</string>
     <string name="recommended_course_detail_retry">다시 시도</string>
+
+    <!-- 소셜 회원이 카카오 이메일 제공에 동의하지 않은 경우(API 명세상 email = null 은 정상 응답) -->
+    <string name="mypage_email_not_provided">이메일 미등록</string>
 </resources>

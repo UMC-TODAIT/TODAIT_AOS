@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -170,7 +171,7 @@ fun MyPageScreen(
 @Composable
 fun ProfileCard(
     nickname: String,
-    email: String,
+    email: String?,
     profileImageUrl: String? = null,
 ) {
     Card(
@@ -220,8 +221,9 @@ fun ProfileCard(
 
                 Spacer(modifier = Modifier.height(4.dp))
 
+                // 이메일 미제공 소셜 회원(email = null)도 카드 높이가 같도록 행을 비우지 않고 안내 문구를 넣는다.
                 Text(
-                    text = email,
+                    text = email ?: stringResource(R.string.mypage_email_not_provided),
                     color = Gray800,
                     fontSize = 14.sp
                 )

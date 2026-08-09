@@ -72,23 +72,15 @@ class SavedCoursesViewModel @Inject constructor(
     private fun getNickname() {
         viewModelScope.launch {
             when (val result = myPageRepository.getMyPage()) {
-
                 is ApiResult.Success -> {
                     _uiState.update {
                         it.copy(
-                            nickname = result.data.nickname,
-                            error = null
+                            nickname = result.data.nickname
                         )
                     }
                 }
-
                 is ApiResult.Failure -> {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            error = result.toUiError()
-                        )
-                    }
+                    // 닉네임 조회 실패는 저장된 코스 화면에 영향을 주지 않음
                 }
             }
         }

@@ -9,6 +9,5 @@ data class MyPageUiState(
     val profileImageUrl: String? = null,
     val savedCourseCount: Int = 0,
     val error: UiError? = null,
-    val isLoggedOut: Boolean = false,
     val isLogoutCompleted: Boolean = false
 )

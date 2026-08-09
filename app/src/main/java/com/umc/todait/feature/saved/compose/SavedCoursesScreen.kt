@@ -147,6 +147,9 @@ fun SavedCoursesScreen(
                                             navController.navigate(
                                                 Screen.CourseDetail.createRoute(course.id)
                                             )
+                                        },
+                                        onDeleteClick = {
+                                            // TODO: 삭제 API 연결 후 구현
                                         }
                                     )
                                 }
@@ -171,6 +174,9 @@ fun SavedCoursesScreen(
                                             navController.navigate(
                                                 Screen.CourseDetail.createRoute(course.id)
                                             )
+                                        },
+                                        onDeleteClick = {
+                                            // TODO: 삭제 API 연결 후 구현
                                         }
                                     )
                                 }

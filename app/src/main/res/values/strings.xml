@@ -81,6 +81,16 @@
     <string name="terms_agreement_check_content_description">동의</string>
     <string name="terms_agreement_detail_content_description">약관 상세 보기</string>
 
+    <!-- Mood select (분위기 선택) -->
+    <string name="mood_select_title">취향 설정</string>
+    <string name="mood_select_headline">오늘 어떤 분위기를 원하시나요?</string>
+    <string name="mood_select_subtitle">원하는 분위기를 최소 %1$d개 이상 선택해주세요.</string>
+
+    <!-- Food select (음식 선택) -->
+    <string name="food_select_title">취향 설정</string>
+    <string name="food_select_headline">어떤 음식을 드시고 싶으신가요?</string>
+    <string name="food_select_subtitle">음식 취향을 최소 %1$d개 이상 선택해주세요.</string>
+
     <!-- Base place (기준 장소 설정) -->
     <string name="base_place_title">기준 장소 설정</string>
     <string name="base_place_search_hint">원하는 장소를 검색해보세요</string>
@@ -150,4 +160,7 @@
     <string name="recommended_course_detail_save_button">코스 저장</string>
     <string name="recommended_course_detail_load_error">코스 정보를 불러오지 못했어요.</string>
     <string name="recommended_course_detail_retry">다시 시도</string>
+
+    <!-- 소셜 회원이 카카오 이메일 제공에 동의하지 않은 경우(API 명세상 email = null 은 정상 응답) -->
+    <string name="mypage_email_not_provided">이메일 미등록</string>
 </resources>

@@ -4,13 +4,18 @@ import com.umc.todait.core.network.BaseResponse
 import com.umc.todait.feature.course.data.dto.BasePlaceSetRequestDto
 import com.umc.todait.feature.course.data.dto.BasePlaceSetResponseDto
 import com.umc.todait.feature.course.data.dto.CourseDraftCreateResponseDto
+import com.umc.todait.feature.course.data.dto.CourseDraftFoodCategorySaveResponseDto
+import com.umc.todait.feature.course.data.dto.CourseDraftMoodTagSaveResponseDto
 import com.umc.todait.feature.course.data.dto.CourseDraftSavingEnterResponseDto
+import com.umc.todait.feature.course.data.dto.FoodCategorySaveRequestDto
+import com.umc.todait.feature.course.data.dto.MoodTagSaveRequestDto
 import com.umc.todait.feature.course.data.dto.OrderingEntryResponseDto
 import com.umc.todait.feature.course.data.dto.PlaceOrderUpdateRequestDto
 import com.umc.todait.feature.course.data.dto.PlaceOrderUpdateResponseDto
 import retrofit2.http.Body
 import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 
 /**
@@ -32,6 +37,26 @@ interface CourseDraftService {
      */
     @POST("api/course-drafts")
     suspend fun createCourseDraft(): BaseResponse<CourseDraftCreateResponseDto>
+
+    /**
+     * 분위기 태그 선택 저장 — PUT /api/course-drafts/{courseDraftId}/mood-tags
+     * 선택값 전체를 교체 저장한다(최소 2개~최대 6개).
+     */
+    @PUT("api/course-drafts/{courseDraftId}/mood-tags")
+    suspend fun saveMoodTags(
+        @Path("courseDraftId") courseDraftId: Long,
+        @Body request: MoodTagSaveRequestDto,
+    ): BaseResponse<CourseDraftMoodTagSaveResponseDto>
+
+    /**
+     * 음식 카테고리 선택 저장 — PUT /api/course-drafts/{courseDraftId}/food-categories
+     * 선택값 전체를 교체 저장한다(최소 1개).
+     */
+    @PUT("api/course-drafts/{courseDraftId}/food-categories")
+    suspend fun saveFoodCategories(
+        @Path("courseDraftId") courseDraftId: Long,
+        @Body request: FoodCategorySaveRequestDto,
+    ): BaseResponse<CourseDraftFoodCategorySaveResponseDto>
 
     /**
      * 임시 코스 기준 장소 설정 — PATCH /api/course-drafts/{courseDraftId}/base-place

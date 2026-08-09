@@ -36,6 +36,8 @@ import com.umc.todait.feature.auth.terms.TermDetailScreen
 import com.umc.todait.feature.auth.terms.TermsAgreementScreen
 import com.umc.todait.feature.auth.terms.TermsFlow
 import com.umc.todait.feature.course.base_place.BasePlaceScreen
+import com.umc.todait.feature.course.food.FoodSelectScreen
+import com.umc.todait.feature.course.mood.MoodSelectScreen
 import com.umc.todait.feature.course.compose.CourseComposeScreen
 import com.umc.todait.feature.course.compose.CourseComposeViewModel
 import com.umc.todait.feature.course.compose.SelectedPlacesScreen
@@ -48,7 +50,6 @@ import com.umc.todait.feature.home.coursedetail.RecommendedCourseDetailScreen
 import com.umc.todait.feature.saved.compose.CourseDetailScreen
 import com.umc.todait.feature.saved.compose.SavedCoursesScreen
 import com.umc.todait.ui.component.BottomBar
-import com.umc.todait.ui.component.PlaceholderScreen
 import com.umc.todait.ui.component.TopBar
 import com.umc.todait.ui.theme.Cream
 
@@ -70,7 +71,10 @@ fun TodaitApp() {
     // 하단 탭바를 노출할 화면 (플로우 중간 화면에서는 숨김)
     val bottomBarRoutes = BottomTab.entries.map { it.route }.toSet()
     val showBottomBar =
-        currentRoute in bottomBarRoutes || currentRoute?.startsWith("saved/") == true
+        currentRoute in bottomBarRoutes ||
+            currentRoute?.startsWith("saved/") == true ||
+            // 음식 선택(course/food/{courseDraftId})도 Figma 상 하단 탭이 보이는 화면이다.
+            currentRoute?.startsWith("course/food/") == true
 
     Scaffold(
         containerColor = Cream,
@@ -304,9 +308,33 @@ fun TodaitApp() {
             }
 
             // ---------- Course 생성 플로우 ----------
-            composable(Screen.MoodSelect.route) { PlaceholderScreen("분위기 선택") }
-            composable(Screen.FoodSelect.route) { PlaceholderScreen("음식 선택") }
-            composable(Screen.BasePlace.route) {
+            composable(Screen.MoodSelect.route) {
+                MoodSelectScreen(
+                    onBack = { navController.popBackStack() },
+                    onNavigateToFood = { courseDraftId ->
+                        navController.navigate(Screen.FoodSelect.createRoute(courseDraftId))
+                    },
+                )
+            }
+            composable(
+                route = Screen.FoodSelect.route,
+                arguments = listOf(
+                    navArgument(Screen.FoodSelect.ARG_COURSE_DRAFT_ID) { type = NavType.LongType },
+                ),
+            ) {
+                FoodSelectScreen(
+                    onBack = { navController.popBackStack() },
+                    onNavigateToBasePlace = { courseDraftId ->
+                        navController.navigate(Screen.BasePlace.createRoute(courseDraftId))
+                    },
+                )
+            }
+            composable(
+                route = Screen.BasePlace.route,
+                arguments = listOf(
+                    navArgument(Screen.BasePlace.ARG_COURSE_DRAFT_ID) { type = NavType.LongType },
+                ),
+            ) {
                 BasePlaceScreen(
                     // 기준 장소가 서버에 저장된 뒤에만 넘어온다(PATCH .../base-place 성공).
                     onNavigateToCompose = { courseDraftId, basePlaceId ->

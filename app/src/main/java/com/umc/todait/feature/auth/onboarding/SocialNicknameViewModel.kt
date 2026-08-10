@@ -49,7 +49,8 @@ class SocialNicknameViewModel @Inject constructor(
             // 경로 인자는 값이 없을 때 빈 문자열로 오므로 null 로 정규화해 화면 분기를 단순하게 둔다.
             profileImageUrl = savedStateHandle
                 .get<String>(Screen.SocialNickname.ARG_PROFILE_IMAGE_URL)
-                ?.takeIf { it.isNotBlank() },
+                ?.takeIf { it.isNotBlank() }
+                ?.toHttpsUrl(),
         ),
     )
     val uiState: StateFlow<SocialNicknameUiState> = _uiState.asStateFlow()
@@ -115,3 +116,14 @@ class SocialNicknameViewModel @Inject constructor(
         val NICKNAME_REGEX = Regex("^[0-9A-Za-z가-힣]{2,12}$")
     }
 }
+
+private const val HTTP_SCHEME = "http://"
+private const val HTTPS_SCHEME = "https://"
+
+/**
+ * 카카오가 내려주는 프로필 이미지 URL 은 `http://k.kakaocdn.net/...` 형태라, 앱의 cleartext 차단 정책
+ * (`usesCleartextTraffic=false`, 배포 API 서버만 예외)에 걸려 이미지 로드가 조용히 실패한다.
+ * 카카오 CDN 은 https 를 지원하므로 스킴만 올려서 요청한다 — 평문 예외 도메인을 늘리지 않기 위함이다.
+ */
+private fun String.toHttpsUrl(): String =
+    if (startsWith(HTTP_SCHEME)) HTTPS_SCHEME + removePrefix(HTTP_SCHEME) else this

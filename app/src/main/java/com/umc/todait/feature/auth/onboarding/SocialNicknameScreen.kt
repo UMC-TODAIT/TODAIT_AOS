@@ -127,7 +127,7 @@ private fun SocialNicknameContent(
                 // 소셜에서 받은 프로필 사진이 있으면 그대로, 없으면(미동의·기본이미지 등) 투데잇 기본 이미지를 쓴다.
                 if (uiState.profileImageUrl.isNullOrBlank()) {
                     Image(
-                        painter = painterResource(R.drawable.ic_my_page_profile),
+                        painter = painterResource(R.drawable.ic_signup_profile_default),
                         contentDescription = stringResource(R.string.social_nickname_profile_content_description),
                         modifier = Modifier.size(52.dp),
                     )

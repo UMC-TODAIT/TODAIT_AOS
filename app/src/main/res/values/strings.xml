@@ -47,7 +47,6 @@
 
     <!-- Signup complete (회원가입 완료) -->
     <string name="signup_complete_welcome">환영합니다!</string>
-    <string name="signup_complete_brand">투데잇</string>
     <string name="signup_complete_message">님\n가입이 완료되었습니다.</string>
     <string name="signup_complete_navigating">잠시 후 홈 화면으로 이동합니다...</string>
 

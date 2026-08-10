@@ -31,4 +31,6 @@ data class SocialLoginResultDto(
     @SerializedName("onboardingToken") val onboardingToken: String?,
     @SerializedName("email") val email: String?,
     @SerializedName("provider") val provider: String?,
+    // 신규 회원은 카카오/구글에서 조회한 값, 기존 회원은 DB 저장값. 미제공·기본이미지 등이면 null 이다.
+    @SerializedName("profileImageUrl") val profileImageUrl: String?,
 )

@@ -33,8 +33,24 @@ class HomeViewModel @Inject constructor(
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     init {
+        loadNickname()
         loadRecommendedCourses()
         loadRecommendedPlaces()
+    }
+
+    /**
+     * 상단 인사말에 쓸 닉네임을 불러온다 (GET /api/members/me).
+     *
+     * 실패해도 화면 전체를 막지 않는다 — 인사말만 이름 없이 표시하고 추천 섹션은 그대로 보여준다.
+     * (닉네임 전용 API 는 폐지되어 "마이페이지 사용자 정보 조회"로 통합됐다)
+     */
+    private fun loadNickname() {
+        viewModelScope.launch {
+            when (val result = homeRepository.getMyProfile()) {
+                is ApiResult.Success -> _uiState.update { it.copy(nickname = result.data.nickname) }
+                is ApiResult.Failure -> Unit
+            }
+        }
     }
 
     fun loadRecommendedCourses() {

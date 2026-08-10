@@ -11,11 +11,15 @@ sealed class Screen(val route: String) {
     data object Splash : Screen("splash")                       // 앱 최초 진입 — 저장된 토큰 확인 후 홈/로그인으로 자동 분기
     data object Login : Screen("login")
     data object EmailLogin : Screen("email_login")             // 첫화면 "이메일로 로그인/회원가입" 클릭 시
-    data object TermsAgreement : Screen("terms_agreement/{flow}?token={token}") { // 로그인 화면(카카오/구글) 또는 이메일 로그인 화면(회원가입) 진입 시
+    data object TermsAgreement : Screen("terms_agreement/{flow}?token={token}&profileImageUrl={profileImageUrl}") { // 로그인 화면(카카오/구글) 또는 이메일 로그인 화면(회원가입) 진입 시
         const val ARG_FLOW = "flow"                            // "email" | "kakao" | "google"
         const val ARG_TOKEN = "token"                          // 소셜 온보딩 임시 토큰(온보딩 완료 API 호출까지 들고 감). 이메일 플로우는 빈 문자열.
-        fun createRoute(flow: String, token: String = "") =
-            "terms_agreement/$flow?token=${URLEncoder.encode(token, "UTF-8")}"
+        // 소셜 프로필 사진 URL. 이 화면에서 쓰지는 않고 닉네임 설정 화면으로 넘겨주기만 한다. 없으면 빈 문자열.
+        const val ARG_PROFILE_IMAGE_URL = "profileImageUrl"
+        fun createRoute(flow: String, token: String = "", profileImageUrl: String? = null) =
+            "terms_agreement/$flow" +
+                "?token=${URLEncoder.encode(token, "UTF-8")}" +
+                "&profileImageUrl=${URLEncoder.encode(profileImageUrl.orEmpty(), "UTF-8")}"
     }
     data object TermDetail : Screen("terms_agreement/detail/{termId}") { // 약관 동의 화면에서 필수 약관 항목(화살표) 탭 시
         const val ARG_TERM_ID = "termId"
@@ -25,14 +29,17 @@ sealed class Screen(val route: String) {
         const val ARG_TERMS = "terms"                          // TermAgreementDto 리스트를 JSON 문자열로 직렬화한 값
         fun createRoute(termsJson: String) = "signup?terms=${URLEncoder.encode(termsJson, "UTF-8")}"
     }
-    data object SocialNickname : Screen("onboarding/nickname/{provider}?token={token}&terms={terms}") { // 약관 동의 완료(소셜 플로우)
+    data object SocialNickname : Screen("onboarding/nickname/{provider}?token={token}&terms={terms}&profileImageUrl={profileImageUrl}") { // 약관 동의 완료(소셜 플로우)
         const val ARG_PROVIDER = "provider"                    // "kakao" | "google"
         const val ARG_TOKEN = "token"                          // 온보딩 임시 토큰
         const val ARG_TERMS = "terms"                          // TermAgreementDto 리스트를 JSON 문자열로 직렬화한 값
-        fun createRoute(provider: String, token: String, termsJson: String) =
+        // 소셜 프로필 사진 URL(로그인 응답 그대로). 없으면 빈 문자열 → 화면에서 기본 이미지로 처리한다.
+        const val ARG_PROFILE_IMAGE_URL = "profileImageUrl"
+        fun createRoute(provider: String, token: String, termsJson: String, profileImageUrl: String? = null) =
             "onboarding/nickname/$provider" +
                 "?token=${URLEncoder.encode(token, "UTF-8")}" +
-                "&terms=${URLEncoder.encode(termsJson, "UTF-8")}"
+                "&terms=${URLEncoder.encode(termsJson, "UTF-8")}" +
+                "&profileImageUrl=${URLEncoder.encode(profileImageUrl.orEmpty(), "UTF-8")}"
     }
     data object SignupComplete : Screen("signup_complete?nickname={nickname}") { // 이메일 회원가입 / 소셜 온보딩 완료 직후
         const val ARG_NICKNAME = "nickname"                    // 가입 확정된 닉네임. 완료 문구에 그대로 노출한다.

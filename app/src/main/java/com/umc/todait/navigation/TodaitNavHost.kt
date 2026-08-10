@@ -499,10 +499,6 @@ fun TodaitApp() {
             composable(Screen.MyPage.route) {
                 MyPageScreen(navController = navController)
             }
-
-            composable(Screen.Notice.route) {
-                NoticeScreen(navController = navController)
-            }
         }
     }
 }

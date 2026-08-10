@@ -101,5 +101,4 @@ sealed class Screen(val route: String) {
 
     // MyPage (지니/황지희)
     data object MyPage : Screen("mypage")
-    object Notice : Screen("notice")
 }

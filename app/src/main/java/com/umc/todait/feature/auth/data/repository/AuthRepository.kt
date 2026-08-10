@@ -22,6 +22,8 @@ import com.umc.todait.feature.auth.data.dto.TokenRefreshResultDto
 import com.umc.todait.feature.auth.data.service.AuthService
 import com.umc.todait.feature.mypage.data.dto.LogoutRequestDto
 import javax.inject.Inject
+import retrofit2.HttpException
+import java.io.IOException
 
 /**
  * 인증(member/auth) 도메인 데이터 접근 계층.
@@ -112,10 +114,30 @@ class AuthRepository @Inject constructor(
      * accessToken을 서버가 무효화하지 않으므로, 호출부(ViewModel)가 성공 여부와 무관하게
      * TokenDataStore.clearTokens()로 로컬 토큰을 반드시 지워야 한다.
      */
-    suspend fun logout(refreshToken: String): ApiResult<Unit> =
-        safeApiCall {
-            authService.logout(
+    suspend fun logout(refreshToken: String): ApiResult<Unit> {
+        return try {
+            val response = authService.logout(
                 LogoutRequestDto(refreshToken = refreshToken)
             )
+
+            if (response.isSuccess) {
+                ApiResult.Success(Unit)
+            } else {
+                ApiResult.Failure.ServerError(
+                    code = response.code,
+                    message = response.message
+                )
+            }
+        } catch (e: HttpException) {
+            ApiResult.Failure.ServerError(
+                code = null,
+                message = e.message(),
+                httpStatus = e.code()
+            )
+        } catch (e: IOException) {
+            ApiResult.Failure.NetworkError(e)
+        } catch (e: Throwable) {
+            ApiResult.Failure.UnknownError(e)
         }
+    }
 }

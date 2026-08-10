@@ -69,6 +69,24 @@ class SavedCoursesViewModel @Inject constructor(
         }
     }
 
+    fun deleteSavedCourse(courseId: Long) {
+        viewModelScope.launch {
+            when (val result = savedRepository.deleteSavedCourse(courseId)) {
+                is ApiResult.Success -> {
+                    getSavedCourses()
+                }
+
+                is ApiResult.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            error = result.toUiError()
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     private fun getNickname() {
         viewModelScope.launch {
             when (val result = myPageRepository.getMyPage()) {

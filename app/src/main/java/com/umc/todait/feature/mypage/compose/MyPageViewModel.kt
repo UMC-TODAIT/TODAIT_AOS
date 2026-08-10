@@ -46,7 +46,13 @@ class MyPageViewModel @Inject constructor(
                             isLoading = false,
                             nickname = result.data.nickname,
                             email = result.data.email,
-                            profileImageUrl = result.data.profileImageUrl,
+                            profileImageUrl = result.data.profileImageUrl?.let { url ->
+                                if (url.startsWith("http://")) {
+                                    "https://${url.removePrefix("http://")}"
+                                } else {
+                                    url
+                                }
+                            },
                             savedCourseCount = result.data.savedCourseCount
                         )
                     }

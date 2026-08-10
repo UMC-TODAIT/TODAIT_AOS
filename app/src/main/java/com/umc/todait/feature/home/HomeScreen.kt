@@ -62,7 +62,6 @@ import com.umc.todait.ui.theme.HomePlaceGreenEnd
 import com.umc.todait.ui.theme.HomePlaceGreenStart
 import com.umc.todait.ui.theme.HomePlaceMintEnd
 import com.umc.todait.ui.theme.HomePlaceMintStart
-import com.umc.todait.ui.theme.Pink400
 import com.umc.todait.ui.theme.Pink800
 import com.umc.todait.ui.theme.Pink900
 import com.umc.todait.ui.theme.TodaitTheme
@@ -70,13 +69,12 @@ import com.umc.todait.ui.theme.White
 
 /**
  * 홈 화면(라우트 진입점). ViewModel의 상태를 구독한다.
- * "오늘의 추천 코스" 카드 탭 → 코스 상세, 상단 알림/프로필 아이콘은 각각 상위(NavHost)로 위임한다.
+ * "오늘의 추천 코스" 카드 탭 → 코스 상세, 상단 프로필 아이콘은 상위(NavHost)로 위임한다.
  */
 @Composable
 fun HomeScreen(
     onCourseClick: (Long) -> Unit,
     onPlaceClick: (Long) -> Unit,
-    onNotificationClick: () -> Unit,
     onProfileClick: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel(),
@@ -87,7 +85,6 @@ fun HomeScreen(
         uiState = uiState,
         onCourseClick = onCourseClick,
         onPlaceClick = onPlaceClick,
-        onNotificationClick = onNotificationClick,
         onProfileClick = onProfileClick,
         onRetryCourses = viewModel::loadRecommendedCourses,
         onRetryPlaces = viewModel::loadRecommendedPlaces,
@@ -100,7 +97,6 @@ private fun HomeContent(
     uiState: HomeUiState,
     onCourseClick: (Long) -> Unit,
     onPlaceClick: (Long) -> Unit,
-    onNotificationClick: () -> Unit,
     onProfileClick: () -> Unit,
     onRetryCourses: () -> Unit,
     onRetryPlaces: () -> Unit,
@@ -112,12 +108,16 @@ private fun HomeContent(
             .background(Cream)
             .verticalScroll(rememberScrollState()),
     ) {
-        HomeTopBar(onNotificationClick = onNotificationClick, onProfileClick = onProfileClick)
+        HomeTopBar(onProfileClick = onProfileClick)
 
         Spacer(Modifier.height(25.dp))
 
         Text(
-            text = stringResource(R.string.home_greeting),
+            text = if (uiState.hasNickname) {
+                stringResource(R.string.home_greeting, uiState.nickname)
+            } else {
+                stringResource(R.string.home_greeting_anonymous)
+            },
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             color = Gray900,
@@ -136,8 +136,16 @@ private fun HomeContent(
         Spacer(Modifier.height(32.dp))
         SectionHeader(
             icon = { DiamondIcon() },
-            title = stringResource(R.string.home_section_places_title),
-            subtitle = stringResource(R.string.home_section_places_subtitle),
+            title = if (uiState.hasNickname) {
+                stringResource(R.string.home_section_places_title, uiState.nickname)
+            } else {
+                stringResource(R.string.home_section_places_title_anonymous)
+            },
+            subtitle = if (uiState.hasNickname) {
+                stringResource(R.string.home_section_places_subtitle, uiState.nickname)
+            } else {
+                stringResource(R.string.home_section_places_subtitle_anonymous)
+            },
         )
         Spacer(Modifier.height(16.dp))
         Column(
@@ -152,7 +160,7 @@ private fun HomeContent(
 }
 
 @Composable
-private fun HomeTopBar(onNotificationClick: () -> Unit, onProfileClick: () -> Unit) {
+private fun HomeTopBar(onProfileClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -171,39 +179,10 @@ private fun HomeTopBar(onNotificationClick: () -> Unit, onProfileClick: () -> Un
             modifier = Modifier.height(23.dp),
         )
         Spacer(Modifier.weight(1f))
-        NotificationIconButton(onClick = onNotificationClick)
-        Spacer(Modifier.width(10.dp))
         HeaderIconButton(
             iconRes = R.drawable.ic_my_page_profile,
             contentDescription = stringResource(R.string.home_profile_content_description),
             onClick = onProfileClick,
-        )
-    }
-}
-
-/**
- * 알림 아이콘(종) + 핑크 알림 표시(오른쪽 위).
- * 지금은 표시가 항상 노출된다(피그마 기준). 안읽음 알림이 있을 때만 노출할지는 디자인 확인 후 조건부로 바꾼다.
- */
-@Composable
-private fun NotificationIconButton(onClick: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .size(24.dp)
-            .clickable(onClick = onClick),
-    ) {
-        Image(
-            painter = painterResource(R.drawable.ic_home_notification),
-            contentDescription = stringResource(R.string.home_notification_content_description),
-            modifier = Modifier.fillMaxSize(),
-        )
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .offset(x = (-1).dp, y = 1.dp)
-                .size(8.dp)
-                .clip(CircleShape)
-                .background(Pink400),
         )
     }
 }
@@ -588,7 +567,7 @@ private fun HomeScreenDefaultPreview() {
                     ),
                 ),
             ),
-            onCourseClick = {}, onPlaceClick = {}, onNotificationClick = {}, onProfileClick = {}, onRetryCourses = {}, onRetryPlaces = {},
+            onCourseClick = {}, onPlaceClick = {}, onProfileClick = {}, onRetryCourses = {}, onRetryPlaces = {},
         )
     }
 }
@@ -599,7 +578,7 @@ private fun HomeScreenLoadingPreview() {
     TodaitTheme {
         HomeContent(
             uiState = HomeUiState(placesState = HomePlacesState.Loading),
-            onCourseClick = {}, onPlaceClick = {}, onNotificationClick = {}, onProfileClick = {}, onRetryCourses = {}, onRetryPlaces = {},
+            onCourseClick = {}, onPlaceClick = {}, onProfileClick = {}, onRetryCourses = {}, onRetryPlaces = {},
         )
     }
 }

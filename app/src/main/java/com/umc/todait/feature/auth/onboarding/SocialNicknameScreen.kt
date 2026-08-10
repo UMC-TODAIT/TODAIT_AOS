@@ -19,10 +19,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -33,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -42,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.umc.todait.R
 import com.umc.todait.ui.component.HeaderCircleButton
 import com.umc.todait.ui.theme.DisabledButtonGray
@@ -125,12 +124,22 @@ private fun SocialNicknameContent(
                     .background(VerifyPink),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(
-                    imageVector = Icons.Filled.Person,
-                    contentDescription = stringResource(R.string.social_nickname_profile_content_description),
-                    tint = White,
-                    modifier = Modifier.size(52.dp),
-                )
+                // 소셜에서 받은 프로필 사진이 있으면 그대로, 없으면(미동의·기본이미지 등) 투데잇 기본 이미지를 쓴다.
+                if (uiState.profileImageUrl.isNullOrBlank()) {
+                    Image(
+                        painter = painterResource(R.drawable.ic_signup_profile_default),
+                        contentDescription = stringResource(R.string.social_nickname_profile_content_description),
+                        modifier = Modifier.size(52.dp),
+                    )
+                } else {
+                    AsyncImage(
+                        model = uiState.profileImageUrl,
+                        contentDescription = stringResource(R.string.social_nickname_profile_content_description),
+                        contentScale = ContentScale.Crop,
+                        // 원형 배경을 가득 채우도록 Box 크기에 맞춘다(아이콘처럼 52dp 로 두면 여백이 남는다).
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
             }
 
             Spacer(Modifier.height(16.dp))

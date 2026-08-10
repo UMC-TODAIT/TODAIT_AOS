@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  소셜 간편가입 닉네임 설정 화면의 기본 프로필 이미지(카카오/구글 프로필 사진이 없을 때).
+  분홍 원 배경 위에 얹히므로 흰색 실루엣이다.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="36dp"
+    android:height="38dp"
+    android:viewportWidth="36"
+    android:viewportHeight="38">
+    <!-- 몸통 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M0,28.7678a17.8275,8.78638 0 1,0 35.655,0a17.8275,8.78638 0 1,0 -35.655,0Z" />
+    <!-- 머리 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M9.04122,8.78638a8.78638,8.78638 0 1,0 17.57276,0a8.78638,8.78638 0 1,0 -17.57276,0Z" />
+</vector>

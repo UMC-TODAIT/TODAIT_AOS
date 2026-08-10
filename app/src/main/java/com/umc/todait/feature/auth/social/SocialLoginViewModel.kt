@@ -20,12 +20,37 @@ import javax.inject.Inject
 
 enum class SocialProvider { KAKAO, GOOGLE }
 
+/**
+ * 소셜 로그인 응답의 `loginStatus`. 명세가 정의한 두 값만 인정한다.
+ * (카카오/구글 로그인 API 명세 "비고 — 프론트는 응답의 loginStatus에 따라 처리합니다")
+ */
+enum class SocialLoginStatus {
+    /** 기존 회원. accessToken/refreshToken 저장 후 홈으로. */
+    LOGIN_COMPLETED,
+
+    /** 신규 회원. onboardingToken 을 들고 약관·닉네임 온보딩으로. */
+    ONBOARDING_REQUIRED,
+    ;
+
+    companion object {
+        /** 명세에 없는 값이나 null 은 판별 불가로 두어 호출부가 실패로 처리하게 한다. */
+        fun from(raw: String?): SocialLoginStatus? = entries.firstOrNull { it.name == raw }
+    }
+}
+
 sealed interface SocialLoginEffect {
     /** 기존 회원 로그인 완료(토큰 저장됨) → 홈으로 이동. */
     data class Success(val provider: SocialProvider) : SocialLoginEffect
 
-    /** 신규 회원 → 온보딩(약관 동의 → 닉네임 설정) 플로우로 이동. onboardingToken은 온보딩 완료 API 호출까지 들고 가야 한다. */
-    data class NeedsOnboarding(val provider: SocialProvider, val onboardingToken: String) : SocialLoginEffect
+    /**
+     * 신규 회원 → 온보딩(약관 동의 → 닉네임 설정) 플로우로 이동. onboardingToken은 온보딩 완료 API 호출까지 들고 가야 한다.
+     * [profileImageUrl]은 닉네임 설정 화면에 표시할 소셜 프로필 사진으로, null이면 투데잇 기본 이미지를 쓴다.
+     */
+    data class NeedsOnboarding(
+        val provider: SocialProvider,
+        val onboardingToken: String,
+        val profileImageUrl: String?,
+    ) : SocialLoginEffect
 
     data class Failure(val message: String) : SocialLoginEffect
 }
@@ -86,23 +111,53 @@ class SocialLoginViewModel @Inject constructor(
 
     private suspend fun handleBackendResult(provider: SocialProvider, result: ApiResult<SocialLoginResultDto>) {
         when (result) {
-            is ApiResult.Success -> {
-                val data = result.data
-                when {
-                    // onboardingToken 이 있으면 신규 회원 — 온보딩 필요.
-                    !data.onboardingToken.isNullOrBlank() ->
-                        _effect.send(SocialLoginEffect.NeedsOnboarding(provider, data.onboardingToken))
-                    // 기존 회원 — 서비스 토큰 저장 후 로그인 완료.
-                    !data.accessToken.isNullOrBlank() && !data.refreshToken.isNullOrBlank() -> {
-                        tokenDataStore.saveTokens(data.accessToken, data.refreshToken)
-                        _effect.send(SocialLoginEffect.Success(provider))
-                    }
-                    else -> _effect.send(SocialLoginEffect.Failure("로그인 응답이 올바르지 않아요."))
-                }
-            }
+            is ApiResult.Success -> handleLoginStatus(provider, result.data)
 
             is ApiResult.Failure ->
                 _effect.send(SocialLoginEffect.Failure(result.toUiError().message))
         }
+    }
+
+    /**
+     * 명세대로 [SocialLoginResultDto.loginStatus] 로 신규/기존을 가른다.
+     *
+     * 토큰 유무는 분기 기준이 아니라 **검증**으로만 쓴다 — 상태와 맞지 않는 응답(예: ONBOARDING_REQUIRED
+     * 인데 onboardingToken 이 비어 있음)은 진행할 수 없으므로 실패로 드러낸다.
+     * 명세에 없는 상태가 오면 조용히 넘어가지 않고 실패 처리해, 서버가 상태를 추가했을 때 바로 알아채도록 한다.
+     */
+    private suspend fun handleLoginStatus(provider: SocialProvider, data: SocialLoginResultDto) {
+        when (SocialLoginStatus.from(data.loginStatus)) {
+            SocialLoginStatus.ONBOARDING_REQUIRED -> {
+                val onboardingToken = data.onboardingToken
+                if (onboardingToken.isNullOrBlank()) {
+                    _effect.send(SocialLoginEffect.Failure(ERROR_INVALID_RESPONSE))
+                    return
+                }
+                _effect.send(
+                    SocialLoginEffect.NeedsOnboarding(
+                        provider = provider,
+                        onboardingToken = onboardingToken,
+                        profileImageUrl = data.profileImageUrl,
+                    ),
+                )
+            }
+
+            SocialLoginStatus.LOGIN_COMPLETED -> {
+                val accessToken = data.accessToken
+                val refreshToken = data.refreshToken
+                if (accessToken.isNullOrBlank() || refreshToken.isNullOrBlank()) {
+                    _effect.send(SocialLoginEffect.Failure(ERROR_INVALID_RESPONSE))
+                    return
+                }
+                tokenDataStore.saveTokens(accessToken, refreshToken)
+                _effect.send(SocialLoginEffect.Success(provider))
+            }
+
+            null -> _effect.send(SocialLoginEffect.Failure(ERROR_INVALID_RESPONSE))
+        }
+    }
+
+    private companion object {
+        const val ERROR_INVALID_RESPONSE = "로그인 응답이 올바르지 않아요."
     }
 }

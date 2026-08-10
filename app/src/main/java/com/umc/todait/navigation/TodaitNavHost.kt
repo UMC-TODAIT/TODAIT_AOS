@@ -140,15 +140,18 @@ fun TodaitApp() {
                                     popUpTo(Screen.Login.route) { inclusive = true }
                                 }
                             // 신규 회원 — 약관 동의(→ 닉네임) 온보딩 플로우로 이동. onboardingToken은 온보딩 완료 API 호출까지 들고 간다.
-                            is SocialLoginEffect.NeedsOnboarding -> when (effect.provider) {
-                                SocialProvider.KAKAO ->
-                                    navController.navigate(
-                                        Screen.TermsAgreement.createRoute(TermsFlow.KAKAO.route, effect.onboardingToken),
-                                    )
-                                SocialProvider.GOOGLE ->
-                                    navController.navigate(
-                                        Screen.TermsAgreement.createRoute(TermsFlow.GOOGLE.route, effect.onboardingToken),
-                                    )
+                            is SocialLoginEffect.NeedsOnboarding -> {
+                                val flow = when (effect.provider) {
+                                    SocialProvider.KAKAO -> TermsFlow.KAKAO
+                                    SocialProvider.GOOGLE -> TermsFlow.GOOGLE
+                                }
+                                navController.navigate(
+                                    Screen.TermsAgreement.createRoute(
+                                        flow = flow.route,
+                                        token = effect.onboardingToken,
+                                        profileImageUrl = effect.profileImageUrl,
+                                    ),
+                                )
                             }
                             // TODO: 실패 안내(스낵바) 연결.
                             is SocialLoginEffect.Failure -> Unit
@@ -182,9 +185,15 @@ fun TodaitApp() {
                         type = NavType.StringType
                         defaultValue = ""
                     },
+                    navArgument(Screen.TermsAgreement.ARG_PROFILE_IMAGE_URL) {
+                        type = NavType.StringType
+                        defaultValue = ""
+                    },
                 ),
             ) { backStackEntry ->
                 val onboardingToken = backStackEntry.arguments?.getString(Screen.TermsAgreement.ARG_TOKEN).orEmpty()
+                val profileImageUrl =
+                    backStackEntry.arguments?.getString(Screen.TermsAgreement.ARG_PROFILE_IMAGE_URL).orEmpty()
                 TermsAgreementScreen(
                     onBackClick = { navController.popBackStack() },
                     onNext = { flow, agreedTerms ->
@@ -199,6 +208,7 @@ fun TodaitApp() {
                                         provider = SignupProvider.KAKAO.route,
                                         token = onboardingToken,
                                         termsJson = termsJson,
+                                        profileImageUrl = profileImageUrl,
                                     ),
                                 )
                             TermsFlow.GOOGLE ->
@@ -207,6 +217,7 @@ fun TodaitApp() {
                                         provider = SignupProvider.GOOGLE.route,
                                         token = onboardingToken,
                                         termsJson = termsJson,
+                                        profileImageUrl = profileImageUrl,
                                     ),
                                 )
                         }
@@ -249,6 +260,10 @@ fun TodaitApp() {
                     navArgument(Screen.SocialNickname.ARG_PROVIDER) { type = NavType.StringType },
                     navArgument(Screen.SocialNickname.ARG_TOKEN) { type = NavType.StringType },
                     navArgument(Screen.SocialNickname.ARG_TERMS) { type = NavType.StringType },
+                    navArgument(Screen.SocialNickname.ARG_PROFILE_IMAGE_URL) {
+                        type = NavType.StringType
+                        defaultValue = ""
+                    },
                 ),
             ) {
                 SocialNicknameScreen(

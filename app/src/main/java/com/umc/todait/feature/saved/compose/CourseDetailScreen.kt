@@ -119,6 +119,13 @@ fun CourseDetailScreen(
                         isEditing = isEditing,
                         onEditingChange = {
                             isEditing = it
+                        },
+                        onSaveMemo = { memo ->
+                            viewModel.updateCourseMemo(
+                                courseId = courseId,
+                                memo = memo
+                            )
+                            isEditing = false
                         }
                     )
 
@@ -224,7 +231,8 @@ private fun DetailHeader(
 private fun SummaryCard(
     uiState: CourseDetailUiState,
     isEditing: Boolean,
-    onEditingChange: (Boolean) -> Unit
+    onEditingChange: (Boolean) -> Unit,
+    onSaveMemo: (String) -> Unit
 ) {
     var showExitDialog by remember { mutableStateOf(false) }
     val backgroundImage = getMoodBackground(uiState.moodTagCode)
@@ -298,7 +306,8 @@ private fun SummaryCard(
                 MemoSection(
                     memo = uiState.memo,
                     isEditing = isEditing,
-                    onEditingChange = onEditingChange
+                    onEditingChange = onEditingChange,
+                    onSaveMemo = onSaveMemo
                 )
             }
         }
@@ -309,7 +318,8 @@ private fun SummaryCard(
 fun MemoSection(
     memo: String,
     isEditing: Boolean,
-    onEditingChange: (Boolean) -> Unit
+    onEditingChange: (Boolean) -> Unit,
+    onSaveMemo: (String) -> Unit
 ) {
     var editMemo by remember(memo) {
         mutableStateOf(memo)
@@ -371,7 +381,7 @@ fun MemoSection(
                             CircleShape
                         )
                         .clickable {
-                            onEditingChange(false)
+                            onSaveMemo(editMemo)
                         },
                     contentAlignment = Alignment.Center
                 ) {
@@ -432,7 +442,7 @@ fun MemoSection(
                                 .verticalScroll(rememberScrollState()),
                             contentAlignment = Alignment.TopStart
                         ) {
-                            if (memo.isEmpty()) {
+                            if (editMemo.isEmpty()) {
                                 Text(
                                     text = "",
                                     color = Gray600,

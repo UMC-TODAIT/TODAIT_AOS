@@ -48,6 +48,7 @@ class CourseDetailViewModel @Inject constructor(
                             memo = data.memo ?: "",
 
                             places = data.places.map { place -> PlaceUiModel(
+                                coursePlaceId = place.coursePlaceId,
                                 placeId = place.placeId,
                                 isStartPlace = place.visitOrder == 1,
                                 name = place.name,
@@ -74,6 +75,70 @@ class CourseDetailViewModel @Inject constructor(
             }
         }
     }
+
+    fun updateCourseMemo(
+        courseId: Long,
+        memo: String?
+    ) {
+        viewModelScope.launch {
+            when (val result = savedRepository.updateCourseMemo(courseId, memo)) {
+                is ApiResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            memo = result.data.memo ?: "",
+                            error = null
+                        )
+                    }
+                }
+
+                is ApiResult.Failure -> {
+                    _uiState.update {
+                        it.copy(error = result.toUiError())
+                    }
+                }
+            }
+        }
+    }
+
+    fun updateCoursePlaceMemo(
+        courseId: Long,
+        coursePlaceId: Long,
+        memo: String?
+    ) {
+        viewModelScope.launch {
+            when (
+                val result = savedRepository.updateCoursePlaceMemo(
+                    courseId = courseId,
+                    coursePlaceId = coursePlaceId,
+                    memo = memo
+                )
+            ) {
+                is ApiResult.Success -> {
+                    _uiState.update { state ->
+                        state.copy(
+                            places = state.places.map { place ->
+                                if (place.coursePlaceId == coursePlaceId) {
+                                    place.copy(
+                                        memo = result.data.memo ?: ""
+                                    )
+                                } else {
+                                    place
+                                }
+                            },
+                            error = null
+                        )
+                    }
+                }
+
+                is ApiResult.Failure -> {
+                    _uiState.update {
+                        it.copy(error = result.toUiError())
+                    }
+                }
+            }
+        }
+    }
+
     fun clearError() {
         _uiState.update {
             it.copy(error = null)
@@ -93,3 +158,5 @@ private fun getMoodBackground(
         else -> R.drawable.bg_saved_courses_romantic
     }
 }
+
+

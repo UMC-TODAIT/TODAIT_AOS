@@ -21,6 +21,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,6 +43,8 @@ import com.umc.todait.ui.component.ErrorContent
 import com.umc.todait.ui.component.LoadingIndicator
 import com.umc.todait.ui.theme.Cream
 import com.umc.todait.ui.theme.Gray800
+import androidx.compose.runtime.setValue
+import com.umc.todait.ui.component.CommonDialog
 
 
 @Preview(showBackground = true, showSystemUi = true)
@@ -57,6 +61,10 @@ fun SavedCoursesScreen(
 ) {
     val viewModel: SavedCoursesViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
+
+    var deleteCourseId by remember {
+        mutableStateOf<Long?>(null)
+    }
 
     when {
         uiState.isLoading -> {
@@ -147,6 +155,9 @@ fun SavedCoursesScreen(
                                             navController.navigate(
                                                 Screen.CourseDetail.createRoute(course.id)
                                             )
+                                        },
+                                        onDeleteClick = {
+                                            deleteCourseId = course.id
                                         }
                                     )
                                 }
@@ -171,6 +182,9 @@ fun SavedCoursesScreen(
                                             navController.navigate(
                                                 Screen.CourseDetail.createRoute(course.id)
                                             )
+                                        },
+                                        onDeleteClick = {
+                                            deleteCourseId = course.id
                                         }
                                     )
                                 }
@@ -190,6 +204,19 @@ fun SavedCoursesScreen(
                         .offset(y = 80.dp),
                     contentScale = ContentScale.FillBounds
                 )
+
+                deleteCourseId?.let { courseId ->
+                    CommonDialog(
+                        title = "저장된 코스를 삭제하시겠어요?",
+                        onConfirm = {
+                            viewModel.deleteSavedCourse(courseId)
+                            deleteCourseId = null
+                        },
+                        onDismiss = {
+                            deleteCourseId = null
+                        }
+                    )
+                }
             }
         }
     }

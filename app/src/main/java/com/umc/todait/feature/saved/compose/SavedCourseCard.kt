@@ -2,6 +2,7 @@ package com.umc.todait.feature.saved.compose
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,7 +32,8 @@ import com.umc.todait.feature.saved.CourseUiModel
 @Composable
 fun SavedCourseCard(
     course: CourseUiModel,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onDeleteClick: () -> Unit
 ) {
     Card(
         onClick = onClick,
@@ -140,6 +142,17 @@ fun SavedCourseCard(
                     }
                 }
             }
+            Image(
+                painter = painterResource(R.drawable.ic_course_delete),
+                contentDescription = "코스 삭제",
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 12.dp, end = 12.dp)
+                    .size(13.dp)
+                    .clickable {
+                        onDeleteClick()
+                    }
+            )
         }
     }
 }

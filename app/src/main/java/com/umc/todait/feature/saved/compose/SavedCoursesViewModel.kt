@@ -1,8 +1,11 @@
 package com.umc.todait.feature.saved.compose
 
 import androidx.lifecycle.viewModelScope
+import com.umc.todait.R
 import com.umc.todait.core.base.BaseViewModel
 import com.umc.todait.core.network.ApiResult
+import com.umc.todait.core.network.toUiError
+import com.umc.todait.feature.mypage.data.repository.MyPageRepository
 import com.umc.todait.feature.saved.CourseUiModel
 import com.umc.todait.feature.saved.data.dto.SavedCourseDto
 import com.umc.todait.feature.saved.data.repository.SavedRepository
@@ -13,9 +16,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.umc.todait.R
-import com.umc.todait.core.network.toUiError
-import com.umc.todait.feature.mypage.data.repository.MyPageRepository
 
 @HiltViewModel
 class SavedCoursesViewModel @Inject constructor(
@@ -46,7 +46,7 @@ class SavedCoursesViewModel @Inject constructor(
                         it.copy(
                             isLoading = false,
                             recentCourses = result.data.recentCourses.map { it.toUiModel() },
-                            popularCourses = result.data.popularCourses.map { it.toUiModel() },
+                            popularCourses = result.data.popularCourses.map { it.toUiModel() }
                         )
                     }
                 }
@@ -69,10 +69,27 @@ class SavedCoursesViewModel @Inject constructor(
         }
     }
 
+    fun deleteSavedCourse(courseId: Long) {
+        viewModelScope.launch {
+            when (val result = savedRepository.deleteSavedCourse(courseId)) {
+                is ApiResult.Success -> {
+                    getSavedCourses()
+                }
+
+                is ApiResult.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            error = result.toUiError()
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     private fun getNickname() {
         viewModelScope.launch {
             when (val result = myPageRepository.getMyPage()) {
-
                 is ApiResult.Success -> {
                     _uiState.update {
                         it.copy(
@@ -83,12 +100,7 @@ class SavedCoursesViewModel @Inject constructor(
                 }
 
                 is ApiResult.Failure -> {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            error = result.toUiError()
-                        )
-                    }
+                    // 닉네임 조회 실패는 저장된 코스 화면에 영향을 주지 않음
                 }
             }
         }
@@ -97,16 +109,16 @@ class SavedCoursesViewModel @Inject constructor(
     private fun SavedCourseDto.toUiModel(): CourseUiModel {
         return CourseUiModel(
             id = courseId,
-
-            backgroundImage = getBackgroundImage(representativeMoodTag?.code),
-            topImage = getTopImage(representativeMoodTag?.code),
-
+            backgroundImage = getBackgroundImage(
+                representativeMoodTag?.code
+            ),
+            topImage = getTopImage(
+                representativeMoodTag?.code
+            ),
             title = title,
             date = savedDate,
-
             moodTag = representativeMoodTag?.name,
             foodTag = representativePlaceCategory?.name,
-
             places = previewPlaces.map { it.name }
         )
     }

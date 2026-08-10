@@ -76,6 +76,14 @@ fun TodaitApp() {
             // 음식 선택(course/food/{courseDraftId})도 Figma 상 하단 탭이 보이는 화면이다.
             currentRoute?.startsWith("course/food/") == true
 
+    val selectedBottomBarRoute = when {
+        currentRoute?.startsWith("saved/") == true ->
+            Screen.SavedCourses.route
+
+        else ->
+            currentRoute
+    }
+
     Scaffold(
         containerColor = Cream,
         topBar = {
@@ -86,7 +94,7 @@ fun TodaitApp() {
             if(showBottomBar){
 
                 BottomBar(
-                    currentRoute = currentRoute,
+                    currentRoute = selectedBottomBarRoute,
                     onTabClick = { tab ->
 
                         // 탭을 누르면 항상 그 탭의 루트 화면으로 리셋한다(예: 코스 상세까지 들어갔다가

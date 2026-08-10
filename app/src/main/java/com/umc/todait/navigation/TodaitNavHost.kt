@@ -295,7 +295,6 @@ fun TodaitApp() {
                         navController.navigate(Screen.PlaceDetail.createRoute(placeId))
                     },
                     // TODO: 알림 화면 없음(스코프 밖) — 생기면 연결.
-                    onNotificationClick = {},
                     onProfileClick = { navController.navigate(Screen.MyPage.route) },
                 )
             }

@@ -1,6 +1,7 @@
 package com.umc.todait.feature.home.data.service
 
 import com.umc.todait.core.network.BaseResponse
+import com.umc.todait.feature.home.data.dto.HomeMemberDto
 import com.umc.todait.feature.home.data.dto.HomeRecommendedPlaceResultDto
 import com.umc.todait.feature.home.data.dto.RecommendedCourseDetailDto
 import com.umc.todait.feature.home.data.dto.RecommendedCourseListResultDto
@@ -14,6 +15,16 @@ import retrofit2.http.Query
  * 홈 화면 전용 Retrofit 서비스. 로그인 필요(Authorization: Bearer, AuthInterceptor가 일괄 부착).
  */
 interface HomeService {
+
+    /**
+     * 홈 화면 상단 인사말용 회원 조회 — GET /api/members/me
+     *
+     * 명세상 홈은 통합 API 없이 닉네임·추천 코스·추천 장소를 각각 호출한다.
+     * 닉네임 전용 `GET /api/members/me/nickname` 은 폐지되어 이 엔드포인트로 통합됐다.
+     * 응답에 "님"은 포함되지 않으므로 화면에서 붙인다.
+     */
+    @GET("api/members/me")
+    suspend fun getMyProfile(): BaseResponse<HomeMemberDto>
 
     /**
      * 홈 화면 추천 장소 목록 조회 — GET /api/recommended-places?page&size&latitude&longitude

@@ -70,7 +70,7 @@ import com.umc.todait.ui.theme.White
 @Composable
 fun SocialNicknameScreen(
     onBackClick: () -> Unit,
-    onNavigateToComplete: () -> Unit,
+    onNavigateToComplete: (String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SocialNicknameViewModel = hiltViewModel(),
 ) {
@@ -79,7 +79,7 @@ fun SocialNicknameScreen(
     LaunchedEffect(viewModel) {
         viewModel.effect.collect { effect ->
             when (effect) {
-                SocialNicknameEffect.NavigateToComplete -> onNavigateToComplete()
+                is SocialNicknameEffect.NavigateToComplete -> onNavigateToComplete(effect.nickname)
             }
         }
     }

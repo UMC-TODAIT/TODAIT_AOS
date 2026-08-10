@@ -73,7 +73,7 @@ import com.umc.todait.ui.theme.White
 @Composable
 fun SignupScreen(
     onBackClick: () -> Unit,
-    onSignupComplete: () -> Unit,
+    onSignupComplete: (String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SignupViewModel = hiltViewModel(),
 ) {
@@ -82,7 +82,7 @@ fun SignupScreen(
     LaunchedEffect(viewModel) {
         viewModel.effect.collect { effect ->
             when (effect) {
-                SignupEffect.NavigateToComplete -> onSignupComplete()
+                is SignupEffect.NavigateToComplete -> onSignupComplete(effect.nickname)
             }
         }
     }

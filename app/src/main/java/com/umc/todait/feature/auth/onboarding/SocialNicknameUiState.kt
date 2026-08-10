@@ -47,6 +47,6 @@ data class SocialNicknameUiState(
 
 /** 화면 밖으로 나가는 일회성 효과(네비게이션 등). */
 sealed interface SocialNicknameEffect {
-    /** 온보딩 완료(회원가입 확정) 후 홈으로 이동. */
-    data object NavigateToComplete : SocialNicknameEffect
+    /** 온보딩 완료(회원가입 확정) 후 홈으로 이동. [nickname]은 완료 화면 문구에 노출한다. */
+    data class NavigateToComplete(val nickname: String) : SocialNicknameEffect
 }

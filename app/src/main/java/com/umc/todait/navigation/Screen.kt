@@ -34,7 +34,11 @@ sealed class Screen(val route: String) {
                 "?token=${URLEncoder.encode(token, "UTF-8")}" +
                 "&terms=${URLEncoder.encode(termsJson, "UTF-8")}"
     }
-    data object SignupComplete : Screen("signup_complete")
+    data object SignupComplete : Screen("signup_complete?nickname={nickname}") { // 이메일 회원가입 / 소셜 온보딩 완료 직후
+        const val ARG_NICKNAME = "nickname"                    // 가입 확정된 닉네임. 완료 문구에 그대로 노출한다.
+        fun createRoute(nickname: String) =
+            "signup_complete?nickname=${URLEncoder.encode(nickname, "UTF-8")}"
+    }
 
     // Home (무즈/김규리)
     data object Home : Screen("home")

@@ -127,7 +127,7 @@ class SignupViewModel @Inject constructor(
                 is ApiResult.Success -> {
                     tokenDataStore.saveTokens(result.data.accessToken, result.data.refreshToken)
                     _uiState.update { it.copy(isSubmitting = false) }
-                    _effect.send(SignupEffect.NavigateToComplete)
+                    _effect.send(SignupEffect.NavigateToComplete(state.nickname))
                 }
                 is ApiResult.Failure ->
                     _uiState.update { it.copy(isSubmitting = false, submitError = result.toUiError().message) }

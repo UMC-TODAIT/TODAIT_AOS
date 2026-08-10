@@ -98,7 +98,7 @@ class SocialNicknameViewModel @Inject constructor(
                 is ApiResult.Success -> {
                     tokenDataStore.saveTokens(result.data.accessToken, result.data.refreshToken)
                     _uiState.update { it.copy(isSubmitting = false) }
-                    _effect.send(SocialNicknameEffect.NavigateToComplete)
+                    _effect.send(SocialNicknameEffect.NavigateToComplete(state.nickname))
                 }
                 is ApiResult.Failure ->
                     _uiState.update { it.copy(isSubmitting = false, submitError = result.toUiError().message) }

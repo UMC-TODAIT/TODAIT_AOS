@@ -67,6 +67,7 @@ private const val DECORATION_ROTATION_TURNS = 0.7f
  */
 @Composable
 fun SignupCompleteScreen(
+    nickname: String,
     onNavigateToHome: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -75,7 +76,6 @@ fun SignupCompleteScreen(
         onNavigateToHome()
     }
 
-    val brand = stringResource(R.string.signup_complete_brand)
     val message = stringResource(R.string.signup_complete_message)
 
     Column(
@@ -96,7 +96,7 @@ fun SignupCompleteScreen(
         Text(
             text = buildAnnotatedString {
                 withStyle(SpanStyle(color = Primary, fontWeight = FontWeight.Bold)) {
-                    append(brand)
+                    append(nickname)
                 }
                 append(message)
             },
@@ -218,6 +218,6 @@ private val DOT_ALPHAS = listOf(1f, 0.6f, 0.35f)
 @Composable
 private fun SignupCompleteScreenPreview() {
     TodaitTheme {
-        SignupCompleteScreen(onNavigateToHome = {})
+        SignupCompleteScreen(nickname = "투데잇", onNavigateToHome = {})
     }
 }

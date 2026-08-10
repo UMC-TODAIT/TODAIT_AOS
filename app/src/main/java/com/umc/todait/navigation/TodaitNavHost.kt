@@ -236,8 +236,8 @@ fun TodaitApp() {
             ) {
                 SignupScreen(
                     onBackClick = { navController.popBackStack() },
-                    onSignupComplete = {
-                        navController.navigate(Screen.SignupComplete.route) {
+                    onSignupComplete = { nickname ->
+                        navController.navigate(Screen.SignupComplete.createRoute(nickname)) {
                             popUpTo(Screen.Login.route) { inclusive = true }
                         }
                     },
@@ -253,15 +253,25 @@ fun TodaitApp() {
             ) {
                 SocialNicknameScreen(
                     onBackClick = { navController.popBackStack() },
-                    onNavigateToComplete = {
-                        navController.navigate(Screen.SignupComplete.route) {
+                    onNavigateToComplete = { nickname ->
+                        navController.navigate(Screen.SignupComplete.createRoute(nickname)) {
                             popUpTo(Screen.Login.route) { inclusive = true }
                         }
                     },
                 )
             }
-            composable(Screen.SignupComplete.route) {
+            composable(
+                route = Screen.SignupComplete.route,
+                arguments = listOf(
+                    navArgument(Screen.SignupComplete.ARG_NICKNAME) {
+                        type = NavType.StringType
+                        defaultValue = ""
+                    },
+                ),
+            ) { backStackEntry ->
                 SignupCompleteScreen(
+                    nickname = backStackEntry.arguments
+                        ?.getString(Screen.SignupComplete.ARG_NICKNAME).orEmpty(),
                     onNavigateToHome = {
                         navController.navigate(Screen.Home.route) {
                             popUpTo(Screen.SignupComplete.route) { inclusive = true }

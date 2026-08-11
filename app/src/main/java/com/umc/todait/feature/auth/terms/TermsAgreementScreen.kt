@@ -63,7 +63,7 @@ import com.umc.todait.ui.theme.White
 fun TermsAgreementScreen(
     onBackClick: () -> Unit,
     onNext: (TermsFlow, List<TermAgreementDto>) -> Unit,
-    onViewDetail: (Long) -> Unit,
+    onViewDetail: (String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: TermsAgreementViewModel = hiltViewModel(),
 ) {
@@ -73,7 +73,7 @@ fun TermsAgreementScreen(
         viewModel.effect.collect { effect ->
             when (effect) {
                 is TermsAgreementEffect.NavigateNext -> onNext(effect.flow, effect.agreedTerms)
-                is TermsAgreementEffect.NavigateToDetail -> onViewDetail(effect.termId)
+                is TermsAgreementEffect.OpenDetail -> onViewDetail(effect.url)
             }
         }
     }
@@ -287,11 +287,13 @@ private fun TermCheckCircle(checked: Boolean) {
     }
 }
 
+private const val PREVIEW_TERM_URL = "https://tranquil-paw-d58.notion.site/preview"
+
 private val previewTerms = listOf(
-    TermItemUiModel(1, "SERVICE", "서비스 이용약관", isRequired = true, isAgreed = false, hasDetail = true),
-    TermItemUiModel(2, "PRIVACY", "개인정보 수집 및 이용", isRequired = true, isAgreed = false, hasDetail = true),
-    TermItemUiModel(3, "LOCATION", "위치정보 이용 권한", isRequired = false, isAgreed = false),
-    TermItemUiModel(4, "MARKETING", "마케팅 푸시 알림", isRequired = false, isAgreed = false),
+    TermItemUiModel(1, "SERVICE", "서비스 이용약관", isRequired = true, isAgreed = false, detailUrl = PREVIEW_TERM_URL),
+    TermItemUiModel(2, "PRIVACY", "개인정보 수집 및 이용", isRequired = true, isAgreed = false, detailUrl = PREVIEW_TERM_URL),
+    TermItemUiModel(3, "LOCATION", "위치정보 이용 권한", isRequired = false, isAgreed = false, detailUrl = PREVIEW_TERM_URL),
+    TermItemUiModel(4, "MARKETING", "마케팅 푸시 알림", isRequired = false, isAgreed = false, detailUrl = PREVIEW_TERM_URL),
 )
 
 @Preview(showBackground = true, name = "기본")

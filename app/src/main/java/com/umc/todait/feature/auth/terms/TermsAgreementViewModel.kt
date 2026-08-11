@@ -57,8 +57,9 @@ class TermsAgreementViewModel @Inject constructor(
 
     /** 필수 약관 항목의 화살표 탭 → 상세 화면 이동(체크 토글과는 별개 동작). */
     fun onViewDetail(termId: Long) {
+        val url = _uiState.value.terms.firstOrNull { it.termId == termId }?.detailUrl ?: return
         viewModelScope.launch {
-            _effect.send(TermsAgreementEffect.NavigateToDetail(termId))
+            _effect.send(TermsAgreementEffect.OpenDetail(url))
         }
     }
 
@@ -77,22 +78,28 @@ class TermsAgreementViewModel @Inject constructor(
 
     private companion object {
         // TODO(BE 고슴이): GET /api/terms 스펙 확정되면 서버 응답으로 교체.
+        // 약관 전문은 노션에 올려두고 앱은 링크만 연다(팀 방침 — 공지사항·고객센터도 동일).
+        // BE 의 term 테이블 content 컬럼에도 같은 노션 주소가 들어간다.
         val DUMMY_TERMS = listOf(
             TermItemUiModel(
                 termId = 1, termType = "SERVICE", title = "서비스 이용약관",
-                isRequired = true, isAgreed = false, hasDetail = true,
+                isRequired = true, isAgreed = false,
+                detailUrl = "https://tranquil-paw-d58.notion.site/39bd2aae5cbb8049aa0fc51166ffaf19",
             ),
             TermItemUiModel(
                 termId = 2, termType = "PRIVACY", title = "개인정보 수집 및 이용",
-                isRequired = true, isAgreed = false, hasDetail = true,
+                isRequired = true, isAgreed = false,
+                detailUrl = "https://tranquil-paw-d58.notion.site/39bd2aae5cbb805bb2abd40d3abc41d3",
             ),
             TermItemUiModel(
                 termId = 3, termType = "LOCATION", title = "위치정보 이용 권한",
                 isRequired = false, isAgreed = false,
+                detailUrl = "https://tranquil-paw-d58.notion.site/39bd2aae5cbb805faceff6d042af9ead",
             ),
             TermItemUiModel(
                 termId = 4, termType = "MARKETING", title = "마케팅 푸시 알림",
                 isRequired = false, isAgreed = false,
+                detailUrl = "https://tranquil-paw-d58.notion.site/39bd2aae5cbb80b88c77c3f895fb280c",
             ),
         )
     }

@@ -30,9 +30,12 @@ data class TermItemUiModel(
     val title: String,
     val isRequired: Boolean,
     val isAgreed: Boolean,
-    // 필수 약관만 상세 화면(화살표)을 노출한다. 선택 약관은 상세 없음.
-    val hasDetail: Boolean = false,
-)
+    // 약관 전문이 올라가 있는 노션 페이지 주소. 화살표를 누르면 외부 브라우저로 연다.
+    val detailUrl: String,
+) {
+    /** 상세(화살표) 노출 여부. 주소가 있으면 항상 노출한다. */
+    val hasDetail: Boolean get() = detailUrl.isNotBlank()
+}
 
 /**
  * 약관 동의 화면 상태.
@@ -64,6 +67,6 @@ sealed interface TermsAgreementEffect {
         val agreedTerms: List<TermAgreementDto>,
     ) : TermsAgreementEffect
 
-    /** 필수 약관 항목의 화살표 탭 → 약관 상세 화면으로 이동. */
-    data class NavigateToDetail(val termId: Long) : TermsAgreementEffect
+    /** 약관 항목의 화살표 탭 → 약관 전문(노션)을 외부 브라우저로 연다. */
+    data class OpenDetail(val url: String) : TermsAgreementEffect
 }

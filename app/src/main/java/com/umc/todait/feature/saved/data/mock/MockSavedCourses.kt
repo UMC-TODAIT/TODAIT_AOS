@@ -4,7 +4,6 @@ import com.umc.todait.feature.saved.data.dto.*
 
 object SavedCoursesMock {
     private val courseList = listOf(
-
         SavedCourseDto(
             courseId = 1,
             title = "연희동 데이트 코스",

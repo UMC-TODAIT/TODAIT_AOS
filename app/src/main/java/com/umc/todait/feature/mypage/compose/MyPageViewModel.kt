@@ -21,7 +21,6 @@ class MyPageViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val tokenDataStore: TokenDataStore,
 ) : BaseViewModel() {
-
     private val _uiState = MutableStateFlow(MyPageUiState())
     val uiState: StateFlow<MyPageUiState> = _uiState.asStateFlow()
 
@@ -38,7 +37,6 @@ class MyPageViewModel @Inject constructor(
 
         viewModelScope.launch {
             when (val result = repository.getMyPage()) {
-
                 is ApiResult.Success -> {
                     _uiState.update {
                         it.copy(

@@ -95,9 +95,7 @@ fun PlaceCard(
                             fontSize = 12.sp,
                             color = Color.Black
                         )
-
                     }
-
                 }
                 Spacer(modifier = Modifier.height(18.dp))
 
@@ -206,7 +204,6 @@ private fun PlaceMemoSection(
                 )
 
             } else {
-
                 BasicTextField(
                     value = memo,
                     onValueChange = {
@@ -226,7 +223,6 @@ private fun PlaceMemoSection(
                         color = Color.Black,
                         fontSize = 14.sp
                     ),
-
                     decorationBox = { innerTextField ->
                         Box(
                             modifier = Modifier.fillMaxSize(),

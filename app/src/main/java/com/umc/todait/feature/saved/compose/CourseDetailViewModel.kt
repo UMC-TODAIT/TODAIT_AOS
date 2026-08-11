@@ -42,8 +42,8 @@ class CourseDetailViewModel @Inject constructor(
                             moodTag = data.representativeMoodTag?.name,
                             moodTagCode = data.representativeMoodTag?.code,
 
-                            foodTag = data.representativePlaceCategory?.name,
-                            foodTagCode = data.representativePlaceCategory?.code,
+                            placeTag = data.representativePlaceCategory?.name,
+                            placeTagCode = data.representativePlaceCategory?.code,
 
                             memo = data.memo ?: "",
 
@@ -158,5 +158,3 @@ private fun getMoodBackground(
         else -> R.drawable.bg_saved_courses_romantic
     }
 }
-
-

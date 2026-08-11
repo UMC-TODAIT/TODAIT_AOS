@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -69,6 +70,7 @@ fun SavedCourseCard(
                     text = course.title,
                     color = Color.White,
                     fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center
                 )
@@ -95,7 +97,7 @@ fun SavedCourseCard(
                             CourseTag(it)
                         }
 
-                        course.foodTag?.takeIf { it.isNotBlank() }?.let {
+                        course.placeTag?.takeIf { it.isNotBlank() }?.let {
                             CourseTag(it)
                         }
                     }
@@ -106,7 +108,6 @@ fun SavedCourseCard(
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-
                     val visiblePlaces = course.places.take(3)
 
                     visiblePlaces.forEachIndexed { index, place ->

@@ -24,7 +24,6 @@ import com.umc.todait.feature.auth.social.SocialLoginEffect
 import com.umc.todait.feature.auth.social.SocialLoginViewModel
 import com.umc.todait.feature.auth.social.SocialProvider
 import com.umc.todait.feature.mypage.compose.MyPageScreen
-import com.umc.todait.feature.mypage.compose.NoticeScreen
 import com.umc.todait.feature.auth.login.EmailLoginScreen
 import com.umc.todait.feature.auth.login.LoginScreen
 import com.umc.todait.feature.auth.splash.SplashScreen
@@ -117,7 +116,7 @@ fun TodaitApp() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Splash.route,
+            startDestination = Screen.Login.route,//Splash
             modifier = Modifier.padding(innerPadding),
         ) {
             // ---------- Auth ----------

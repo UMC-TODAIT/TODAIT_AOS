@@ -36,6 +36,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.umc.todait.navigation.Screen
+import com.umc.todait.ui.theme.Gray200
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
@@ -92,23 +93,29 @@ fun MyPageScreen(
                     .background(Cream)
                     .padding(horizontal = 20.dp)
             ) {
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(11.dp))
 
-                Text(
-                    text = "마이페이지",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center,
-                    color = Gray800
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(40.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "마이페이지",
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Gray800
+                    )
+                }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(11.dp))
 
-                Image(
-                    painter = painterResource(R.drawable.divider_line),
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxWidth()
+                HorizontalDivider(
+                    thickness = 1.dp,
+                    color = Gray200
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -123,9 +130,10 @@ fun MyPageScreen(
 
                 Text(
                     text = "앱 설정 및 계정",
-                    modifier = Modifier.fillMaxWidth(),
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 17.sp,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.SemiBold
+                    ),
                     color = Gray800
                 )
 
@@ -214,18 +222,22 @@ fun ProfileCard(
             Column {
                 Text(
                     text = nickname,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    ),
                     color = Gray800
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                // 이메일 미제공 소셜 회원(email = null)도 카드 높이가 같도록 행을 비우지 않고 안내 문구를 넣는다.
                 Text(
                     text = email ?: stringResource(R.string.mypage_email_not_provided),
                     color = Gray800,
-                    fontSize = 14.sp
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    ),
                 )
             }
         }
@@ -258,14 +270,11 @@ fun SettingsCard(
                     onClick = onNoticeClick
                 )
 
-            Image(
-                painter = painterResource(R.drawable.divider_my_page),
-                contentDescription = null,
-                modifier = Modifier
-                    .padding(horizontal = 18.dp)
-                    .fillMaxWidth()
-                    .height(1.dp)
-            )
+                HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = 18.dp),
+                    thickness = 1.dp,
+                    color = Gray200
+                )
 
                 SettingItem(
                     icon = {
@@ -279,14 +288,11 @@ fun SettingsCard(
                     onClick = onCustomerCenterClick
                 )
 
-            Image(
-                painter = painterResource(R.drawable.divider_my_page),
-                contentDescription = null,
-                modifier = Modifier
-                    .padding(horizontal = 18.dp)
-                    .fillMaxWidth()
-                    .height(1.dp)
-            )
+                HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = 18.dp),
+                    thickness = 1.dp,
+                    color = Gray200
+                )
 
                 SettingItem(
                     icon = {
@@ -316,7 +322,6 @@ fun SettingItem(
             .padding(horizontal = 28.dp, vertical = 18.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-
         icon()
 
         Spacer(modifier = Modifier.width(12.dp))

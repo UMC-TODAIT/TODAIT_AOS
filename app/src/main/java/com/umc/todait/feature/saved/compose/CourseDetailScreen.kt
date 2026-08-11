@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -46,6 +47,7 @@ import com.umc.todait.ui.component.LoadingIndicator
 import com.umc.todait.ui.theme.Cream
 import com.umc.todait.ui.theme.Gray600
 import com.umc.todait.ui.theme.Gray800
+import com.umc.todait.ui.theme.Suit
 import com.umc.todait.ui.theme.TextPlaceholder
 
 @Preview(showBackground = true, showSystemUi = true)
@@ -65,8 +67,6 @@ fun CourseDetailScreen(
     val viewModel: CourseDetailViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
     var isEditing by remember { mutableStateOf(false) }
-    //var summaryEditing by remember { mutableStateOf(false) }
-    //var placeEditing by remember { mutableStateOf(false) }
     var showExitDialog by remember { mutableStateOf(false) }
 
     var editingPlaces by remember {
@@ -93,7 +93,6 @@ fun CourseDetailScreen(
                 }
             )
         }
-
         else -> {
             Box(
                 modifier = modifier
@@ -197,7 +196,7 @@ private fun DetailHeader(
     Column(
         modifier = Modifier.padding(horizontal = 20.dp)
     ) {
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(11.dp))
 
         Box(
             modifier = Modifier
@@ -209,6 +208,7 @@ private fun DetailHeader(
                 contentDescription = null,
                 modifier = Modifier
                     .size(40.dp)
+                    .align(Alignment.CenterStart)
                     .clickable {
                         onBackClick()
                     }
@@ -216,14 +216,17 @@ private fun DetailHeader(
 
             Text(
                 text = "코스 상세 정보",
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.align(Alignment.Center),
                 textAlign = TextAlign.Center,
-                fontSize = 20.sp,
+                fontFamily = Suit,
                 fontWeight = FontWeight.Medium,
+                fontSize = 20.sp,
+                lineHeight = 20.sp,
                 color = Gray800
             )
         }
-        Spacer(Modifier.height(24.dp))
+
+        Spacer(Modifier.height(11.dp))
     }
 }
 
@@ -234,7 +237,6 @@ private fun SummaryCard(
     onEditingChange: (Boolean) -> Unit,
     onSaveMemo: (String) -> Unit
 ) {
-    var showExitDialog by remember { mutableStateOf(false) }
     val backgroundImage = getMoodBackground(uiState.moodTagCode)
 
     Card(
@@ -257,7 +259,6 @@ private fun SummaryCard(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-
                     Image(
                         painter = painterResource(
                             getMoodIcon(uiState.moodTagCode)
@@ -271,8 +272,11 @@ private fun SummaryCard(
                     Text(
                         text = uiState.title,
                         color = Color.White,
-                        fontSize = 26.sp,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontSize = 26.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            lineHeight = 26.sp
+                        )
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -280,11 +284,14 @@ private fun SummaryCard(
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-
                         Text(
                             text = uiState.date,
                             color = Color.White,
-                            fontSize = 13.sp
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                lineHeight = 14.sp
+                            )
                         )
 
                         Spacer(modifier = Modifier.width(9.dp))
@@ -296,7 +303,7 @@ private fun SummaryCard(
                         Spacer(modifier = Modifier.width(9.dp))
 
                         CourseTag(
-                            text = uiState.foodTag ?: ""
+                            text = uiState.placeTag ?: ""
                         )
                     }
                 }
@@ -353,9 +360,12 @@ fun MemoSection(
 
                 Text(
                     text = "코스 메모",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    color = Color.Black,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        lineHeight = 14.sp
+                    )
                 )
             }
 
@@ -410,7 +420,11 @@ fun MemoSection(
                         Text(
                             text = if (memo.isBlank()) "" else memo,
                             color = TextPlaceholder,
-                            fontSize = 14.sp
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                lineHeight = 14.sp
+                            )
                         )
                     }
                 }
@@ -431,9 +445,11 @@ fun MemoSection(
                             RoundedCornerShape(12.dp)
                         )
                         .padding(horizontal = 14.dp, vertical = 10.dp),
-                    textStyle = TextStyle(
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(
                         color = Color.Black,
-                        fontSize = 14.sp
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        lineHeight = 14.sp
                     ),
                     decorationBox = { innerTextField ->
                         Box(
@@ -446,7 +462,11 @@ fun MemoSection(
                                 Text(
                                     text = "",
                                     color = Gray600,
-                                    fontSize = 14.sp
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        lineHeight = 14.sp
+                                    )
                                 )
                             }
                             innerTextField()

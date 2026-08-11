@@ -10,8 +10,8 @@ data class CourseDetailUiState(
     val moodTag: String? = null,
     val moodTagCode: String? = null,
 
-    val foodTag: String? = null,
-    val foodTagCode: String? = null,
+    val placeTag: String? = null,
+    val placeTagCode: String? = null,
 
     val memo: String = "",
 

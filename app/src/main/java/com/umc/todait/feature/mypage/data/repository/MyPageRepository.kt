@@ -12,7 +12,6 @@ class MyPageRepository @Inject constructor(
     private val myPageService: MyPageService,
 ) {
     suspend fun getMyPage(): ApiResult<MyPageResultDto> {
-
         if (USE_MOCK) {
             return ApiResult.Success(MockMyPage.myPage)
         }

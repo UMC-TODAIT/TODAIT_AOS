@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -45,7 +47,10 @@ import com.umc.todait.ui.theme.Cream
 import com.umc.todait.ui.theme.Gray800
 import androidx.compose.runtime.setValue
 import com.umc.todait.ui.component.CommonDialog
-
+import com.umc.todait.ui.theme.Gray200
+import com.umc.todait.ui.theme.Gray900
+import com.umc.todait.ui.theme.Suit
+import com.umc.todait.ui.theme.TextMuted
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
@@ -110,23 +115,30 @@ fun SavedCoursesScreen(
                         modifier = Modifier
                             .padding(horizontal = 20.dp)
                     ) {
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(11.dp))
 
-                        Text(
-                            text = "저장된 코스",
-                            modifier = Modifier.fillMaxWidth(),
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Medium,
-                            textAlign = TextAlign.Center,
-                            color = Color(0xFF222222)
-                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(40.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "저장된 코스",
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center,
+                                fontFamily = Suit,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Gray800
+                            )
+                        }
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(11.dp))
 
-                        Image(
-                            painter = painterResource(R.drawable.divider_line),
-                            contentDescription = null,
-                            modifier = Modifier.fillMaxWidth()
+                        HorizontalDivider(
+                            thickness = 1.dp,
+                            color = Gray200
                         )
                     }
 
@@ -240,8 +252,9 @@ fun CourseSection(
 
         Text(
             text = title,
-            fontSize = 17.sp,
-            fontWeight = FontWeight.SemiBold,
+            fontFamily = Suit,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
             color = Gray800
         )
     }
@@ -250,7 +263,10 @@ fun CourseSection(
 
     Text(
         text = description,
-        color = Color(0xFF888888),
-        fontSize = 14.sp
+        style = MaterialTheme.typography.bodyMedium.copy(
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold
+        ),
+        color = TextMuted
     )
 }

@@ -22,7 +22,6 @@ class SavedCoursesViewModel @Inject constructor(
     private val savedRepository: SavedRepository,
     private val myPageRepository: MyPageRepository
 ) : BaseViewModel() {
-
     private val _uiState = MutableStateFlow(SavedCoursesUiState())
     val uiState: StateFlow<SavedCoursesUiState> = _uiState.asStateFlow()
 
@@ -118,7 +117,7 @@ class SavedCoursesViewModel @Inject constructor(
             title = title,
             date = savedDate,
             moodTag = representativeMoodTag?.name,
-            foodTag = representativePlaceCategory?.name,
+            placeTag = representativePlaceCategory?.name,
             places = previewPlaces.map { it.name }
         )
     }

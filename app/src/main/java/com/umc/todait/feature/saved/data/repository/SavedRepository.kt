@@ -1,6 +1,5 @@
 package com.umc.todait.feature.saved.data.repository
 
-import android.util.Log
 import com.umc.todait.core.network.ApiResult
 import com.umc.todait.core.network.safeApiCall
 import com.umc.todait.feature.saved.data.dto.CourseDetailResponseDto

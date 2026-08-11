@@ -22,13 +22,22 @@ data class CourseSaveUiState(
     val draftTags: Set<CourseMood> = emptySet(),
     // 이름 미입력 상태로 저장을 시도했을 때 뜨는 안내 알럿(CommonDialog) 노출 여부. (Figma node 918-2638)
     val isNameErrorDialogVisible: Boolean = false,
+    // 분위기 태그 개수가 명세 범위(2~6개)를 벗어난 상태로 저장을 시도했을 때 뜨는 안내 알럿 노출 여부.
+    val isTagCountErrorDialogVisible: Boolean = false,
     // 이름 통과 후 저장을 시도했을 때 뜨는 확인 알럿(CommonDialog) 노출 여부. (Figma node 1204-4231)
     val isSaveConfirmDialogVisible: Boolean = false,
+    // 코스 저장 요청(POST .../courses) 진행 중. 중복 저장(COURSE_DRAFT409)을 막는다.
+    val isSaving: Boolean = false,
+    // 코스 저장 실패 안내 문구. null 이면 없음.
+    val saveError: String? = null,
     // 저장 완료 다이얼로그(ui/component 의 CourseSaveDialog) 노출 여부.
     val isSavedDialogVisible: Boolean = false,
 ) {
     /** 코스 이름은 필수. 이름이 있어야 저장(체크)이 가능하다. */
     val canSave: Boolean get() = name.isNotBlank()
+
+    /** 최종 코스에 표시할 분위기 태그는 명세상 2개 이상 6개 이하여야 한다(COURSE_MOOD400). */
+    val hasValidTagCount: Boolean get() = selectedTags.size in MIN_TAG_COUNT..MAX_TAG_COUNT
 
     /** 화면 표시용: 선택된 태그를 프리셋 노출 순서([TAG_PRESETS])대로 정렬한 목록. */
     val orderedTags: List<CourseMood> get() = TAG_PRESETS.filter { it in selectedTags }
@@ -36,6 +45,10 @@ data class CourseSaveUiState(
     companion object {
         const val MAX_NAME_LENGTH = 30
         const val MAX_MEMO_LENGTH = 200
+
+        // 코스 저장 요청의 moodTagIds 개수 제한(명세 "저장 전 필수 검증").
+        const val MIN_TAG_COUNT = 2
+        const val MAX_TAG_COUNT = 6
 
         // 태그 추가 시트의 프리셋 노출 순서. (Figma node 1243-6988: 로맨틱·힙한·활발한·조용한·모던한·차분한)
         val TAG_PRESETS = listOf(

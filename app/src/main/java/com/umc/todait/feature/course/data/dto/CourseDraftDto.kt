@@ -156,6 +156,54 @@ data class CourseDraftPlaceDto(
 }
 
 /**
+ * "선택 장소 추가"(POST /api/course-drafts/{courseDraftId}/places)의 요청 바디.
+ *
+ * 기준 장소 확정 이후 카테고리별 추천 카드의 '+' 를 눌렀을 때 보낸다.
+ * 명세상 카카오 외부 장소(externalPlace)는 받지 않는다 — 추천 카드는 항상 내부 place 라 [placeId] 만 있으면 된다.
+ */
+data class CourseDraftPlaceAddRequestDto(
+    @SerializedName("placeId") val placeId: Long,
+)
+
+/**
+ * 선택 장소 추가 result. 장소를 담아도 상태는 PLACE_SELECTING 을 유지한다
+ * (ORDERING 전이는 순서 설정 화면 진입 API 담당).
+ */
+data class CourseDraftPlaceAddResponseDto(
+    @SerializedName("courseDraftId") val courseDraftId: Long,
+    // 정상값 PLACE_SELECTING.
+    @SerializedName(value = "draftStatus", alternate = ["status"]) val draftStatus: String?,
+    @SerializedName("addedPlace") val addedPlace: AddedCourseDraftPlaceDto,
+    // 기준 장소를 제외한 선택 장소 수.
+    @SerializedName("selectedPlaceCount") val selectedPlaceCount: Int?,
+    // 기준 장소를 포함한 전체 장소 수(최솟값 2).
+    @SerializedName("totalPlaceCount") val totalPlaceCount: Int?,
+)
+
+/**
+ * 이번 요청으로 임시 코스에 추가된 장소.
+ * [CourseDraftPlaceDto] 와 달리 카드 렌더에 필요한 area·category·imageUrl 까지 함께 내려온다.
+ */
+data class AddedCourseDraftPlaceDto(
+    // 임시 코스와 장소의 연결 행 ID(course_draft_place.id). 순서 변경 API 가 쓰는 값이다.
+    @SerializedName("courseDraftPlaceId") val courseDraftPlaceId: Long,
+    @SerializedName("placeId") val placeId: Long,
+    @SerializedName("name") val name: String,
+    @SerializedName("address") val address: String,
+    @SerializedName("roadAddress") val roadAddress: String?,
+    @SerializedName("latitude") val latitude: Double,
+    @SerializedName("longitude") val longitude: Double,
+    @SerializedName("area") val area: AreaSummaryDto,
+    @SerializedName("category") val category: PlaceCategorySummaryDto,
+    @SerializedName("subCategory") val subCategory: String?,
+    @SerializedName("imageUrl") val imageUrl: String?,
+    // 기준 장소가 1번을 차지하므로 첫 선택 장소는 2부터 시작한다.
+    @SerializedName("visitOrder") val visitOrder: Int,
+    // 이 API 로 추가한 장소는 항상 SELECTED.
+    @SerializedName("placeRole") val placeRole: String,
+)
+
+/**
  * "임시 코스 순서 설정 화면 진입"(PATCH /api/course-drafts/{courseDraftId}/ordering)의 result.
  *
  * 요청 바디는 없다. PLACE_SELECTING → ORDERING 으로 전이하며, 이미 ORDERING 이면 상태를 바꾸지 않고

@@ -25,9 +25,10 @@ android {
         versionCode = 1
         versionName = "1.0.0"
 
+        // local.properties 에 BASE_URL 이 없으면 배포 서버를 기본값으로 쓴다.
         buildConfigField(
             "String", "BASE_URL",
-            localProperties.getProperty("BASE_URL") ?: "\"https://api.todait.example.com/\""
+            localProperties.getProperty("BASE_URL") ?: "\"https://api.todait.co.kr/\""
         )
         manifestPlaceholders["KAKAO_NATIVE_APP_KEY"] =
             localProperties.getProperty("KAKAO_NATIVE_APP_KEY") ?: ""

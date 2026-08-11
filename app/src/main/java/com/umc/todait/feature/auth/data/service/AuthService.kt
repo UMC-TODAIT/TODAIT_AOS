@@ -67,12 +67,22 @@ interface AuthService {
     @GET("api/members/nickname-availability")
     suspend fun checkNicknameAvailability(@Query("nickname") nickname: String): BaseResponse<NicknameAvailabilityResultDto>
 
-    /** 비밀번호 재설정용 이메일 인증번호 발송 — POST /api/auth/password-reset/email/send (미가입 이메일이면 AUTH404) */
-    @POST("api/auth/password-reset/email/send")
+    /**
+     * 비밀번호 재설정용 이메일 인증번호 발송 — POST /api/auth/password-reset/email/send-code
+     * (미가입 이메일이면 AUTH404)
+     *
+     * ⚠️ 명세서 경로는 `.../email/send` 지만 **배포 서버는 `-code` 접미사**를 쓴다
+     * (회원가입 인증 `api/auth/email/send-code` 와 같은 컨벤션). 동작하는 배포 기준으로 맞춰 뒀다.
+     */
+    @POST("api/auth/password-reset/email/send-code")
     suspend fun sendPasswordResetEmailCode(@Body request: EmailCodeRequestDto): BaseResponse<Unit>
 
-    /** 비밀번호 재설정용 이메일 인증번호 확인 — POST /api/auth/password-reset/email/verify */
-    @POST("api/auth/password-reset/email/verify")
+    /**
+     * 비밀번호 재설정용 이메일 인증번호 확인 — POST /api/auth/password-reset/email/verify-code
+     *
+     * 발송과 마찬가지로 명세서 경로(`.../email/verify`)가 아니라 배포 서버 경로를 따른다.
+     */
+    @POST("api/auth/password-reset/email/verify-code")
     suspend fun verifyPasswordResetEmailCode(
         @Body request: EmailCodeVerifyRequestDto,
     ): BaseResponse<PasswordResetVerifyResultDto>

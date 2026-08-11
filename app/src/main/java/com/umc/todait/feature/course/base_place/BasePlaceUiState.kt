@@ -11,7 +11,8 @@ import com.umc.todait.feature.course.data.dto.SearchPlaceDto
  * 화면 명세(와이어프레임 1.1)에 따라 검색어가 비어 있으면 "지금 내 주변 핫플" 추천 목록을,
  * 검색어가 있으면 검색 결과 목록을 [listState] 로 표현한다.
  *
- * 상호작용(Figma): 카드 우상단 '+' → [selectedPlace] 선택(초록 테두리), 헤더 체크 → [alert] 노출.
+ * 상호작용(Figma): 카드 탭 → [selectedPlace] 선택(초록 테두리 + Click 그라데이션),
+ * 카드 롱프레스 → 장소 상세 진입, 헤더 체크 → [alert] 노출.
  * 미선택 상태 확정 시 [BasePlaceAlert.SelectRequired](시스템알럿1),
  * 선택 상태 확정 시 [BasePlaceAlert.Confirm](시스템알럿2)이 뜬다.
  */
@@ -20,7 +21,7 @@ data class BasePlaceUiState(
     // 현재 지역 표시(예: 마포구). 위치 권한 플로우는 이번 범위에서 제외라 기본 null(미표시).
     val currentAreaName: String? = null,
     val listState: PlaceListState = PlaceListState.Loading,
-    // 현재 선택된 기준 장소(카드 '+' 로 선택). null 이면 미선택.
+    // 현재 선택된 기준 장소(카드 탭으로 선택). null 이면 미선택.
     val selectedPlace: PlaceUiModel? = null,
     // 노출 중인 시스템 알럿. null 이면 닫힘.
     val alert: BasePlaceAlert? = null,
@@ -112,7 +113,7 @@ fun SearchPlaceDto.toUiModel(): PlaceUiModel = PlaceUiModel(
     category = category.name,
     areaName = area.name,
     // 빈 문자열이면 이미지 없음으로 보고 카드 그라데이션으로 렌더한다.
-    imageUrl = imageUrl.takeIf { it.isNotBlank() },
+    imageUrl = imageUrl?.takeIf { it.isNotBlank() },
     reasonText = null,
     latitude = latitude,
     longitude = longitude,

@@ -18,7 +18,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 // androidx.navigation.navigation 이 아니라 compose 버전을 써야 그래프에 arguments 를 선언할 수 있다.
 import androidx.navigation.compose.navigation
 import androidx.compose.runtime.LaunchedEffect
+import android.content.Intent
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.net.toUri
 import com.google.gson.Gson
 import com.umc.todait.feature.auth.social.SocialLoginEffect
 import com.umc.todait.feature.auth.social.SocialLoginViewModel
@@ -31,7 +33,6 @@ import com.umc.todait.feature.auth.onboarding.SignupProvider
 import com.umc.todait.feature.auth.onboarding.SocialNicknameScreen
 import com.umc.todait.feature.auth.signup.SignupScreen
 import com.umc.todait.feature.auth.signupcomplete.SignupCompleteScreen
-import com.umc.todait.feature.auth.terms.TermDetailScreen
 import com.umc.todait.feature.auth.terms.TermsAgreementScreen
 import com.umc.todait.feature.auth.terms.TermsFlow
 import com.umc.todait.feature.course.base_place.BasePlaceScreen
@@ -116,7 +117,7 @@ fun TodaitApp() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Login.route,//Splash
+            startDestination = Screen.Splash.route,
             modifier = Modifier.padding(innerPadding),
         ) {
             // ---------- Auth ----------
@@ -198,6 +199,7 @@ fun TodaitApp() {
                     },
                 ),
             ) { backStackEntry ->
+                val context = LocalContext.current
                 val onboardingToken = backStackEntry.arguments?.getString(Screen.TermsAgreement.ARG_TOKEN).orEmpty()
                 val profileImageUrl =
                     backStackEntry.arguments?.getString(Screen.TermsAgreement.ARG_PROFILE_IMAGE_URL).orEmpty()
@@ -229,21 +231,10 @@ fun TodaitApp() {
                                 )
                         }
                     },
-                    onViewDetail = { termId ->
-                        navController.navigate(Screen.TermDetail.createRoute(termId))
+                    // 약관 전문은 노션에 있어 앱 화면 대신 외부 브라우저로 연다(공지사항·고객센터와 동일한 방식).
+                    onViewDetail = { url ->
+                        context.startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
                     },
-                )
-            }
-            composable(
-                route = Screen.TermDetail.route,
-                arguments = listOf(
-                    navArgument(Screen.TermDetail.ARG_TERM_ID) { type = NavType.LongType },
-                ),
-            ) { backStackEntry ->
-                val termId = backStackEntry.arguments?.getLong(Screen.TermDetail.ARG_TERM_ID) ?: 0L
-                TermDetailScreen(
-                    termId = termId,
-                    onBackClick = { navController.popBackStack() },
                 )
             }
             composable(

@@ -11,8 +11,10 @@ data class HomeRecommendedPlaceResultDto(
     @SerializedName("recommendationLogId") val recommendationLogId: Long,
     @SerializedName("places") val places: List<HomeRecommendedPlaceDto>,
     @SerializedName("locationAvailable") val locationAvailable: Boolean,
-    @SerializedName("page") val page: Int,
     @SerializedName("size") val size: Int,
+    // 추천 코스 목록과 동일하게 커서 방식이다. 마지막 페이지면 nextCursor 가 null 이다.
+    @SerializedName("hasNext") val hasNext: Boolean,
+    @SerializedName("nextCursor") val nextCursor: String?,
 )
 
 data class HomeRecommendedPlaceDto(

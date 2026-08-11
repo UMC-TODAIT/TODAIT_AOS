@@ -21,10 +21,6 @@ sealed class Screen(val route: String) {
                 "?token=${URLEncoder.encode(token, "UTF-8")}" +
                 "&profileImageUrl=${URLEncoder.encode(profileImageUrl.orEmpty(), "UTF-8")}"
     }
-    data object TermDetail : Screen("terms_agreement/detail/{termId}") { // 약관 동의 화면에서 필수 약관 항목(화살표) 탭 시
-        const val ARG_TERM_ID = "termId"
-        fun createRoute(termId: Long) = "terms_agreement/detail/$termId"
-    }
     data object Signup : Screen("signup?terms={terms}") {      // 약관 동의 완료(이메일 플로우)
         const val ARG_TERMS = "terms"                          // TermAgreementDto 리스트를 JSON 문자열로 직렬화한 값
         fun createRoute(termsJson: String) = "signup?terms=${URLEncoder.encode(termsJson, "UTF-8")}"

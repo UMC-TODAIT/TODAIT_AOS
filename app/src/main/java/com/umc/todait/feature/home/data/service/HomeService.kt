@@ -27,24 +27,24 @@ interface HomeService {
     suspend fun getMyProfile(): BaseResponse<HomeMemberDto>
 
     /**
-     * 홈 화면 추천 장소 목록 조회 — GET /api/recommended-places?page&size&latitude&longitude
+     * 홈 화면 추천 장소 목록 조회 — GET /api/recommended-places?cursor&size&latitude&longitude
      * (TODAIT_BE 스펙 확정본. latitude/longitude는 둘 다 전달하거나 둘 다 생략 — 하나만 보내면 PLACE4002)
      */
     @GET("api/recommended-places")
     suspend fun getRecommendedPlaces(
-        @Query("page") page: Int? = null,
+        @Query("cursor") cursor: String? = null,
         @Query("size") size: Int? = null,
         @Query("latitude") latitude: Double? = null,
         @Query("longitude") longitude: Double? = null,
     ): BaseResponse<HomeRecommendedPlaceResultDto>
 
     /**
-     * 홈 화면 추천 코스 목록 조회 — GET /api/recommended-courses?page&size
-     * (TODAIT_BE 스펙 확정본. 홈 화면은 page=0, size=3 고정 사용 — 서버가 날짜 기준으로 순환 반환)
+     * 홈 화면 추천 코스 목록 조회 — GET /api/recommended-courses?cursor&size
+     * (홈 화면은 size=3 만 보내고 페이지네이션은 하지 않는다. 다음 페이지는 응답의 nextCursor 를 cursor 로 넘긴다)
      */
     @GET("api/recommended-courses")
     suspend fun getRecommendedCourses(
-        @Query("page") page: Int? = null,
+        @Query("cursor") cursor: String? = null,
         @Query("size") size: Int? = null,
     ): BaseResponse<RecommendedCourseListResultDto>
 

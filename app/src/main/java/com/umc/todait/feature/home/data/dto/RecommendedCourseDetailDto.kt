@@ -4,15 +4,17 @@ import com.google.gson.annotations.SerializedName
 
 /**
  * "추천 코스 목록 조회"(GET /api/recommended-courses) 의 result.
- * 홈 화면은 page=0, size=3 사용 — 서버가 날짜 기준으로 홍대/연남/성수 코스를 순환 반환한다.
+ * 홈 화면은 size=3 만 보내고 페이지네이션을 하지 않는다 — 서버가 날짜 기준으로 홍대/연남/성수 코스를 순환 반환한다.
+ *
+ * ⚠️ 페이지네이션은 **커서 방식**이다(BE 확인 완료). 명세 문서에는 page/totalElements/totalPages 로
+ * 적혀 있지만 배포 서버 구현은 cursor/nextCursor 이며, 서버 구현이 확정본이다.
  */
 data class RecommendedCourseListResultDto(
     @SerializedName("recommendationLogId") val recommendationLogId: Long,
-    @SerializedName("page") val page: Int,
     @SerializedName("size") val size: Int,
-    @SerializedName("totalElements") val totalElements: Int,
-    @SerializedName("totalPages") val totalPages: Int,
     @SerializedName("hasNext") val hasNext: Boolean,
+    // 다음 페이지를 요청할 때 cursor 로 그대로 되돌려주는 값. 마지막 페이지면 null 이다.
+    @SerializedName("nextCursor") val nextCursor: String?,
     @SerializedName("courses") val courses: List<RecommendedCourseSummaryDto>,
 )
 

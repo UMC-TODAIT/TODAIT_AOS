@@ -19,16 +19,16 @@ class HomeRepository @Inject constructor(
         safeApiCall { homeService.getMyProfile() }
 
     suspend fun getRecommendedPlaces(
-        page: Int? = null,
+        cursor: String? = null,
         size: Int? = null,
         latitude: Double? = null,
         longitude: Double? = null,
     ): ApiResult<HomeRecommendedPlaceResultDto> = safeApiCall {
-        homeService.getRecommendedPlaces(page = page, size = size, latitude = latitude, longitude = longitude)
+        homeService.getRecommendedPlaces(cursor = cursor, size = size, latitude = latitude, longitude = longitude)
     }
 
-    suspend fun getRecommendedCourses(page: Int? = null, size: Int? = null): ApiResult<RecommendedCourseListResultDto> =
-        safeApiCall { homeService.getRecommendedCourses(page = page, size = size) }
+    suspend fun getRecommendedCourses(cursor: String? = null, size: Int? = null): ApiResult<RecommendedCourseListResultDto> =
+        safeApiCall { homeService.getRecommendedCourses(cursor = cursor, size = size) }
 
     suspend fun getRecommendedCourseDetail(courseId: Long): ApiResult<RecommendedCourseDetailDto> =
         safeApiCall { homeService.getRecommendedCourseDetail(courseId) }

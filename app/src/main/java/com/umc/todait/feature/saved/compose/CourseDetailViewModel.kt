@@ -53,6 +53,7 @@ class CourseDetailViewModel @Inject constructor(
                                 isStartPlace = place.visitOrder == 1,
                                 name = place.name,
                                 address = place.address,
+                                imageUrl = place.representativeImageUrl,
                                 backgroundImage = getMoodBackground(
                                     data.representativeMoodTag?.code
                                 ),

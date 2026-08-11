@@ -6,6 +6,7 @@ data class PlaceUiModel(
     val isStartPlace: Boolean,
     val name: String,
     val address: String,
+    val imageUrl: String? = null,
     var backgroundImage: Int,
     var memo: String = ""
 )

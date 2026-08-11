@@ -116,7 +116,7 @@ fun TodaitApp() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Splash.route,
+            startDestination = Screen.Login.route,//Splash
             modifier = Modifier.padding(innerPadding),
         ) {
             // ---------- Auth ----------

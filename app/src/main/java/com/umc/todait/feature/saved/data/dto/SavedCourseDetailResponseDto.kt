@@ -38,6 +38,7 @@ data class DetailCoursePlaceDto(
     @SerializedName("placeId") val placeId: Long,
     @SerializedName("visitOrder") val visitOrder: Int,
     @SerializedName("name") val name: String,
+    @SerializedName("representativeImageUrl") val representativeImageUrl: String?,
     @SerializedName("address") val address: String,
     @SerializedName("memo") val memo: String?
 )

@@ -58,4 +58,4 @@ private val ApiResult.Failure.ServerError.isRetryable: Boolean
 
 private const val CODE_AUTH_401 = "AUTH401"
 private const val CODE_AUTH_403 = "AUTH403"
-private const val DEFAULT_ERROR_MESSAGE = "일시적인 오류가 발생했어요. 다시 시도해주세요."
+private const val DEFAULT_ERROR_MESSAGE = "일시적인 오류가 발생했어요.\n다시 시도해주세요."

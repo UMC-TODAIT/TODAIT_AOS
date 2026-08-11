@@ -382,12 +382,15 @@ private fun CourseDetailPlaceRow(
                     color = White,
                 )
             }
+
             if (!isLast) {
                 Spacer(
                     modifier = Modifier
                         .width(2.dp)
                         .weight(1f)
-                        .background(Pink900.copy(alpha = 0.3f)),
+                        .background(
+                            Pink900.copy(alpha = 0.3f)
+                        ),
                 )
             }
         }

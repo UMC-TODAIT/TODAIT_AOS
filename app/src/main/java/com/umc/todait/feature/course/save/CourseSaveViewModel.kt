@@ -2,7 +2,11 @@ package com.umc.todait.feature.course.save
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.umc.todait.core.network.ApiResult
+import com.umc.todait.core.network.toUiError
 import com.umc.todait.feature.course.compose.CourseMood
+import com.umc.todait.feature.course.data.repository.CourseDraftRepository
+import com.umc.todait.feature.course.data.repository.TaxonomyRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,21 +18,51 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * 코스 저장 화면의 입력 상태(이름·메모·태그)를 관리한다.
+ * 코스 저장 화면의 입력 상태(이름·메모·태그)와 최종 저장 요청을 관리한다.
  *
  * 경로 미리보기에 쓰는 장소 목록은 코스 구성 그래프에 스코프된
  * [com.umc.todait.feature.course.compose.CourseComposeViewModel] 이 들고 있으므로 여기서는 다루지 않는다.
+ * 임시 코스 핸들(courseDraftId)도 같은 이유로 화면에서 인자로 받아 [onConfirmSave] 에 넘긴다.
  *
- * ⚠️ 코스 저장 API 가 아직 명세에 없어 [onSave] 는 검증만 하고 바로 이동한다. (아래 TODO)
+ * 저장은 POST /api/course-drafts/{courseDraftId}/courses 한 번으로 끝난다. 음식 카테고리·장소·방문 순서는
+ * 이미 임시 코스에 저장돼 있어 요청에 넣지 않고, 화면에서 확정한 title·memo·moodTagIds 만 보낸다.
  */
 @HiltViewModel
-class CourseSaveViewModel @Inject constructor() : ViewModel() {
+class CourseSaveViewModel @Inject constructor(
+    private val courseDraftRepository: CourseDraftRepository,
+    private val taxonomyRepository: TaxonomyRepository,
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CourseSaveUiState())
     val uiState: StateFlow<CourseSaveUiState> = _uiState.asStateFlow()
 
     private val _effect = Channel<CourseSaveEffect>(Channel.BUFFERED)
     val effect = _effect.receiveAsFlow()
+
+    // 화면 프리셋(CourseMood) → 서버 mood_tag.id. 저장 요청의 moodTagIds 를 만들 때 쓴다.
+    private var moodTagIdByCode: Map<String, Long> = emptyMap()
+
+    init {
+        loadMoodTagIds()
+    }
+
+    /**
+     * 분위기 태그 기준 데이터 로드(GET /api/mood-tags).
+     *
+     * 저장 요청은 태그 이름이 아니라 mood_tag.id 를 받으므로 id 를 서버에서 받아 둔다.
+     * (컨벤션상 기준 데이터 id 는 앱에 하드코딩하지 않는다.)
+     * 실패해도 화면 입력은 막지 않고, 저장 시점에 안내 문구를 띄운다.
+     */
+    private fun loadMoodTagIds() {
+        viewModelScope.launch {
+            when (val result = taxonomyRepository.getMoodTags()) {
+                is ApiResult.Success ->
+                    moodTagIdByCode = result.data.moodTags.associate { it.code to it.moodTagId }
+
+                is ApiResult.Failure -> Unit
+            }
+        }
+    }
 
     fun onNameChange(value: String) {
         _uiState.update {
@@ -64,13 +98,19 @@ class CourseSaveViewModel @Inject constructor() : ViewModel() {
     }
 
     /**
-     * 헤더 ✓ → 코스 저장 시도. 이름이 비어 있으면 안내 알럿을,
-     * 통과하면 "코스를 저장할까요?" 확인 알럿을 띄운다.
+     * 헤더 ✓ → 코스 저장 시도. 서버가 400 을 주기 전에 화면에서 먼저 걸러낸다.
+     *
+     * 이름이 비어 있으면 안내 알럿을, 분위기 태그가 2~6개가 아니면 태그 안내 알럿을,
+     * 모두 통과하면 "코스를 저장할까요?" 확인 알럿을 띄운다.
      */
     fun onSave() {
         val state = _uiState.value
         if (!state.canSave) {
             _uiState.update { it.copy(isNameErrorDialogVisible = true) }
+            return
+        }
+        if (!state.hasValidTagCount) {
+            _uiState.update { it.copy(isTagCountErrorDialogVisible = true) }
             return
         }
         _uiState.update { it.copy(isSaveConfirmDialogVisible = true) }
@@ -81,18 +121,56 @@ class CourseSaveViewModel @Inject constructor() : ViewModel() {
         _uiState.update { it.copy(isNameErrorDialogVisible = false) }
     }
 
-    /** 저장 확인 알럿 [확인] → 실제 저장 후 완료 다이얼로그로 넘어간다. */
-    fun onConfirmSave() {
-        // TODO(BE 죠): 코스 저장 API(이름·메모·태그 + 임시 코스 세션의 장소 순서) 확정 시 연동.
-        //  현재는 API 가 없어 검증만 하고 바로 완료 다이얼로그로 넘어간다.
-        _uiState.update {
-            it.copy(isSaveConfirmDialogVisible = false, isSavedDialogVisible = true)
+    /** 태그 개수 안내 알럿 닫기. */
+    fun onDismissTagCountErrorDialog() {
+        _uiState.update { it.copy(isTagCountErrorDialogVisible = false) }
+    }
+
+    /**
+     * 저장 확인 알럿 [확인] → 코스 저장 요청
+     * (POST /api/course-drafts/{courseDraftId}/courses).
+     *
+     * 같은 임시 코스는 한 번만 저장할 수 있어(재요청 시 COURSE_DRAFT409) [CourseSaveUiState.isSaving]
+     * 으로 중복 호출을 막는다. 성공하면 완료 다이얼로그로 넘어간다.
+     */
+    fun onConfirmSave(courseDraftId: Long) {
+        val state = _uiState.value
+        if (state.isSaving) return
+
+        val moodTagIds = state.orderedTags.mapNotNull { moodTagIdByCode[it.code] }
+        // 기준 데이터 로드가 실패했거나 서버에 없는 태그를 고른 경우. 저장하면 COURSE_MOOD404 가 난다.
+        if (moodTagIds.size != state.selectedTags.size) {
+            _uiState.update {
+                it.copy(isSaveConfirmDialogVisible = false, saveError = MOOD_TAG_UNAVAILABLE_MESSAGE)
+            }
+            return
+        }
+
+        _uiState.update { it.copy(isSaveConfirmDialogVisible = false, isSaving = true, saveError = null) }
+        viewModelScope.launch {
+            val result = courseDraftRepository.saveCourse(
+                courseDraftId = courseDraftId,
+                title = state.name,
+                memo = state.memo,
+                moodTagIds = moodTagIds,
+            )
+            _uiState.update {
+                when (result) {
+                    is ApiResult.Success -> it.copy(isSaving = false, isSavedDialogVisible = true)
+                    is ApiResult.Failure -> it.copy(isSaving = false, saveError = result.toUiError().message)
+                }
+            }
         }
     }
 
     /** 저장 확인 알럿 [취소] → 알럿만 닫는다. */
     fun onDismissSaveConfirm() {
         _uiState.update { it.copy(isSaveConfirmDialogVisible = false) }
+    }
+
+    /** 저장 실패 안내 닫기. 화면 입력은 그대로 남아 다시 시도할 수 있다. */
+    fun onDismissSaveError() {
+        _uiState.update { it.copy(saveError = null) }
     }
 
     /** 완료 다이얼로그 [저장된 코스로 이동하기]. */
@@ -105,5 +183,9 @@ class CourseSaveViewModel @Inject constructor() : ViewModel() {
     fun onSkipSavedDialog() {
         _uiState.update { it.copy(isSavedDialogVisible = false) }
         viewModelScope.launch { _effect.send(CourseSaveEffect.NavigateToHome) }
+    }
+
+    private companion object {
+        const val MOOD_TAG_UNAVAILABLE_MESSAGE = "분위기 태그 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요."
     }
 }

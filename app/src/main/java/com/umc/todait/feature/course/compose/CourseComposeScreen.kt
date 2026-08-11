@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -121,10 +122,18 @@ fun CourseComposeScreen(
             onRetry = viewModel::retry,
         )
 
-        when (uiState.alert) {
+        when (val alert = uiState.alert) {
             CourseComposeAlert.Duplicate -> BasePlaceSystemAlert(
                 title = stringResource(R.string.course_compose_duplicate_title),
                 description = stringResource(R.string.course_compose_duplicate_desc),
+                onConfirm = viewModel::onDismissAlert,
+                onCancel = viewModel::onDismissAlert,
+            )
+
+            // 선택 장소 추가 실패. 서버가 준 문구(중복·기준 장소·최대 개수 등)를 그대로 보여준다.
+            is CourseComposeAlert.AddFailed -> BasePlaceSystemAlert(
+                title = stringResource(R.string.course_compose_add_error_title),
+                description = alert.message,
                 onConfirm = viewModel::onDismissAlert,
                 onCancel = viewModel::onDismissAlert,
             )
@@ -227,6 +236,8 @@ private fun CourseComposeContent(
                         RecommendCard(
                             place = place,
                             added = place.key in selectedKeys,
+                            // 담기 요청이 끝나기 전에는 '+' 를 다시 누를 수 없다(중복 추가 방지).
+                            adding = place.key in state.addingPlaceKeys,
                             // 분위기별 카드 색상. 추천 응답의 matchedMoodTags 로 결정하되,
                             // 일치한 분위기가 없을 수 있어 그때는 6종을 순번으로 부여한다.
                             mood = CourseMood.fromTags(place.moodTags)
@@ -303,11 +314,14 @@ private fun CourseMood.decorationRes(): Int = when (this) {
  * 추천 장소 카드. Figma("코스구성하기(카페)_기본")와 동일하게 좌측 장소 이미지 위로 우측 그라데이션
  * 패널을 얹고, 그 위에 장소명·주소(흰색)와 근접 배지를 표시한다. 우상단 '+' 로 코스에 담고,
  * 담긴 상태면 초록 테두리 + 체크로 표시한다. 그라데이션/장식은 [mood] 에 따라 달라진다.
+ *
+ * [adding] 이면 담기 API 응답을 기다리는 중이라 '+' 자리에 스피너를 노출하고 탭을 막는다.
  */
 @Composable
 private fun RecommendCard(
     place: PlaceUiModel,
     added: Boolean,
+    adding: Boolean,
     mood: CourseMood,
     onClick: () -> Unit,
     onAdd: () -> Unit,
@@ -371,18 +385,24 @@ private fun RecommendCard(
                     .padding(top = 4.dp, end = 10.dp)
                     .size(24.dp)
                     .clip(CircleShape)
-                    .clickable(onClick = onAdd),
+                    .clickable(enabled = !adding, onClick = onAdd),
                 contentAlignment = Alignment.Center,
             ) {
-                if (added) {
-                    Icon(
+                when {
+                    adding -> CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        color = White,
+                        strokeWidth = 2.dp,
+                    )
+
+                    added -> Icon(
                         imageVector = Icons.Filled.Check,
                         contentDescription = "담김",
                         tint = White,
                         modifier = Modifier.size(20.dp),
                     )
-                } else {
-                    Text(
+
+                    else -> Text(
                         text = "+",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Medium,
@@ -538,6 +558,7 @@ private fun RecommendCardPreview() {
             RecommendCard(
                 place = previewPlaces[0],
                 added = false,
+                adding = false,
                 mood = CourseMood.ROMANTIC,
                 onClick = {},
                 onAdd = {},
@@ -546,6 +567,7 @@ private fun RecommendCardPreview() {
             RecommendCard(
                 place = previewPlaces[1],
                 added = true,
+                adding = false,
                 mood = CourseMood.MODERN,
                 onClick = {},
                 onAdd = {},

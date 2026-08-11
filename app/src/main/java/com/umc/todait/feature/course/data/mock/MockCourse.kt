@@ -1,6 +1,7 @@
 package com.umc.todait.feature.course.data.mock
 
 import com.umc.todait.core.mock.MockImages
+import com.umc.todait.feature.course.data.dto.AddedCourseDraftPlaceDto
 import com.umc.todait.feature.course.data.dto.AreaSummaryDto
 import com.umc.todait.feature.course.data.dto.BasePlaceResultDto
 import com.umc.todait.feature.course.data.dto.BasePlaceSetResponseDto
@@ -8,8 +9,11 @@ import com.umc.todait.feature.course.data.dto.BasePlaceSummaryDto
 import com.umc.todait.feature.course.data.dto.CourseDraftCreateResponseDto
 import com.umc.todait.feature.course.data.dto.CourseDraftFoodCategorySaveResponseDto
 import com.umc.todait.feature.course.data.dto.CourseDraftMoodTagSaveResponseDto
+import com.umc.todait.feature.course.data.dto.CourseDraftPlaceAddResponseDto
 import com.umc.todait.feature.course.data.dto.CourseDraftPlaceDto
 import com.umc.todait.feature.course.data.dto.CourseDraftSavingEnterResponseDto
+import com.umc.todait.feature.course.data.dto.CourseSaveRequestDto
+import com.umc.todait.feature.course.data.dto.CourseSaveResponseDto
 import com.umc.todait.feature.course.data.dto.ExternalPlaceDto
 import com.umc.todait.feature.course.data.dto.FoodCategoryDto
 import com.umc.todait.feature.course.data.dto.FoodCategoryListResponseDto
@@ -30,6 +34,7 @@ import com.umc.todait.feature.course.data.dto.PlaceOrderUpdateResponseDto
 import com.umc.todait.feature.course.data.dto.PlaceSearchResultDto
 import com.umc.todait.feature.course.data.dto.RecommendedPlaceDto
 import com.umc.todait.feature.course.data.dto.RecommendedPlaceResultDto
+import com.umc.todait.feature.course.data.dto.SavedCoursePlaceDto
 import com.umc.todait.feature.course.data.dto.SearchPlaceDto
 
 /**
@@ -192,6 +197,42 @@ object MockCourse {
         ),
     )
 
+    // ---------- 선택 장소 추가 (POST /api/course-drafts/{id}/places) ----------
+
+    /**
+     * 선택 장소 추가 result.
+     *
+     * 추천 카드 mock([recommendedPlaces])에 있는 장소면 그 정보를 그대로 담아 돌려주고,
+     * 없으면 최소 정보만 채운다. courseDraftPlaceId 는 순서 설정 mock 과 같은 `100 + placeId` 규칙을 쓴다.
+     * visitOrder 는 기준 장소가 1번을 차지하므로 2번부터 시작한다(호출마다 증가하지 않는 단순 mock).
+     */
+    fun placeAddResult(courseDraftId: Long, placeId: Long): CourseDraftPlaceAddResponseDto {
+        val source = ALL_CATEGORY_CODES
+            .flatMap { recommendedPlaces(it).places }
+            .firstOrNull { it.placeId == placeId }
+        return CourseDraftPlaceAddResponseDto(
+            courseDraftId = courseDraftId,
+            draftStatus = "PLACE_SELECTING",
+            addedPlace = AddedCourseDraftPlaceDto(
+                courseDraftPlaceId = DRAFT_PLACE_ID_OFFSET + placeId,
+                placeId = placeId,
+                name = source?.name ?: "선택한 장소",
+                address = source?.address ?: "서울 마포구 연남동 227-15",
+                roadAddress = source?.roadAddress,
+                latitude = source?.latitude ?: 37.561234,
+                longitude = source?.longitude ?: 126.923456,
+                area = source?.area ?: areaYeonnam,
+                category = source?.category ?: categoryCafe,
+                subCategory = source?.subCategory,
+                imageUrl = source?.imageUrl,
+                visitOrder = FIRST_SELECTED_VISIT_ORDER,
+                placeRole = "SELECTED",
+            ),
+            selectedPlaceCount = 1,
+            totalPlaceCount = 2,
+        )
+    }
+
     // ---------- 순서 설정/저장 화면 진입 (PATCH .../ordering, .../saving) ----------
 
     /**
@@ -238,6 +279,35 @@ object MockCourse {
         draftStatus = "SAVING",
         totalPlaceCount = draftPlaces.size,
         routePreview = draftPlaces,
+    )
+
+    // ---------- 코스 저장 요청 (POST /api/course-drafts/{id}/courses) ----------
+
+    /**
+     * 코스 저장 result. 요청으로 들어온 이름·메모·분위기 태그를 그대로 echo 하고,
+     * 임시 코스에 담겨 있던 장소([draftPlaces])를 최종 코스 장소로 복사한 형태로 돌려준다.
+     */
+    fun courseSaveResult(request: CourseSaveRequestDto) = CourseSaveResponseDto(
+        courseId = SAVED_COURSE_ID,
+        draftStatus = "COMPLETED",
+        title = request.title,
+        memo = request.memo,
+        savedAt = "2026-08-11T14:30:00",
+        placeCount = draftPlaces.size,
+        moodTags = allMoods.filter { it.moodTagId in request.moodTagIds },
+        foodCategories = listOf(foodWestern),
+        places = draftPlaces.map { place ->
+            SavedCoursePlaceDto(
+                // 최종 코스 연결 행 ID 는 임시 코스와 다른 값이라는 걸 드러내려고 별도 규칙을 쓴다.
+                coursePlaceId = COURSE_PLACE_ID_OFFSET + place.placeId,
+                placeId = place.placeId,
+                placeRole = place.placeRole,
+                visitOrder = place.visitOrder,
+                name = place.name,
+                address = place.address,
+                memo = null,
+            )
+        },
     )
 
     // ---------- 카테고리 탭 (GET /api/place-categories) ----------
@@ -589,4 +659,16 @@ object MockCourse {
 
     // courseDraftPlaceId 생성 규칙(= 100 + place.id). placeId 와 구분되는 값임을 드러내려고 둔다.
     private const val DRAFT_PLACE_ID_OFFSET = 100L
+
+    // coursePlaceId 생성 규칙(= 300 + place.id). 임시 코스의 courseDraftPlaceId 와 구분한다.
+    private const val COURSE_PLACE_ID_OFFSET = 300L
+
+    // 코스 저장 mock 이 발급했다고 가정하는 최종 course.id.
+    private const val SAVED_COURSE_ID = 200L
+
+    // 기준 장소가 visitOrder = 1 을 고정으로 차지하므로 선택 장소는 2번부터 시작한다.
+    private const val FIRST_SELECTED_VISIT_ORDER = 2
+
+    // 장소 대분류 코드 전체. 추천 mock 에서 placeId 로 장소를 되찾을 때 훑는다.
+    private val ALL_CATEGORY_CODES = listOf("CAFE", "RESTAURANT", "ACTIVITY", "BAR")
 }

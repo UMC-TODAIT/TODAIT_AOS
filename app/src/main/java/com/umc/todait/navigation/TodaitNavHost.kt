@@ -457,6 +457,7 @@ fun TodaitApp() {
                     val composeViewModel: CourseComposeViewModel = hiltViewModel(graphEntry)
                     val composeState by composeViewModel.uiState.collectAsStateWithLifecycle()
                     CourseSaveScreen(
+                        courseDraftId = composeState.courseDraftId,
                         places = listOfNotNull(composeState.basePlace) + composeState.selectedPlaces,
                         // 저장 완료 후에는 코스 생성 플로우를 백스택에서 비운다.
                         onNavigateToSavedCourses = {

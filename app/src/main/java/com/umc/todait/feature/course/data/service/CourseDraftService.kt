@@ -6,7 +6,11 @@ import com.umc.todait.feature.course.data.dto.BasePlaceSetResponseDto
 import com.umc.todait.feature.course.data.dto.CourseDraftCreateResponseDto
 import com.umc.todait.feature.course.data.dto.CourseDraftFoodCategorySaveResponseDto
 import com.umc.todait.feature.course.data.dto.CourseDraftMoodTagSaveResponseDto
+import com.umc.todait.feature.course.data.dto.CourseDraftPlaceAddRequestDto
+import com.umc.todait.feature.course.data.dto.CourseDraftPlaceAddResponseDto
 import com.umc.todait.feature.course.data.dto.CourseDraftSavingEnterResponseDto
+import com.umc.todait.feature.course.data.dto.CourseSaveRequestDto
+import com.umc.todait.feature.course.data.dto.CourseSaveResponseDto
 import com.umc.todait.feature.course.data.dto.FoodCategorySaveRequestDto
 import com.umc.todait.feature.course.data.dto.MoodTagSaveRequestDto
 import com.umc.todait.feature.course.data.dto.OrderingEntryResponseDto
@@ -26,8 +30,8 @@ import retrofit2.http.Path
  * 임시 코스는 상태 머신이라 화면을 넘어갈 때마다 상태를 전이시키는 API 를 호출한다.
  * MOOD_SELECTING → FOOD_SELECTING → BASE_PLACE_SELECTING → PLACE_SELECTING → ORDERING → SAVING → COMPLETED
  *
- * ⚠️ 선택 장소 추가/삭제(POST·DELETE .../places)와 최종 저장(POST .../courses)은
- * 명세상 아직 "진행 중"이라 여기에 없다. 개발 완료되면 이 서비스에 추가한다.
+ * ⚠️ 선택 장소 삭제(DELETE .../places/{courseDraftPlaceId})는 명세상 아직 개발 전이라 여기에 없다.
+ * 그래서 담은 장소를 빼는 동작은 화면에서만 반영되고 서버 임시 코스에는 남는다.
  */
 interface CourseDraftService {
 
@@ -71,6 +75,18 @@ interface CourseDraftService {
     ): BaseResponse<BasePlaceSetResponseDto>
 
     /**
+     * 선택 장소 추가 — POST /api/course-drafts/{courseDraftId}/places
+     *
+     * 코스 구성하기 화면에서 추천 카드의 '+' 를 눌렀을 때 호출한다. 상태가 PLACE_SELECTING 이어야 하며,
+     * 장소를 담아도 상태는 그대로 유지된다. visitOrder 는 서버가 (현재 최댓값 + 1)로 부여한다.
+     */
+    @POST("api/course-drafts/{courseDraftId}/places")
+    suspend fun addPlace(
+        @Path("courseDraftId") courseDraftId: Long,
+        @Body request: CourseDraftPlaceAddRequestDto,
+    ): BaseResponse<CourseDraftPlaceAddResponseDto>
+
+    /**
      * 임시 코스 순서 설정 화면 진입 — PATCH /api/course-drafts/{courseDraftId}/ordering
      *
      * 장소 선택 화면에서 [선택 완료]를 눌렀을 때 호출한다. 요청 바디 없음.
@@ -102,4 +118,16 @@ interface CourseDraftService {
     suspend fun enterSaving(
         @Path("courseDraftId") courseDraftId: Long,
     ): BaseResponse<CourseDraftSavingEnterResponseDto>
+
+    /**
+     * 코스 저장 요청 — POST /api/course-drafts/{courseDraftId}/courses
+     *
+     * 저장 화면에서 [확인]을 눌렀을 때 호출한다. 상태가 SAVING 이어야 하며 성공하면 COMPLETED 로 전이한다.
+     * 같은 임시 코스는 한 번만 저장할 수 있어(재시도 시 COURSE_DRAFT409) 버튼 중복 탭을 막아야 한다.
+     */
+    @POST("api/course-drafts/{courseDraftId}/courses")
+    suspend fun saveCourse(
+        @Path("courseDraftId") courseDraftId: Long,
+        @Body request: CourseSaveRequestDto,
+    ): BaseResponse<CourseSaveResponseDto>
 }

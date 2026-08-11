@@ -91,14 +91,14 @@ import com.umc.todait.ui.theme.White
  * - 태그는 '+' 로 바텀시트를 열어 프리셋 분위기 6종 중 골라 추가한다(선택 시 배경이 그라데이션으로 토글).
  * - [places] 는 경로 미리보기용 코스 순서(기준 장소 + 담은 장소)로, 코스 구성 그래프의 공유
  *   ViewModel 에서 받아 넘긴다. 입력 상태만 [viewModel] 이 소유한다.
+ * - [courseDraftId] 도 같은 공유 ViewModel 이 들고 있는 임시 코스 핸들로, 저장 요청 경로 변수로 쓴다.
  *
  * 시안 상단의 Pink-100 밴드와 하단 GNB 는 이 화면이 아니라 [com.umc.todait.navigation.TodaitApp] 의
  * Scaffold 가 그린다(TopBar 는 전역, BottomBar 는 탭 라우트에서만 — 코스 생성 플로우에서는 숨김).
- *
- * ⚠️ 코스 저장 API 미정으로 ✓ 는 검증 후 완료 다이얼로그만 띄운다. (CourseSaveViewModel 의 TODO)
  */
 @Composable
 fun CourseSaveScreen(
+    courseDraftId: Long,
     places: List<PlaceUiModel>,
     onNavigateToSavedCourses: () -> Unit,
     onNavigateToHome: () -> Unit,
@@ -125,11 +125,28 @@ fun CourseSaveScreen(
         )
     }
 
+    if (uiState.isTagCountErrorDialogVisible) {
+        CommonDialog(
+            title = stringResource(R.string.course_save_tag_count_required),
+            onConfirm = viewModel::onDismissTagCountErrorDialog,
+            onDismiss = viewModel::onDismissTagCountErrorDialog,
+        )
+    }
+
     if (uiState.isSaveConfirmDialogVisible) {
         CommonDialog(
             title = stringResource(R.string.course_save_confirm_message),
-            onConfirm = viewModel::onConfirmSave,
+            onConfirm = { viewModel.onConfirmSave(courseDraftId) },
             onDismiss = viewModel::onDismissSaveConfirm,
+        )
+    }
+
+    // 저장 요청 실패(상태 충돌·중복 저장 등). 서버가 준 문구를 그대로 노출한다.
+    uiState.saveError?.let { message ->
+        CommonDialog(
+            title = message,
+            onConfirm = viewModel::onDismissSaveError,
+            onDismiss = viewModel::onDismissSaveError,
         )
     }
 
@@ -183,6 +200,8 @@ private fun CourseSaveContent(
             onBack = onBack,
             backContentDescription = stringResource(R.string.course_save_back),
             onConfirm = onSave,
+            // 저장 요청 중에는 ✓ 를 막는다. 같은 임시 코스를 두 번 저장하면 COURSE_DRAFT409 가 난다.
+            confirmEnabled = !uiState.isSaving,
             confirmContentDescription = stringResource(R.string.course_save_confirm),
         )
 

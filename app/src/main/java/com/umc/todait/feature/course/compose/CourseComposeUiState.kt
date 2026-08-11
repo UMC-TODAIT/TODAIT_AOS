@@ -30,6 +30,8 @@ data class CourseComposeUiState(
     val recommendState: RecommendListState = RecommendListState.Loading,
     // 코스에 담은 장소들. index 0 = 기준 장소 다음 첫 장소. 순서 = 코스 동선.
     val selectedPlaces: List<PlaceUiModel> = emptyList(),
+    // 선택 장소 추가(POST .../places) 요청이 진행 중인 장소의 [PlaceUiModel.key]. 같은 카드의 '+' 중복 탭을 막는다.
+    val addingPlaceKeys: Set<String> = emptySet(),
     // 노출 중인 시스템 알럿(중복 선택 등). null 이면 닫힘.
     val alert: CourseComposeAlert? = null,
     // 다음 단계 전환 API(ordering / places-order / saving) 호출 중. 헤더 ✓ 중복 탭을 막는다.
@@ -125,6 +127,12 @@ sealed interface RecommendListState {
 
 /** 코스 구성하기 화면의 시스템 알럿 종류. */
 sealed interface CourseComposeAlert {
-    /** 이미 담은 장소를 다시 담으려 할 때(중복선택 알럿). */
+    /** 이미 담은 장소를 다시 담으려 할 때(중복선택 알럿). 요청 전에 화면에서 걸러낸 경우다. */
     data object Duplicate : CourseComposeAlert
+
+    /**
+     * 선택 장소 추가(POST .../places)가 실패했을 때.
+     * [message] 는 서버가 준 안내 문구를 그대로 쓴다(중복·기준 장소 재선택·최대 개수 초과 등).
+     */
+    data class AddFailed(val message: String) : CourseComposeAlert
 }

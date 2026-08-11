@@ -31,6 +31,7 @@ import javax.inject.Inject
  * 그래프 경로 변수로 넘어온다. 이후 단계는 모두 이 핸들 위에서 상태를 전이시킨다.
  *
  * - 진입: 기준 장소 상세 + 카테고리 탭 로드 → 카테고리별 추천 장소 조회
+ * - [onAddPlace] (추천 카드 '+'): POST .../places — 임시 코스에 장소를 담고 courseDraftPlaceId 를 받는다
  * - [onSelectionConfirmed] (장소 선택 ✓): PATCH .../ordering — PLACE_SELECTING → ORDERING
  * - [onOrderConfirmed] (순서 설정 ✓): PATCH .../places/order 로 최종 순서 저장 후 PATCH .../saving
  */
@@ -160,24 +161,59 @@ class CourseComposeViewModel @Inject constructor(
     }
 
     /**
-     * 추천 카드 '+' → 코스에 담기.
-     * 이미 담긴 장소면 중복 알럿을 띄우고, 아니면 목록 끝에 추가한다.
+     * 추천 카드 '+' → 코스에 담기
+     * (POST /api/course-drafts/{courseDraftId}/places).
      *
-     * TODO(BE 멍이): "선택 장소 추가"(POST /api/course-drafts/{id}/places)가 개발 완료되면
-     *  여기서 호출해 courseDraftPlaceId 를 서버에서 받아 [PlaceUiModel.courseDraftPlaceId] 에 채운다.
-     *  그 전까지는 로컬 목록만 유지하고, 순서 설정 진입 응답에서 id 를 맞춰 붙인다.
+     * 서버가 임시 코스에 장소를 저장하고 courseDraftPlaceId 를 발급해 주므로, 응답을 받은 뒤에
+     * 목록 끝에 추가한다(순서 변경 API 가 placeId 가 아니라 이 id 를 쓰기 때문).
+     *
+     * 이미 담은 장소는 요청 전에 걸러 중복 알럿을 띄우고, 요청 중인 장소는 [CourseComposeUiState.addingPlaceKeys]
+     * 로 표시해 같은 카드의 '+' 중복 탭을 막는다. 최종 중복·기준 장소·최대 개수 검증은 서버가 한다.
      */
     fun onAddPlace(place: PlaceUiModel) {
-        _uiState.update { state ->
-            if (state.selectedPlaces.any { it.key == place.key }) {
-                state.copy(alert = CourseComposeAlert.Duplicate)
-            } else {
-                state.copy(selectedPlaces = state.selectedPlaces + place)
+        val state = _uiState.value
+        if (state.selectedPlaces.any { it.key == place.key }) {
+            _uiState.update { it.copy(alert = CourseComposeAlert.Duplicate) }
+            return
+        }
+        if (place.key in state.addingPlaceKeys) return
+        // 추천 카드는 운영자 검수를 마친 내부 장소라 placeId 가 항상 있다(외부 장소는 담을 수 없다).
+        val placeId = place.placeId ?: run {
+            _uiState.update { it.copy(alert = CourseComposeAlert.AddFailed(UNSUPPORTED_PLACE_MESSAGE)) }
+            return
+        }
+
+        _uiState.update { it.copy(addingPlaceKeys = it.addingPlaceKeys + place.key) }
+        viewModelScope.launch {
+            val result = courseDraftRepository.addPlace(courseDraftId = courseDraftId, placeId = placeId)
+            _uiState.update { current ->
+                val next = current.copy(addingPlaceKeys = current.addingPlaceKeys - place.key)
+                when (result) {
+                    is ApiResult.Success -> {
+                        // 요청 중에 다른 경로로 이미 담겼다면 그대로 둔다(중복 추가 방지).
+                        if (next.selectedPlaces.any { it.key == place.key }) {
+                            next
+                        } else {
+                            val added = place.copy(courseDraftPlaceId = result.data.addedPlace.courseDraftPlaceId)
+                            next.copy(selectedPlaces = next.selectedPlaces + added)
+                        }
+                    }
+
+                    // 서버 message 가 그대로 안내 문구가 된다(예: "이미 선택한 장소입니다.").
+                    is ApiResult.Failure ->
+                        next.copy(alert = CourseComposeAlert.AddFailed(result.toUiError().message))
+                }
             }
         }
     }
 
-    /** 선택한 장소에서 빼기. */
+    /**
+     * 선택한 장소에서 빼기.
+     *
+     * ⚠️ "선택 장소 삭제"(DELETE .../places/{courseDraftPlaceId})가 아직 개발 전이라 화면에서만 뺀다.
+     * 서버 임시 코스에는 장소가 남아 있어 순서/저장 단계에서 개수가 어긋날 수 있다.
+     * 삭제 API 가 나오면 여기서 호출하고 실패 시 목록을 되돌린다.
+     */
     fun onRemovePlace(place: PlaceUiModel) {
         _uiState.update { state ->
             state.copy(selectedPlaces = state.selectedPlaces.filterNot { it.key == place.key })
@@ -232,8 +268,8 @@ class CourseComposeViewModel @Inject constructor(
      * 1. PATCH .../places/order — 기준 장소를 제외한 선택 장소 전체의 최종 순서를 한 번에 전달
      * 2. PATCH .../saving — ORDERING → SAVING 전이 + 경로 미리보기 수신
      *
-     * 1번은 서버가 부여한 courseDraftPlaceId 를 모두 알고 있을 때만 보낸다. 아직 "선택 장소 추가" API 가
-     * 없어 id 를 못 받은 장소가 섞여 있으면 순서 저장을 건너뛰고 저장 화면 진입만 진행한다.
+     * 1번은 서버가 부여한 courseDraftPlaceId 를 모두 알고 있을 때만 보낸다. id 는 선택 장소 추가 응답에서
+     * 받아 두지만, 이전 세션에서 담긴 장소처럼 id 를 못 받은 항목이 섞여 있으면 순서 저장을 건너뛴다.
      */
     fun onOrderConfirmed() {
         val state = _uiState.value
@@ -286,8 +322,8 @@ class CourseComposeViewModel @Inject constructor(
     /**
      * 서버가 내려준 임시 코스 장소 목록에서 courseDraftPlaceId 를 찾아 담아둔 장소에 붙인다.
      *
-     * "선택 장소 추가" API 가 아직 없어 서버가 앱의 선택 목록을 모르는 동안에는 매칭되지 않는 장소가
-     * 생길 수 있다. 그때는 기존 값을 유지해 화면(로컬 순서)이 깨지지 않게 한다.
+     * id 는 선택 장소 추가 응답에서 이미 받지만, 단계 전환 응답이 서버 기준 최신값이라 한 번 더 맞춘다.
+     * 매칭되지 않는 장소는 기존 값을 유지해 화면(로컬 순서)이 깨지지 않게 한다.
      */
     private fun List<PlaceUiModel>.withDraftPlaceIds(draftPlaces: List<CourseDraftPlaceDto>): List<PlaceUiModel> {
         if (draftPlaces.isEmpty()) return this
@@ -301,6 +337,9 @@ class CourseComposeViewModel @Inject constructor(
 
     companion object {
         private const val EMPTY_MESSAGE = "추천할 수 있는 장소가 없어요."
+
+        // 선택 장소 추가 API 는 내부 placeId 만 받는다(카카오 미등록 장소는 담을 수 없다).
+        private const val UNSUPPORTED_PLACE_MESSAGE = "지금은 담을 수 없는 장소예요."
     }
 }
 

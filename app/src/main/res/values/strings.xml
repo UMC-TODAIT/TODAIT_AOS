@@ -114,6 +114,8 @@
     <string name="course_compose_duplicate_desc">다른 장소를 선택해주세요.</string>
     <!-- 다음 단계 전환 API(ordering/places-order/saving) 실패 시 -->
     <string name="course_compose_submit_error_title">다음 단계로 이동하지 못했어요.</string>
+    <!-- 선택 장소 추가 API(POST .../places) 실패 시. 본문은 서버 message 를 그대로 쓴다. -->
+    <string name="course_compose_add_error_title">장소를 담지 못했어요.</string>
 
     <!-- Course save (코스 저장) -->
     <string name="course_save_title">코스 저장</string>
@@ -134,6 +136,8 @@
     <string name="course_save_confirm">저장</string>
     <!-- 이름 미입력 상태에서 저장(체크)을 눌렀을 때 뜨는 안내 알럿 문구 (Figma node 918-2638) -->
     <string name="course_save_name_required">코스 이름이 입력되지 않았어요.</string>
+    <!-- 분위기 태그 개수가 명세 범위(2~6개)를 벗어난 상태에서 저장을 눌렀을 때 -->
+    <string name="course_save_tag_count_required">태그를 2개 이상 6개 이하로 선택해주세요.</string>
     <!-- 이름 통과 후 저장(체크)을 눌렀을 때 뜨는 확인 알럿 문구 (Figma node 1204-4231) -->
     <string name="course_save_confirm_message">코스를 저장할까요?</string>
 

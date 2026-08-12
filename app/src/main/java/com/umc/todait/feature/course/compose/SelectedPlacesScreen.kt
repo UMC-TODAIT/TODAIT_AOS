@@ -2,7 +2,6 @@ package com.umc.todait.feature.course.compose
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,14 +12,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,7 +27,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -45,11 +41,10 @@ import com.umc.todait.feature.course.base_place.BasePlaceSystemAlert
 import com.umc.todait.feature.course.base_place.PlaceUiModel
 import com.umc.todait.ui.component.ScreenTopBar
 import com.umc.todait.ui.theme.Cream
-import com.umc.todait.ui.theme.Gray200
-import com.umc.todait.ui.theme.Gray500
 import com.umc.todait.ui.theme.Gray600
 import com.umc.todait.ui.theme.Gray900
 import com.umc.todait.ui.theme.Pink100
+import com.umc.todait.ui.theme.Pink800
 import com.umc.todait.ui.theme.TodaitTheme
 import com.umc.todait.ui.theme.White
 import sh.calvin.reorderable.ReorderableItem
@@ -62,11 +57,17 @@ import sh.calvin.reorderable.rememberReorderableLazyListState
  * 헤더(뒤로/타이틀/✓) + 지도 + "선택한 장소 (N)" 드래그 정렬 리스트로 구성된다.
  * 선택 상태는 상위 그래프 스코프 [CourseComposeViewModel] 을 [CourseComposeScreen] 과 공유한다.
  *
- * - 리스트 = 기준 장소(로고 배지, 고정) + 담은 장소들(순번 배지 2·3·4…, 드래그로 순서 변경). 순서 = 코스 동선.
- * - 담은 장소는 ≡ 핸들을 잡아 드래그하면 순서가 바뀐다([CourseComposeViewModel.onMovePlace], sh.calvin.reorderable).
+ * - 리스트 = [CourseComposeUiState.orderedPlaces] (기준 장소 포함). 기준 장소도 다른 장소와 완전히
+ *   같은 행이고, 이름 옆 "기준장소" 칩만 더 붙는다(Figma "코스구성하기_드래그수정" node 534-13891).
+ *   "선택한 장소 (N)" 의 N 도 기준 장소를 포함한 전체 개수다.
+ * - 모든 행은 핸들(흰 점 6개)을 잡아 드래그하면 순서가 바뀐다
+ *   ([CourseComposeViewModel.onMovePlace], sh.calvin.reorderable).
  * - 헤더 ✓ → 코스 저장([onNavigateToSave]).
  *
- * ⚠️ 기준 장소 배지 아이콘은 임시(ic_place_deco_cloud) — 실제 todait 로고 마크로 교체 예정.
+ * ⚠️ 서버는 아직 기준 장소를 placeRole=BASE / visitOrder 1 고정으로 다루고, 순서 변경 API 명세도
+ * "기준 장소 제외 + visitOrder 2부터"다. 기준 장소를 옮긴 순서를 저장하려면 서버가 그 형태를 받아야 한다.
+ * 앱은 옮긴 순서를 그대로 보내고(자세한 건 [CourseComposeViewModel.onOrderConfirmed]),
+ * 서버가 거부하면 실패 메시지를 그대로 띄운다.
  */
 @Composable
 fun SelectedPlacesScreen(
@@ -101,17 +102,14 @@ fun SelectedPlacesScreen(
                 confirmContentDescription = "확정",
             )
 
-            // 기준 장소(있으면)는 고정, 담은 장소들만 드래그로 순서 변경.
-            val hasBase = uiState.basePlace != null
-            val baseOffset = if (hasBase) 1 else 0
-
             val lazyListState = rememberLazyListState()
-            // 드래그로 위치가 바뀌면 PlaceUiModel.key 로 selectedPlaces 인덱스를 찾아 onMovePlace 호출.
+            // 드래그로 위치가 바뀌면 PlaceUiModel.key 로 orderedPlaces 인덱스를 찾아 onMovePlace 호출.
+            // 기준 장소도 같은 목록에 있어 다른 장소와 똑같이 옮겨진다.
             val reorderableState = rememberReorderableLazyListState(lazyListState) { from, to ->
-                val selected = viewModel.uiState.value.selectedPlaces
-                val fromIdx = selected.indexOfFirst { it.key == from.key }
-                val toIdx = selected.indexOfFirst { it.key == to.key }
-                if (fromIdx in selected.indices && toIdx in selected.indices) {
+                val places = viewModel.uiState.value.orderedPlaces
+                val fromIdx = places.indexOfFirst { it.key == from.key }
+                val toIdx = places.indexOfFirst { it.key == to.key }
+                if (fromIdx in places.indices && toIdx in places.indices) {
                     viewModel.onMovePlace(fromIdx, toIdx)
                 }
             }
@@ -123,8 +121,9 @@ fun SelectedPlacesScreen(
             ) {
                 item {
                     CourseMap(
-                        basePlace = uiState.basePlace,
-                        selectedPlaces = uiState.selectedPlaces,
+                        places = uiState.orderedPlaces,
+                        basePlaceKey = uiState.basePlaceKey,
+                        currentLocation = uiState.currentLocation,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(220.dp),
@@ -133,7 +132,11 @@ fun SelectedPlacesScreen(
                 item {
                     Column(modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 8.dp)) {
                         Text(
-                            text = stringResource(R.string.course_compose_selected_section, uiState.selectedPlaces.size),
+                            // 개수는 기준 장소를 포함한 코스 전체 장소 수.
+                            text = stringResource(
+                                R.string.course_compose_selected_section,
+                                uiState.orderedPlaces.size,
+                            ),
                             style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold),
                             color = Gray900,
                         )
@@ -145,24 +148,13 @@ fun SelectedPlacesScreen(
                         )
                     }
                 }
-                // 기준 장소(고정, 드래그 불가).
-                uiState.basePlace?.let { base ->
-                    item(key = "base_place") {
-                        SelectedPlaceRow(
-                            place = base,
-                            isBase = true,
-                            order = 1,
-                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
-                        )
-                    }
-                }
-                // 담은 장소(드래그로 순서 변경). 배지 순번은 기준 장소가 있으면 2부터.
-                itemsIndexed(uiState.selectedPlaces, key = { _, place -> place.key }) { index, place ->
+                // 기준 장소를 포함한 코스 전체. 전부 같은 행이고 전부 드래그로 순서를 바꿀 수 있다.
+                itemsIndexed(uiState.orderedPlaces, key = { _, place -> place.key }) { index, place ->
                     ReorderableItem(reorderableState, key = place.key) { isDragging ->
                         SelectedPlaceRow(
                             place = place,
-                            isBase = false,
-                            order = index + 1 + baseOffset,
+                            isBase = place.key == uiState.basePlaceKey,
+                            order = index + 1,
                             isDragging = isDragging,
                             handleModifier = Modifier.draggableHandle(),
                             modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
@@ -185,8 +177,10 @@ fun SelectedPlacesScreen(
 }
 
 /**
- * 선택한 장소 행(와이어프레임: Pink-100 카드). 좌측 드래그 핸들 + 장소명/주소 + 우측 배지.
- * 배지는 기준 장소면 로고, 아니면 순번([order]).
+ * 선택한 장소 행(Figma: Pink-100 카드). 좌측 드래그 핸들 + 장소명/주소 + 우측 순번 배지.
+ *
+ * 기준 장소도 같은 행을 쓰고 배지에 순번([order], 1)을 그대로 노출한다.
+ * 다른 점은 이름 옆의 "기준장소" 칩([isBase])뿐이다.
  *
  * [handleModifier] 는 ≡ 핸들에 붙는 드래그 핸들 modifier(ReorderableItem 스코프의 draggableHandle).
  * 기준 장소 등 드래그 불가 행은 기본값(Modifier)으로 핸들만 표시한다.
@@ -209,22 +203,32 @@ private fun SelectedPlaceRow(
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // 드래그 핸들(≡). 담은 장소 행에서는 handleModifier(draggableHandle)로 드래그를 시작한다.
-        Icon(
-            imageVector = Icons.Filled.Menu,
+        // 드래그 핸들(흰 점 6개). handleModifier(draggableHandle)를 잡아 드래그를 시작한다.
+        Image(
+            painter = painterResource(id = R.drawable.ic_drag_handle),
             contentDescription = "순서 변경 핸들",
-            tint = Gray500,
-            modifier = handleModifier.size(20.dp),
+            modifier = handleModifier
+                .width(11.dp)
+                .height(17.dp),
         )
-        Spacer(Modifier.size(12.dp))
+        // Figma: 핸들과 장소명 사이 27.
+        Spacer(Modifier.size(27.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = place.name,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = Gray900,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = place.name,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = Gray900,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+                // 기준 장소 표시는 순번 배지가 아니라 이름 옆 칩으로 한다. (Figma node 1678-10775)
+                if (isBase) {
+                    Spacer(Modifier.size(6.dp))
+                    BasePlaceChip()
+                }
+            }
             Text(
                 text = place.address,
                 style = MaterialTheme.typography.bodySmall,
@@ -234,28 +238,39 @@ private fun SelectedPlaceRow(
             )
         }
         Spacer(Modifier.size(12.dp))
-        // 우측 배지(지도 핀과 대응): 기준 장소=로고, 나머지=순번.
+        // 우측 순번 배지(지도 핀 번호와 대응). 기준 장소도 동일하게 숫자를 노출한다.
         Box(
             modifier = Modifier
-                .size(28.dp)
+                .size(26.dp)
                 .clip(CircleShape)
                 .background(White),
             contentAlignment = Alignment.Center,
         ) {
-            if (isBase) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_place_deco_cloud),
-                    contentDescription = "기준 장소",
-                    modifier = Modifier.size(18.dp),
-                )
-            } else {
-                Text(
-                    text = order.toString(),
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
-                    color = Gray900,
-                )
-            }
+            Text(
+                text = order.toString(),
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Gray900,
+            )
         }
+    }
+}
+
+/** 기준 장소 행 이름 옆의 "기준장소" 칩. 흰 pill + Pink-800 텍스트. (Figma node 1678-10775) */
+@Composable
+private fun BasePlaceChip() {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(50))
+            .background(White)
+            .padding(horizontal = 8.dp, vertical = 2.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.course_compose_base_place_chip),
+            fontSize = 10.sp,
+            color = Pink800,
+            maxLines = 1,
+        )
     }
 }
 
@@ -263,7 +278,7 @@ private fun SelectedPlaceRow(
 @Composable
 private fun SelectedPlacesRowsPreview() {
     val sample = listOf(
-        PlaceUiModel(1, "꿔노이", "서울 마포구 연남동 383-37", "카페", "연남", null, null, 37.56, 126.92),
+        PlaceUiModel(1, "뀌노이", "서울 마포구 연남동 383-37", "카페", "연남", null, null, 37.56, 126.92),
         PlaceUiModel(2, "코이크", "서울 마포구 연남동 383-37", "카페", "연남", null, null, 37.56, 126.92),
         PlaceUiModel(3, "121르말뒤페이", "서울 마포구 연남동 383-37", "카페", "연남", null, null, 37.56, 126.92),
     )

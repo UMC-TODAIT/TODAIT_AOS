@@ -3,12 +3,15 @@ package com.umc.todait.feature.course.compose
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.umc.todait.core.location.LocationProvider
 import com.umc.todait.core.network.ApiResult
 import com.umc.todait.core.network.toUiError
 import com.umc.todait.feature.course.base_place.PlaceUiModel
 import com.umc.todait.feature.course.base_place.toUiModel
 import com.umc.todait.feature.course.data.dto.CourseDraftPlaceDto
 import com.umc.todait.feature.course.data.repository.CourseDraftRepository
+import com.umc.todait.feature.course.data.repository.CourseDraftRepository.Companion.FIRST_SELECTED_VISIT_ORDER
+import com.umc.todait.feature.course.data.repository.CourseDraftRepository.Companion.FIRST_VISIT_ORDER
 import com.umc.todait.feature.course.data.repository.PlaceCategoryRepository
 import com.umc.todait.feature.course.data.repository.PlaceRepository
 import com.umc.todait.feature.course.data.repository.RecommendationRepository
@@ -31,7 +34,7 @@ import javax.inject.Inject
  * 그래프 경로 변수로 넘어온다. 이후 단계는 모두 이 핸들 위에서 상태를 전이시킨다.
  *
  * - 진입: 기준 장소 상세 + 카테고리 탭 로드 → 카테고리별 추천 장소 조회
- * - [onAddPlace] (추천 카드 '+'): POST .../places — 임시 코스에 장소를 담고 courseDraftPlaceId 를 받는다
+ * - [onAddPlace] (추천 카드 탭): POST .../places — 임시 코스에 장소를 담고 courseDraftPlaceId 를 받는다
  * - [onSelectionConfirmed] (장소 선택 ✓): PATCH .../ordering — PLACE_SELECTING → ORDERING
  * - [onOrderConfirmed] (순서 설정 ✓): PATCH .../places/order 로 최종 순서 저장 후 PATCH .../saving
  */
@@ -41,6 +44,7 @@ class CourseComposeViewModel @Inject constructor(
     private val placeCategoryRepository: PlaceCategoryRepository,
     private val courseDraftRepository: CourseDraftRepository,
     private val placeRepository: PlaceRepository,
+    private val locationProvider: LocationProvider,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -62,8 +66,21 @@ class CourseComposeViewModel @Inject constructor(
 
     init {
         loadBasePlace()
+        loadCurrentLocation()
         // 카테고리(탭)가 있어야 추천을 조회할 수 있어(placeCategoryCode 필요) 카테고리 로드 후 추천을 부른다.
         loadCategories()
+    }
+
+    /**
+     * 지도 "현재 위치" 마커용 좌표 1회 조회.
+     * 권한이 없거나 조회에 실패하면 null 이 그대로 남아 마커만 빠진다(화면은 정상 동작).
+     * 화면에서 위치 권한을 받아낸 뒤 다시 부를 수 있도록 public 이다.
+     */
+    fun loadCurrentLocation() {
+        viewModelScope.launch {
+            val coordinate = locationProvider.getCurrentLocation() ?: return@launch
+            _uiState.update { it.copy(currentLocation = coordinate) }
+        }
     }
 
     /**
@@ -76,7 +93,15 @@ class CourseComposeViewModel @Inject constructor(
     private fun loadBasePlace() {
         viewModelScope.launch {
             when (val result = placeRepository.getPlaceDetail(basePlaceId)) {
-                is ApiResult.Success -> _uiState.update { it.copy(basePlace = result.data.toBasePlaceUiModel()) }
+                is ApiResult.Success -> _uiState.update { state ->
+                    val base = result.data.toBasePlaceUiModel()
+                    state.copy(
+                        // 기준 장소도 코스 목록의 일원이다. 처음엔 맨 앞에 놓고, 이후 드래그로 옮길 수 있다.
+                        orderedPlaces = listOf(base) + state.orderedPlaces.filterNot { it.key == base.key },
+                        basePlaceKey = base.key,
+                    )
+                }
+
                 is ApiResult.Failure -> Unit
             }
         }
@@ -161,14 +186,14 @@ class CourseComposeViewModel @Inject constructor(
     }
 
     /**
-     * 추천 카드 '+' → 코스에 담기
+     * 추천 카드 탭 → 코스에 담기
      * (POST /api/course-drafts/{courseDraftId}/places).
      *
      * 서버가 임시 코스에 장소를 저장하고 courseDraftPlaceId 를 발급해 주므로, 응답을 받은 뒤에
      * 목록 끝에 추가한다(순서 변경 API 가 placeId 가 아니라 이 id 를 쓰기 때문).
      *
      * 이미 담은 장소는 요청 전에 걸러 중복 알럿을 띄우고, 요청 중인 장소는 [CourseComposeUiState.addingPlaceKeys]
-     * 로 표시해 같은 카드의 '+' 중복 탭을 막는다. 최종 중복·기준 장소·최대 개수 검증은 서버가 한다.
+     * 로 표시해 같은 카드의 중복 탭을 막는다. 최종 중복·기준 장소·최대 개수 검증은 서버가 한다.
      */
     fun onAddPlace(place: PlaceUiModel) {
         val state = _uiState.value
@@ -195,7 +220,7 @@ class CourseComposeViewModel @Inject constructor(
                             next
                         } else {
                             val added = place.copy(courseDraftPlaceId = result.data.addedPlace.courseDraftPlaceId)
-                            next.copy(selectedPlaces = next.selectedPlaces + added)
+                            next.copy(orderedPlaces = next.orderedPlaces + added)
                         }
                     }
 
@@ -216,17 +241,22 @@ class CourseComposeViewModel @Inject constructor(
      */
     fun onRemovePlace(place: PlaceUiModel) {
         _uiState.update { state ->
-            state.copy(selectedPlaces = state.selectedPlaces.filterNot { it.key == place.key })
+            // 기준 장소는 화면에서 뺄 수 없다(코스의 기준점이라 빼면 임시 코스가 성립하지 않는다).
+            if (place.key == state.basePlaceKey) return@update state
+            state.copy(orderedPlaces = state.orderedPlaces.filterNot { it.key == place.key })
         }
     }
 
-    /** 선택한 장소 순서 변경(드래그). 서버 반영은 순서 설정 화면 ✓ 에서 한 번에 한다. */
+    /**
+     * 코스 순서 변경(드래그). 기준 장소도 다른 장소와 똑같이 옮길 수 있다.
+     * 인덱스는 [CourseComposeUiState.orderedPlaces] 기준이며, 서버 반영은 순서 설정 화면 ✓ 에서 한 번에 한다.
+     */
     fun onMovePlace(fromIndex: Int, toIndex: Int) {
         _uiState.update { state ->
-            val list = state.selectedPlaces.toMutableList()
+            val list = state.orderedPlaces.toMutableList()
             if (fromIndex !in list.indices || toIndex !in list.indices) return@update state
             list.add(toIndex, list.removeAt(fromIndex))
-            state.copy(selectedPlaces = list)
+            state.copy(orderedPlaces = list)
         }
     }
 
@@ -248,7 +278,7 @@ class CourseComposeViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             isSubmitting = false,
-                            selectedPlaces = it.selectedPlaces.withDraftPlaceIds(result.data.places),
+                            orderedPlaces = it.orderedPlaces.withDraftPlaceIds(result.data.places),
                         )
                     }
                     _effect.send(CourseComposeEffect.NavigateToSelected)
@@ -265,11 +295,17 @@ class CourseComposeViewModel @Inject constructor(
     /**
      * 순서 설정 화면 헤더 ✓ → 최종 순서를 저장하고 코스 저장 화면으로 진입한다.
      *
-     * 1. PATCH .../places/order — 기준 장소를 제외한 선택 장소 전체의 최종 순서를 한 번에 전달
+     * 1. PATCH .../places/order — 화면에 보이는 최종 순서를 한 번에 전달
      * 2. PATCH .../saving — ORDERING → SAVING 전이 + 경로 미리보기 수신
      *
      * 1번은 서버가 부여한 courseDraftPlaceId 를 모두 알고 있을 때만 보낸다. id 는 선택 장소 추가 응답에서
      * 받아 두지만, 이전 세션에서 담긴 장소처럼 id 를 못 받은 항목이 섞여 있으면 순서 저장을 건너뛴다.
+     *
+     * ⚠️ 페이로드 모양이 기준 장소 위치에 따라 달라진다.
+     * 명세상 순서 변경 요청은 "기준 장소를 빼고 visitOrder 2부터"인데, 이는 기준 장소가 항상 1번이라는
+     * 전제에서 나온 규칙이다. 기준 장소를 다른 자리로 옮기면 그 전제로는 순서를 표현할 수 없으므로
+     * 기준 장소까지 포함해 visitOrder 1부터 보낸다. 서버가 아직 이 형태를 안 받으면 실패 응답이
+     * [CourseComposeUiState.submitError] 로 그대로 노출된다(조용히 어긋나지는 않는다).
      */
     fun onOrderConfirmed() {
         val state = _uiState.value
@@ -277,11 +313,15 @@ class CourseComposeViewModel @Inject constructor(
 
         _uiState.update { it.copy(isSubmitting = true, submitError = null) }
         viewModelScope.launch {
-            val draftPlaceIds = state.selectedPlaces.map { it.courseDraftPlaceId }
+            // 기준 장소가 1번이면 기존 규약대로(기준 장소 제외, 2번부터), 옮겼으면 전체를 1번부터.
+            val placesToOrder = if (state.isBasePlaceFirst) state.selectedPlaces else state.orderedPlaces
+            val firstVisitOrder = if (state.isBasePlaceFirst) FIRST_SELECTED_VISIT_ORDER else FIRST_VISIT_ORDER
+            val draftPlaceIds = placesToOrder.map { it.courseDraftPlaceId }
             if (draftPlaceIds.isNotEmpty() && draftPlaceIds.all { it != null }) {
                 val orderResult = courseDraftRepository.updatePlaceOrder(
                     courseDraftId = courseDraftId,
-                    selectedPlaceIds = draftPlaceIds.filterNotNull(),
+                    orderedPlaceIds = draftPlaceIds.filterNotNull(),
+                    firstVisitOrder = firstVisitOrder,
                 )
                 if (orderResult is ApiResult.Failure) {
                     _uiState.update {
@@ -296,7 +336,7 @@ class CourseComposeViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             isSubmitting = false,
-                            selectedPlaces = it.selectedPlaces.withDraftPlaceIds(result.data.routePreview),
+                            orderedPlaces = it.orderedPlaces.withDraftPlaceIds(result.data.routePreview),
                         )
                     }
                     _effect.send(CourseComposeEffect.NavigateToSave)
@@ -324,11 +364,13 @@ class CourseComposeViewModel @Inject constructor(
      *
      * id 는 선택 장소 추가 응답에서 이미 받지만, 단계 전환 응답이 서버 기준 최신값이라 한 번 더 맞춘다.
      * 매칭되지 않는 장소는 기존 값을 유지해 화면(로컬 순서)이 깨지지 않게 한다.
+     *
+     * 기준 장소(placeRole=BASE)도 서버 응답에 courseDraftPlaceId 를 달고 내려오므로 함께 매칭한다.
+     * 기준 장소를 다른 자리로 옮겼을 때 순서 변경 요청에 넣으려면 이 id 가 있어야 한다.
      */
     private fun List<PlaceUiModel>.withDraftPlaceIds(draftPlaces: List<CourseDraftPlaceDto>): List<PlaceUiModel> {
         if (draftPlaces.isEmpty()) return this
-        // 기준 장소(BASE)는 선택 장소 목록에 없으므로 매칭 대상에서 제외한다.
-        val idByPlaceId = draftPlaces.filterNot { it.isBase }.associate { it.placeId to it.courseDraftPlaceId }
+        val idByPlaceId = draftPlaces.associate { it.placeId to it.courseDraftPlaceId }
         return map { place ->
             val draftPlaceId = place.placeId?.let(idByPlaceId::get) ?: return@map place
             place.copy(courseDraftPlaceId = draftPlaceId)

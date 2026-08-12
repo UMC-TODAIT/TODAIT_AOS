@@ -109,6 +109,7 @@
     <string name="course_compose_title">코스 구성하기</string>
     <string name="course_compose_selected_section">선택한 장소 (%1$d)</string>
     <string name="course_compose_selected_desc">드래그해 순서를 수정 할 수 있어요.</string>
+    <string name="course_compose_base_place_chip">기준장소</string>
     <!-- 이미 담은 장소를 다시 담으려 할 때 (중복선택 알럿) -->
     <string name="course_compose_duplicate_title">이미 선택한 장소에요.</string>
     <string name="course_compose_duplicate_desc">다른 장소를 선택해주세요.</string>

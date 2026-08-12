@@ -135,15 +135,20 @@ class CourseDraftRepository @Inject constructor(
     /**
      * 선택 장소 순서 변경 (PATCH /api/course-drafts/{courseDraftId}/places/order).
      *
-     * [selectedPlaceIds] 는 **기준 장소를 제외한** 선택 장소들의 courseDraftPlaceId 를 화면에 보이는
-     * 최종 순서대로 담은 목록이다. visitOrder 는 기준 장소가 1번이므로 2부터 매긴다.
+     * [orderedPlaceIds] 는 화면에 보이는 최종 순서대로의 courseDraftPlaceId 목록이고,
+     * visitOrder 는 [firstVisitOrder] 부터 1씩 증가시켜 붙인다.
+     *
+     * 호출 형태는 두 가지다.
+     * - 기준 장소가 1번인 보통의 경우: 기준 장소를 뺀 목록 + [FIRST_SELECTED_VISIT_ORDER] (명세 기본형)
+     * - 기준 장소를 다른 자리로 옮긴 경우: 기준 장소를 포함한 전체 목록 + [FIRST_VISIT_ORDER]
      */
     suspend fun updatePlaceOrder(
         courseDraftId: Long,
-        selectedPlaceIds: List<Long>,
+        orderedPlaceIds: List<Long>,
+        firstVisitOrder: Int = FIRST_SELECTED_VISIT_ORDER,
     ): ApiResult<PlaceOrderUpdateResponseDto> {
-        val placeOrders = selectedPlaceIds.mapIndexed { index, id ->
-            PlaceOrderItemDto(courseDraftPlaceId = id, visitOrder = index + FIRST_SELECTED_VISIT_ORDER)
+        val placeOrders = orderedPlaceIds.mapIndexed { index, id ->
+            PlaceOrderItemDto(courseDraftPlaceId = id, visitOrder = index + firstVisitOrder)
         }
         if (USE_COURSE_MOCK) return ApiResult.Success(MockCourse.placeOrderUpdateResult(courseDraftId, placeOrders))
         return safeApiCall {
@@ -182,8 +187,11 @@ class CourseDraftRepository @Inject constructor(
         return safeApiCall { courseDraftService.saveCourse(courseDraftId, request) }
     }
 
-    private companion object {
-        // 기준 장소가 visitOrder = 1 을 고정으로 차지하므로 선택 장소는 2번부터 시작한다.
+    companion object {
+        /** 코스의 첫 장소. 기준 장소를 포함한 전체 순서를 보낼 때 쓴다. */
+        const val FIRST_VISIT_ORDER = 1
+
+        /** 기준 장소가 visitOrder = 1 을 고정으로 차지할 때, 선택 장소는 2번부터 시작한다. */
         const val FIRST_SELECTED_VISIT_ORDER = 2
     }
 }

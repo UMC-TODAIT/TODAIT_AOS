@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  코스 구성 지도의 "현재 위치" 마커.
+  Figma "코스구성하기(카페)_기본" node 2934-12900 (Group 1171276017) 을 그대로 옮긴 것.
+
+  구성(viewport 41.8 x 49.0196, 원 중심 = 20.9, 28.1196):
+  - 글로우: Figma 는 drop shadow(#FFE0DF, dilate 2 + blur 3.45)로 그렸다.
+    벡터 드로어블은 blur 를 못 써서 같은 색 radial gradient 로 근사한다.
+  - 흰 링: r=8~12 (Figma 는 r=10 원에 4 두께 흰 stroke)
+  - 코어: r=8, Pink-900(#ED9896)
+  - 방향 콘: 원 위쪽 삼각형(Polygon 20). Figma 시안에서는 회전돼 있지만
+    앱은 방위(heading)를 추적하지 않으므로 회전 없이 원본 각도로 둔다.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="42dp"
+    android:height="49dp"
+    android:viewportWidth="41.8"
+    android:viewportHeight="49.0196">
+
+    <path android:pathData="M0,28.1196 a20.9,20.9 0 1,0 41.8,0 a20.9,20.9 0 1,0 -41.8,0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:centerX="20.9"
+                android:centerY="28.1196"
+                android:gradientRadius="20.9"
+                android:type="radial">
+                <item
+                    android:color="#FFE0DF"
+                    android:offset="0.0" />
+                <item
+                    android:color="#FFE0DF"
+                    android:offset="0.62" />
+                <item
+                    android:color="#00FFE0DF"
+                    android:offset="1.0" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <path
+        android:fillColor="#ED9896"
+        android:pathData="M20.0339,1.5 C20.4188,0.8333 21.381,0.8333 21.7659,1.5 L27.9443,12.2012 C28.3292,12.8679 27.848,13.7012 27.0782,13.7012 L14.7215,13.7012 C13.9517,13.7012 13.4706,12.8679 13.8555,12.2012 Z" />
+
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M8.9,28.1196 a12,12 0 1,0 24,0 a12,12 0 1,0 -24,0 Z" />
+
+    <path
+        android:fillColor="#ED9896"
+        android:pathData="M12.9,28.1196 a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0 Z" />
+</vector>

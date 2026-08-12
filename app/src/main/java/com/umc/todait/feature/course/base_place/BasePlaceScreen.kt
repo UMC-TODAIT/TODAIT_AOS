@@ -1,9 +1,11 @@
 package com.umc.todait.feature.course.base_place
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -53,17 +56,40 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.umc.todait.R
 import com.umc.todait.core.network.UiError
+import com.umc.todait.feature.course.compose.CourseMood
 import com.umc.todait.ui.component.ErrorContent
 import com.umc.todait.ui.component.LoadingIndicator
 import com.umc.todait.ui.component.ScreenTopBar
+import com.umc.todait.ui.theme.CourseActiveGradientEnd
+import com.umc.todait.ui.theme.CourseActiveGradientStart
+import com.umc.todait.ui.theme.CourseActiveSelectedGradientEnd
+import com.umc.todait.ui.theme.CourseActiveSelectedGradientStart
+import com.umc.todait.ui.theme.CourseCalmGradientEnd
+import com.umc.todait.ui.theme.CourseCalmGradientStart
+import com.umc.todait.ui.theme.CourseCalmSelectedGradientEnd
+import com.umc.todait.ui.theme.CourseCalmSelectedGradientStart
+import com.umc.todait.ui.theme.CourseHipGradientEnd
+import com.umc.todait.ui.theme.CourseHipGradientStart
+import com.umc.todait.ui.theme.CourseHipSelectedGradientEnd
+import com.umc.todait.ui.theme.CourseHipSelectedGradientStart
+import com.umc.todait.ui.theme.CourseModernGradientEnd
+import com.umc.todait.ui.theme.CourseModernGradientStart
+import com.umc.todait.ui.theme.CourseModernSelectedGradientEnd
+import com.umc.todait.ui.theme.CourseModernSelectedGradientStart
+import com.umc.todait.ui.theme.CourseQuietGradientEnd
+import com.umc.todait.ui.theme.CourseQuietGradientStart
+import com.umc.todait.ui.theme.CourseQuietSelectedGradientEnd
+import com.umc.todait.ui.theme.CourseQuietSelectedGradientStart
+import com.umc.todait.ui.theme.CourseRomanticGradientEnd
+import com.umc.todait.ui.theme.CourseRomanticGradientStart
+import com.umc.todait.ui.theme.CourseRomanticSelectedGradientEnd
+import com.umc.todait.ui.theme.CourseRomanticSelectedGradientStart
 import com.umc.todait.ui.theme.Cream
 import com.umc.todait.ui.theme.Green700
 import com.umc.todait.ui.theme.Gray200
 import com.umc.todait.ui.theme.Gray500
 import com.umc.todait.ui.theme.Gray900
-import com.umc.todait.ui.theme.Pink700
-import com.umc.todait.ui.theme.PlaceCardGradientEnd
-import com.umc.todait.ui.theme.PlaceCardGradientStart
+import com.umc.todait.ui.theme.Pink800
 import com.umc.todait.ui.theme.SearchIconCircle
 import com.umc.todait.ui.theme.TodaitTheme
 import com.umc.todait.ui.theme.White
@@ -71,8 +97,9 @@ import com.umc.todait.ui.theme.White
 /**
  * 기준 장소 설정 화면(와이어프레임 1.1).
  *
- * 상단 헤더(뒤로가기/타이틀/확인) + 검색창 + "지금 내 주변 핫플" 추천/검색 결과 목록으로 구성되며,
- * 장소 카드 탭 시 확인 모달(1.2)을 띄운다.
+ * 상단 헤더(뒤로가기/타이틀/확인) + 검색창 + "지금 내 주변 핫플" 추천/검색 결과 목록으로 구성된다.
+ * 장소 카드는 탭하면 그 자리에서 기준 장소로 선택되고(Figma: 장소카드 Click 배리언트),
+ * 길게 누르면 장소 상세 화면으로 진입한다. 확정은 헤더 체크로 한다.
  */
 @Composable
 fun BasePlaceScreen(
@@ -101,12 +128,12 @@ fun BasePlaceScreen(
             onSearchQueryChange = viewModel::onSearchQueryChange,
             onSearch = viewModel::onSearch,
             onClearSearch = viewModel::onClearSearch,
-            // 카드 본문 탭 → 장소 상세 화면 진입 (기획 문서 기준).
+            // 카드 길게 누르기 → 장소 상세 화면 진입.
             // 내부 DB에 없는 카카오 검색 결과(placeId 없음)나 detailAvailable=false 인 장소는 상세가 없다.
-            onPlaceClick = { place ->
+            onPlaceLongClick = { place ->
                 place.placeId?.takeIf { place.detailAvailable }?.let(onNavigateToDetail)
             },
-            // 카드 우상단 '+' → 기준 장소 선택.
+            // 카드 탭 → 기준 장소 선택.
             onSelectPlace = viewModel::onSelectPlace,
             // 헤더 체크 → 확정 알럿.
             onConfirmClick = viewModel::onConfirmClick,
@@ -142,7 +169,7 @@ private fun BasePlaceContent(
     onSearchQueryChange: (String) -> Unit,
     onSearch: () -> Unit,
     onClearSearch: () -> Unit,
-    onPlaceClick: (PlaceUiModel) -> Unit,
+    onPlaceLongClick: (PlaceUiModel) -> Unit,
     onSelectPlace: (PlaceUiModel) -> Unit,
     onConfirmClick: () -> Unit,
     onRetry: () -> Unit,
@@ -201,7 +228,7 @@ private fun BasePlaceContent(
                     is PlaceListState.Success -> PlaceList(
                         places = listState.places,
                         selectedPlaceKey = state.selectedPlace?.key,
-                        onPlaceClick = onPlaceClick,
+                        onPlaceLongClick = onPlaceLongClick,
                         onSelectPlace = onSelectPlace,
                     )
                 }
@@ -293,19 +320,56 @@ private fun SearchIcon() {
     }
 }
 
-// 카드 우측 하단 파스텔 장식(3종)을 순서대로 순환 적용한다. (Figma 목업의 장식 실루엣)
-private val placeDecorations = listOf(
-    R.drawable.ic_place_deco_cloud,
-    R.drawable.ic_place_deco_bead,
-    R.drawable.ic_place_deco_sparkle,
-)
+// 분위기 태그가 없을 때(핫플/검색 응답) 순번으로 부여할 fallback. 색이 확정된 6종을 순환한다.
+private val fallbackMoods = CourseMood.entries
+
+/**
+ * 분위기(mood)별 카드 그라데이션(bg-gradient-to-b). [selected] 면 Figma 장소카드의
+ * Property 1=Click 배리언트 색(기본색보다 채도가 높다)을 쓴다.
+ */
+private fun CourseMood.gradientColors(selected: Boolean): List<Color> = when {
+    !selected -> when (this) {
+        CourseMood.ROMANTIC -> listOf(CourseRomanticGradientStart, CourseRomanticGradientEnd)
+        CourseMood.MODERN -> listOf(CourseModernGradientStart, CourseModernGradientEnd)
+        CourseMood.HIP -> listOf(CourseHipGradientStart, CourseHipGradientEnd)
+        CourseMood.QUIET -> listOf(CourseQuietGradientStart, CourseQuietGradientEnd)
+        CourseMood.ACTIVE -> listOf(CourseActiveGradientStart, CourseActiveGradientEnd)
+        CourseMood.CALM -> listOf(CourseCalmGradientStart, CourseCalmGradientEnd)
+    }
+
+    else -> when (this) {
+        CourseMood.ROMANTIC ->
+            listOf(CourseRomanticSelectedGradientStart, CourseRomanticSelectedGradientEnd)
+
+        CourseMood.MODERN ->
+            listOf(CourseModernSelectedGradientStart, CourseModernSelectedGradientEnd)
+
+        CourseMood.HIP -> listOf(CourseHipSelectedGradientStart, CourseHipSelectedGradientEnd)
+        CourseMood.QUIET -> listOf(CourseQuietSelectedGradientStart, CourseQuietSelectedGradientEnd)
+
+        CourseMood.ACTIVE ->
+            listOf(CourseActiveSelectedGradientStart, CourseActiveSelectedGradientEnd)
+
+        CourseMood.CALM -> listOf(CourseCalmSelectedGradientStart, CourseCalmSelectedGradientEnd)
+    }
+}
+
+/** 분위기별 우측 하단 아이콘(장식). 6종 각각의 전용 아이콘(ic_mood_*, 분위기별 색/모양)을 쓴다. */
+private fun CourseMood.decorationRes(): Int = when (this) {
+    CourseMood.HIP -> R.drawable.ic_mood_hip
+    CourseMood.QUIET -> R.drawable.ic_mood_quiet
+    CourseMood.ACTIVE -> R.drawable.ic_mood_active
+    CourseMood.ROMANTIC -> R.drawable.ic_mood_romantic
+    CourseMood.MODERN -> R.drawable.ic_mood_modern
+    CourseMood.CALM -> R.drawable.ic_mood_calm
+}
 
 @Composable
 private fun PlaceList(
     places: List<PlaceUiModel>,
     // 내부 미등록 장소도 섞이므로 placeId 가 아니라 PlaceUiModel.key 로 비교한다.
     selectedPlaceKey: String?,
-    onPlaceClick: (PlaceUiModel) -> Unit,
+    onPlaceLongClick: (PlaceUiModel) -> Unit,
     onSelectPlace: (PlaceUiModel) -> Unit,
 ) {
     LazyColumn(
@@ -316,10 +380,12 @@ private fun PlaceList(
         itemsIndexed(places, key = { _, place -> place.key }) { index, place ->
             PlaceCard(
                 place = place,
-                decorationRes = placeDecorations[index % placeDecorations.size],
+                // 분위기별 카드 색상. 핫플/검색 응답에는 분위기 태그가 없어 대부분 fallback 을 탄다.
+                mood = CourseMood.fromTags(place.moodTags)
+                    ?: fallbackMoods[index % fallbackMoods.size],
                 isSelected = place.key == selectedPlaceKey,
-                onClick = { onPlaceClick(place) },
                 onSelect = { onSelectPlace(place) },
+                onLongClick = { onPlaceLongClick(place) },
             )
         }
     }
@@ -329,40 +395,46 @@ private fun PlaceList(
  * 장소 카드. 좌측 장소 이미지 위에 우측으로 이어지는 그라데이션 패널을 얹고,
  * 그 위에 장소명·주소·근접 배지를 흰색 텍스트로 표시한다.
  * 명세 정책상 별점/평점/점수는 표시하지 않는다.
+ *
+ * 탭하면 기준 장소로 선택되고(Green-700 2dp 테두리 + Click 그라데이션),
+ * 길게 누르면 장소 상세로 넘어간다. (Figma: 장소카드 Default/Click 배리언트)
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun PlaceCard(
     place: PlaceUiModel,
-    decorationRes: Int,
+    mood: CourseMood,
     isSelected: Boolean,
-    onClick: () -> Unit,
     onSelect: () -> Unit,
+    onLongClick: () -> Unit,
 ) {
-    // 디자인: bg-gradient-to-b (수직, 상단 → 하단)
-    val gradient = Brush.verticalGradient(
-        colors = listOf(PlaceCardGradientStart, PlaceCardGradientEnd),
-    )
+    // 디자인: bg-gradient-to-b (수직, 상단 → 하단). 분위기별 + 선택 여부별 색상.
+    val gradientColors = mood.gradientColors(selected = isSelected)
+    val gradient = Brush.verticalGradient(colors = gradientColors)
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(110.dp)
             .clip(RoundedCornerShape(12.dp))
-            // 선택 시 초록 테두리(Figma: Green-700).
+            // 선택 시 초록 테두리(Figma: Green-700, 2dp).
             .then(
                 if (isSelected) {
-                    Modifier.border(1.dp, Green700, RoundedCornerShape(12.dp))
+                    Modifier.border(2.dp, Green700, RoundedCornerShape(12.dp))
                 } else {
                     Modifier
                 },
             )
-            .clickable(onClick = onClick),
+            .combinedClickable(
+                onClick = onSelect,
+                onLongClick = onLongClick,
+            ),
     ) {
         // 좌측: 장소 이미지 (약 1/3)
         Box(
             modifier = Modifier
                 .weight(0.35f)
                 .fillMaxHeight()
-                .background(PlaceCardGradientStart), // 이미지가 없을 때의 배경
+                .background(gradientColors.first()), // 이미지가 없을 때의 배경(분위기 시작색)
         ) {
             if (place.imageUrl != null) {
                 AsyncImage(
@@ -382,34 +454,18 @@ private fun PlaceCard(
         ) {
             // 우측 하단 파스텔 장식(텍스트 뒤에 배치)
             Image(
-                painter = painterResource(id = decorationRes),
+                painter = painterResource(id = mood.decorationRes()),
                 contentDescription = null,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(end = 10.dp, bottom = 8.dp)
+                    .padding(end = 11.dp, bottom = 11.dp)
                     .size(60.dp),
             )
-            // 우측 상단 '+' 선택 버튼 (Figma: 기준 장소 선택). 탭 시 초록 테두리로 선택 표시.
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = 4.dp, end = 10.dp)
-                    .size(24.dp)
-                    .clip(CircleShape)
-                    .clickable(onClick = onSelect),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = "+",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = White,
-                )
-            }
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(14.dp),
+                    // Figma: 텍스트 좌측이 카드 기준 135px(그라데이션 패널 안쪽 11), 상단 10, 하단 12.
+                    .padding(start = 11.dp, top = 10.dp, end = 10.dp, bottom = 12.dp),
             ) {
                 Text(
                     text = place.name,
@@ -472,7 +528,7 @@ private fun PlaceEmptyState(
     }
 }
 
-/** 흰색 pill 배지. 추천 이유(없으면 카테고리)를 강조 텍스트로 노출한다. */
+/** 흰색 pill 배지. 추천 이유(없으면 카테고리)를 강조 텍스트로 노출한다. (Figma: Pink-800) */
 @Composable
 private fun ProximityBadge(text: String) {
     Surface(
@@ -482,7 +538,7 @@ private fun ProximityBadge(text: String) {
         Text(
             text = text,
             style = TextStyle(fontSize = 10.sp),
-            color = Pink700,
+            color = Pink800,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
@@ -530,7 +586,7 @@ private fun BasePlaceContentSuccessPreview() {
             onSearchQueryChange = {},
             onSearch = {},
             onClearSearch = {},
-            onPlaceClick = {},
+            onPlaceLongClick = {},
             onSelectPlace = {},
             onConfirmClick = {},
             onRetry = {},
@@ -551,7 +607,7 @@ private fun BasePlaceContentEmptyPreview() {
             onSearchQueryChange = {},
             onSearch = {},
             onClearSearch = {},
-            onPlaceClick = {},
+            onPlaceLongClick = {},
             onSelectPlace = {},
             onConfirmClick = {},
             onRetry = {},

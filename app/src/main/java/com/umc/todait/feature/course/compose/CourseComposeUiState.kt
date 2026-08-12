@@ -1,5 +1,6 @@
 package com.umc.todait.feature.course.compose
 
+import com.umc.todait.core.location.Coordinate
 import com.umc.todait.feature.course.base_place.PlaceUiModel
 import com.umc.todait.feature.course.data.dto.PlaceCategoryResponseDto
 import com.umc.todait.feature.course.data.dto.PlaceDetailDto
@@ -8,11 +9,12 @@ import com.umc.todait.feature.course.data.dto.PlaceDetailDto
  * 코스 구성하기 플로우(#26, 와이어프레임 "코스구성하기_수정버전")의 공유 UI 상태.
  *
  * **두 화면이 이 상태를 공유한다**(NavHost 의 course/compose 중첩 그래프에 스코프된 ViewModel):
- * 1) [CourseComposeScreen] (장소카드 선택): [상단 지도] + [카테고리 탭] + [추천 카드('+' 담기)]. 헤더 ✓ → 2)로 이동.
+ * 1) [CourseComposeScreen] (장소카드 선택): [상단 지도] + [카테고리 탭] + [추천 카드(탭해서 담기)]. 헤더 ✓ → 2)로 이동.
  * 2) [com.umc.todait.feature.course.compose.SelectedPlacesScreen] (선택한 장소): [지도] + "선택한 장소(N)" 드래그 순서 조정. 헤더 ✓ → 코스 저장.
  *
  * - 기준 장소([basePlace], #11에서 확정)를 출발점으로, 카테고리별 추천 장소를 [recommendState] 로 노출.
- * - 카드 '+' 로 코스에 담고([selectedPlaces], 담은 순서 = 코스 순서), 2) 화면에서 드래그로 순서를 수정한다.
+ * - 카드 탭으로 코스에 담고([selectedPlaces], 담은 순서 = 코스 순서), 2) 화면에서 드래그로 순서를 수정한다.
+ *   (담긴 카드는 Green-700 테두리 + Click 그라데이션으로 표시하고 탭을 무시한다.)
  * - 이미 담긴 장소를 다시 담으면 [alert] 로 중복 안내.
  *
  * ⚠️ 지도는 카카오맵 v2([CourseMap])로 연동돼 있다(런타임 키/렌더 확인은 별도).
@@ -21,16 +23,20 @@ import com.umc.todait.feature.course.data.dto.PlaceDetailDto
 data class CourseComposeUiState(
     // 임시 코스(course-draft) 핸들. 기준 장소 설정 화면에서 확정돼 경로 변수로 넘어온다.
     val courseDraftId: Long,
-    // 기준 장소(코스 출발점). 상세 조회 전이거나 실패하면 null.
-    val basePlace: PlaceUiModel? = null,
+    // 코스 동선 순서대로의 **전체** 장소 목록. 기준 장소도 이 안에 들어 있고 드래그 대상이다.
+    // 지도 핀 번호·순번 배지는 모두 이 목록의 index + 1 이다.
+    val orderedPlaces: List<PlaceUiModel> = emptyList(),
+    // [orderedPlaces] 안에서 기준 장소가 누구인지 가리키는 key. 상세 조회 전이거나 실패하면 null.
+    // 순서를 바꾸면 기준 장소가 첫 번째가 아닐 수도 있어 "index 0" 대신 key 로 들고 있는다.
+    val basePlaceKey: String? = null,
+    // 지도에 현재 위치 마커를 찍기 위한 좌표. 위치 권한 없음/조회 실패면 null(마커 미표시).
+    val currentLocation: Coordinate? = null,
     // 카테고리 탭(장소 대분류). GET /api/place-categories 로 로드. 비어 있으면 탭 미표시.
     val categories: List<PlaceCategoryUiModel> = emptyList(),
     // 현재 선택된 카테고리 id. null 이면 미선택.
     val selectedCategoryId: Long? = null,
     val recommendState: RecommendListState = RecommendListState.Loading,
-    // 코스에 담은 장소들. index 0 = 기준 장소 다음 첫 장소. 순서 = 코스 동선.
-    val selectedPlaces: List<PlaceUiModel> = emptyList(),
-    // 선택 장소 추가(POST .../places) 요청이 진행 중인 장소의 [PlaceUiModel.key]. 같은 카드의 '+' 중복 탭을 막는다.
+    // 선택 장소 추가(POST .../places) 요청이 진행 중인 장소의 [PlaceUiModel.key]. 같은 카드의 중복 탭을 막는다.
     val addingPlaceKeys: Set<String> = emptySet(),
     // 노출 중인 시스템 알럿(중복 선택 등). null 이면 닫힘.
     val alert: CourseComposeAlert? = null,
@@ -39,6 +45,19 @@ data class CourseComposeUiState(
     // 단계 전환 실패 안내 문구. null 이면 없음.
     val submitError: String? = null,
 ) {
+    /** 기준 장소. 순서를 바꿨다면 [orderedPlaces] 의 첫 번째가 아닐 수도 있다. */
+    val basePlace: PlaceUiModel? get() = orderedPlaces.firstOrNull { it.key == basePlaceKey }
+
+    /**
+     * 사용자가 추천 카드로 담은 장소들(기준 장소 제외). 담기/중복 검사와
+     * 순서 변경 API 페이로드 구성에 쓴다. 순서는 [orderedPlaces] 를 따른다.
+     */
+    val selectedPlaces: List<PlaceUiModel> get() = orderedPlaces.filterNot { it.key == basePlaceKey }
+
+    /** 기준 장소가 코스의 첫 장소인지. 순서 변경 API 페이로드 모양이 이 값에 따라 달라진다. */
+    val isBasePlaceFirst: Boolean
+        get() = basePlaceKey == null || orderedPlaces.firstOrNull()?.key == basePlaceKey
+
     /** 담은 장소가 하나라도 있어야 확정(다음 단계) 가능. */
     val canConfirm: Boolean get() = selectedPlaces.isNotEmpty()
 

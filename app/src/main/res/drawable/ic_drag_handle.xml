@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  선택한 장소 행의 드래그 핸들. 2열 x 3행 흰 점 6개.
+  Figma "코스구성하기_드래그수정" node 401-616 (Group 1171275958) 실측:
+  11.0552 x 16.8687, 점 반지름 2.04904, 흰색. Pink-100 카드 위에 올라간다.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="11dp"
+    android:height="17dp"
+    android:viewportWidth="11.0552"
+    android:viewportHeight="16.8687">
+
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M0,2.04904 a2.04904,2.04904 0 1,0 4.09808,0 a2.04904,2.04904 0 1,0 -4.09808,0 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M6.95716,2.04904 a2.04904,2.04904 0 1,0 4.09808,0 a2.04904,2.04904 0 1,0 -4.09808,0 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M0,8.43445 a2.04904,2.04904 0 1,0 4.09808,0 a2.04904,2.04904 0 1,0 -4.09808,0 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M6.95716,8.43445 a2.04904,2.04904 0 1,0 4.09808,0 a2.04904,2.04904 0 1,0 -4.09808,0 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M0,14.8195 a2.04904,2.04904 0 1,0 4.09808,0 a2.04904,2.04904 0 1,0 -4.09808,0 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M6.95716,14.8195 a2.04904,2.04904 0 1,0 4.09808,0 a2.04904,2.04904 0 1,0 -4.09808,0 Z" />
+</vector>

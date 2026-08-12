@@ -4,6 +4,8 @@ import com.google.gson.Gson
 import com.umc.todait.BuildConfig
 import com.umc.todait.core.datastore.TokenDataStore
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -35,9 +37,13 @@ import javax.inject.Singleton
 @Singleton
 class AuthInterceptor @Inject constructor(
     private val tokenDataStore: TokenDataStore,
+    private val sessionExpiredNotifier: SessionExpiredNotifier,
 ) : Interceptor {
 
     private val refreshClient = OkHttpClient.Builder().build()
+
+    // 동시에 401 이 여러 건 발생해도 재발급 요청은 한 번만 나가도록 직렬화한다.
+    private val refreshMutex = Mutex()
     private val gson = Gson()
 
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -57,9 +63,9 @@ class AuthInterceptor @Inject constructor(
         val response = chain.proceed(requestWithToken)
         if (!isAuthExpiredResponse(response)) return response
 
-        // refreshToken 자체가 만료/폐기됐거나 네트워크 오류면, 원래 응답을 그대로 돌려준다
-        // (재로그인 유도는 상위 레이어 몫).
-        val newAccessToken = tryRefreshAccessToken() ?: return response
+        // refreshToken 자체가 만료/폐기됐거나 네트워크 오류면, 원래 응답을 그대로 돌려준다.
+        // (이때 토큰은 지워지고 세션 만료 이벤트가 나가 화면이 로그인으로 이동한다)
+        val newAccessToken = refreshTokens(usedAccessToken = accessToken) ?: return response
 
         response.close()
         val retryRequest = original.newBuilder()
@@ -106,8 +112,36 @@ class AuthInterceptor @Inject constructor(
         }.getOrDefault(response.code == 403)
     }
 
-    private fun tryRefreshAccessToken(): String? = runCatching {
-        val refreshToken = runBlocking { tokenDataStore.getRefreshToken() } ?: return null
+    /**
+     * 토큰 재발급. 성공하면 새 accessToken 을 돌려주고, 실패하면 저장된 인증 정보를 지운 뒤
+     * 세션 만료를 알린다(→ 로그인 화면 이동).
+     *
+     * **동시에 여러 요청이 401 을 받아도 재발급은 한 번만 실행된다.** [refreshMutex] 로 직렬화하고,
+     * 락을 잡은 뒤 저장된 accessToken 이 내가 보냈던 값([usedAccessToken])과 달라졌으면
+     * 다른 요청이 이미 갱신을 끝낸 것이므로 그 값을 그대로 쓴다.
+     */
+    private fun refreshTokens(usedAccessToken: String?): String? = runBlocking {
+        refreshMutex.withLock {
+            val current = tokenDataStore.getAccessToken()
+            if (current != null && current != usedAccessToken) return@withLock current
+
+            val refreshToken = tokenDataStore.getRefreshToken()
+            val newTokens = refreshToken?.let { requestNewTokens(it) }
+            if (newTokens == null) {
+                // Rotation 적용 후에는 재발급 실패 = refreshToken 도 못 쓰는 상태라 재로그인 외에 방법이 없다.
+                tokenDataStore.clearTokens()
+                sessionExpiredNotifier.notifySessionExpired()
+                return@withLock null
+            }
+            // Rotation: 요청에 쓴 기존 refreshToken 은 서버에서 즉시 폐기되므로 둘 다 교체 저장해야 한다.
+            tokenDataStore.saveTokens(newTokens.accessToken, newTokens.refreshToken)
+            newTokens.accessToken
+        }
+    }
+
+    private data class TokenPair(val accessToken: String, val refreshToken: String)
+
+    private fun requestNewTokens(refreshToken: String): TokenPair? = runCatching {
         // core는 feature에 의존하지 않으므로(§5) feature의 요청 DTO를 쓰지 않고 JSON을 직접 만든다.
         val body = gson.toJson(mapOf("refreshToken" to refreshToken))
             .toRequestBody("application/json".toMediaType())
@@ -122,8 +156,9 @@ class AuthInterceptor @Inject constructor(
             if (!parsed.isSuccess) return null
             @Suppress("UNCHECKED_CAST")
             val result = parsed.result as? Map<String, Any?>
-            val newAccessToken = result?.get("accessToken") as? String
-            newAccessToken?.also { token -> runBlocking { tokenDataStore.updateAccessToken(token) } }
+            val newAccessToken = result?.get("accessToken") as? String ?: return null
+            val newRefreshToken = result["refreshToken"] as? String ?: return null
+            TokenPair(newAccessToken, newRefreshToken)
         }
     }.getOrNull()
 

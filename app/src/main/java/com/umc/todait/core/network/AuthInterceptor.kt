@@ -184,13 +184,7 @@ class AuthInterceptor @Inject constructor(
         val parsed = runCatching { gson.fromJson(json, BaseResponse::class.java) }.getOrNull()
             ?: return RefreshOutcome.TransientFailure
 
-        if (!parsed.isSuccess) {
-            return if (res.code in HTTP_SERVER_ERROR_RANGE) {
-                RefreshOutcome.TransientFailure
-            } else {
-                RefreshOutcome.Rejected
-            }
-        }
+        if (!parsed.isSuccess) return classifyFailure(res.code, parsed.code)
 
         @Suppress("UNCHECKED_CAST")
         val result = parsed.result as? Map<String, Any?>
@@ -202,11 +196,27 @@ class AuthInterceptor @Inject constructor(
         return RefreshOutcome.Success(newAccessToken, newRefreshToken)
     }
 
+    /**
+     * 재발급 실패 응답이 **토큰이 무효해서**인지, **서버가 잠깐 아파서**인지 가른다.
+     *
+     * ⚠️ 실패는 HTTP 4xx/5xx 뿐 아니라 **HTTP 200 + isSuccess:false** 형태로도 온다
+     * (공통 API 응답 규약, 배포 서버 실측). 그래서 상태 코드만 보면 `200 + COMMON500`(서버 오류)을
+     * 거절로 오판해 멀쩡한 세션을 지워버린다. 상태 코드와 body 의 code 를 **함께** 본다.
+     */
+    private fun classifyFailure(httpStatus: Int, bodyCode: String?): RefreshOutcome {
+        val isServerError = httpStatus in HTTP_SERVER_ERROR_RANGE ||
+            (bodyCode != null && SERVER_ERROR_CODE_SUFFIX.containsMatchIn(bodyCode))
+        return if (isServerError) RefreshOutcome.TransientFailure else RefreshOutcome.Rejected
+    }
+
     private companion object {
         const val PEEK_BODY_MAX_BYTES = 2048L
         const val CODE_AUTH_401 = "AUTH401"
         const val CODE_AUTH_403 = "AUTH403"
         val HTTP_CLIENT_ERROR_RANGE = 400..499
         val HTTP_SERVER_ERROR_RANGE = 500..599
+
+        /** COMMON500·KAKAO_API502 처럼 응답 코드 끝의 5xx 가 서버 오류를 뜻한다. */
+        val SERVER_ERROR_CODE_SUFFIX = Regex("5\\d{2}$")
     }
 }

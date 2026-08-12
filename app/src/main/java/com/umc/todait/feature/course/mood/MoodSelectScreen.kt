@@ -152,6 +152,8 @@ private fun MoodGrid(
                 hashtags = mood.hashtags,
                 gradientStart = mood.gradientStart,
                 gradientEnd = mood.gradientEnd,
+                selectedGradientStart = mood.selectedGradientStart,
+                selectedGradientEnd = mood.selectedGradientEnd,
                 decorationRes = mood.decorationRes,
                 isSelected = mood.isSelected,
                 onClick = { onToggleMood(mood.code) },

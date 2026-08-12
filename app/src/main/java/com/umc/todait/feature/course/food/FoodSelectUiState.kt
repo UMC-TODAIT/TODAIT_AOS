@@ -6,16 +6,28 @@ import com.umc.todait.R
 import com.umc.todait.feature.course.data.dto.FoodCategoryDto
 import com.umc.todait.ui.theme.FoodChineseGradientEnd
 import com.umc.todait.ui.theme.FoodChineseGradientStart
+import com.umc.todait.ui.theme.FoodChineseSelectedGradientEnd
+import com.umc.todait.ui.theme.FoodChineseSelectedGradientStart
 import com.umc.todait.ui.theme.FoodDessertGradientEnd
 import com.umc.todait.ui.theme.FoodDessertGradientStart
+import com.umc.todait.ui.theme.FoodDessertSelectedGradientEnd
+import com.umc.todait.ui.theme.FoodDessertSelectedGradientStart
 import com.umc.todait.ui.theme.FoodJapaneseGradientEnd
 import com.umc.todait.ui.theme.FoodJapaneseGradientStart
+import com.umc.todait.ui.theme.FoodJapaneseSelectedGradientEnd
+import com.umc.todait.ui.theme.FoodJapaneseSelectedGradientStart
 import com.umc.todait.ui.theme.FoodKoreanGradientEnd
 import com.umc.todait.ui.theme.FoodKoreanGradientStart
+import com.umc.todait.ui.theme.FoodKoreanSelectedGradientEnd
+import com.umc.todait.ui.theme.FoodKoreanSelectedGradientStart
 import com.umc.todait.ui.theme.FoodSnackGradientEnd
 import com.umc.todait.ui.theme.FoodSnackGradientStart
+import com.umc.todait.ui.theme.FoodSnackSelectedGradientEnd
+import com.umc.todait.ui.theme.FoodSnackSelectedGradientStart
 import com.umc.todait.ui.theme.FoodWesternGradientEnd
 import com.umc.todait.ui.theme.FoodWesternGradientStart
+import com.umc.todait.ui.theme.FoodWesternSelectedGradientEnd
+import com.umc.todait.ui.theme.FoodWesternSelectedGradientStart
 
 /**
  * 음식 선택 화면의 UI 상태.
@@ -64,6 +76,8 @@ data class FoodOptionUiModel(
     val hashtags: String,
     val gradientStart: Color,
     val gradientEnd: Color,
+    val selectedGradientStart: Color,
+    val selectedGradientEnd: Color,
     @DrawableRes val decorationRes: Int,
     val isSelected: Boolean = false,
 )
@@ -81,6 +95,8 @@ fun FoodCategoryDto.toUiModel(): FoodOptionUiModel {
         hashtags = visual.hashtags,
         gradientStart = visual.gradientStart,
         gradientEnd = visual.gradientEnd,
+        selectedGradientStart = visual.selectedGradientStart,
+        selectedGradientEnd = visual.selectedGradientEnd,
         decorationRes = visual.decorationRes,
     )
 }
@@ -90,27 +106,48 @@ private data class FoodVisual(
     val hashtags: String,
     val gradientStart: Color,
     val gradientEnd: Color,
+    val selectedGradientStart: Color,
+    val selectedGradientEnd: Color,
     @DrawableRes val decorationRes: Int,
 )
 
 private val FOOD_VISUALS: Map<String, FoodVisual> = mapOf(
     "KOREAN" to FoodVisual(
-        "#깔끔한 #든든한", FoodKoreanGradientStart, FoodKoreanGradientEnd, R.drawable.ic_food_korean,
+        hashtags = "#깔끔한 #든든한",
+        gradientStart = FoodKoreanGradientStart, gradientEnd = FoodKoreanGradientEnd,
+        selectedGradientStart = FoodKoreanSelectedGradientStart, selectedGradientEnd = FoodKoreanSelectedGradientEnd,
+        decorationRes = R.drawable.ic_food_korean,
     ),
     "JAPANESE" to FoodVisual(
-        "#담백한 #정갈한", FoodJapaneseGradientStart, FoodJapaneseGradientEnd, R.drawable.ic_food_japanese,
+        hashtags = "#담백한 #정갈한",
+        gradientStart = FoodJapaneseGradientStart, gradientEnd = FoodJapaneseGradientEnd,
+        selectedGradientStart = FoodJapaneseSelectedGradientStart,
+        selectedGradientEnd = FoodJapaneseSelectedGradientEnd,
+        decorationRes = R.drawable.ic_food_japanese,
     ),
     "WESTERN" to FoodVisual(
-        "#격식 #무드", FoodWesternGradientStart, FoodWesternGradientEnd, R.drawable.ic_food_western,
+        hashtags = "#격식 #무드",
+        gradientStart = FoodWesternGradientStart, gradientEnd = FoodWesternGradientEnd,
+        selectedGradientStart = FoodWesternSelectedGradientStart, selectedGradientEnd = FoodWesternSelectedGradientEnd,
+        decorationRes = R.drawable.ic_food_western,
     ),
     "CHINESE" to FoodVisual(
-        "#마라 #자극적", FoodChineseGradientStart, FoodChineseGradientEnd, R.drawable.ic_food_chinese,
+        hashtags = "#마라 #자극적",
+        gradientStart = FoodChineseGradientStart, gradientEnd = FoodChineseGradientEnd,
+        selectedGradientStart = FoodChineseSelectedGradientStart, selectedGradientEnd = FoodChineseSelectedGradientEnd,
+        decorationRes = R.drawable.ic_food_chinese,
     ),
     "SNACK" to FoodVisual(
-        "#따뜻한 #편한", FoodSnackGradientStart, FoodSnackGradientEnd, R.drawable.ic_food_snack,
+        hashtags = "#따뜻한 #편한",
+        gradientStart = FoodSnackGradientStart, gradientEnd = FoodSnackGradientEnd,
+        selectedGradientStart = FoodSnackSelectedGradientStart, selectedGradientEnd = FoodSnackSelectedGradientEnd,
+        decorationRes = R.drawable.ic_food_snack,
     ),
     "DESSERT" to FoodVisual(
-        "#달콤한 #감성", FoodDessertGradientStart, FoodDessertGradientEnd, R.drawable.ic_food_dessert,
+        hashtags = "#달콤한 #감성",
+        gradientStart = FoodDessertGradientStart, gradientEnd = FoodDessertGradientEnd,
+        selectedGradientStart = FoodDessertSelectedGradientStart, selectedGradientEnd = FoodDessertSelectedGradientEnd,
+        decorationRes = R.drawable.ic_food_dessert,
     ),
 )
 
@@ -119,6 +156,8 @@ private val FALLBACK_VISUAL = FoodVisual(
     hashtags = "",
     gradientStart = FoodKoreanGradientStart,
     gradientEnd = FoodKoreanGradientEnd,
+    selectedGradientStart = FoodKoreanSelectedGradientStart,
+    selectedGradientEnd = FoodKoreanSelectedGradientEnd,
     decorationRes = R.drawable.ic_food_korean,
 )
 

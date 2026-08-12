@@ -152,6 +152,8 @@ private fun FoodGrid(
                 hashtags = food.hashtags,
                 gradientStart = food.gradientStart,
                 gradientEnd = food.gradientEnd,
+                selectedGradientStart = food.selectedGradientStart,
+                selectedGradientEnd = food.selectedGradientEnd,
                 decorationRes = food.decorationRes,
                 isSelected = food.isSelected,
                 onClick = { onToggleFood(food.code) },

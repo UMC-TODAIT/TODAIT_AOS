@@ -187,9 +187,11 @@ fun CourseDetailScreen(
                                     ),
                                     decorationRes = cardDecorationRes,
                                     onClick = {
-                                        navController.navigate(
-                                            Screen.PlaceDetail.createRoute(place.placeId)
-                                        )
+                                        place.placeId?.let { placeId ->
+                                            navController.navigate(
+                                                Screen.PlaceDetail.createRoute(placeId)
+                                            )
+                                        }
                                     }
                                 )
 
@@ -587,7 +589,7 @@ private fun CourseDetailPlaceRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(70.dp),
+            .height(96.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(
@@ -691,7 +693,7 @@ private fun CourseDetailPlaceRow(
         Box(
             modifier = Modifier
                 .weight(1f)
-                .height(96.dp)
+                .fillMaxHeight()
                 .clip(RoundedCornerShape(12.dp))
                 .clickable(
                     enabled = onClick != null,

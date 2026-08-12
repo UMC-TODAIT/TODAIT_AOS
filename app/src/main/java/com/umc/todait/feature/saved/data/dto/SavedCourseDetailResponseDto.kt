@@ -7,7 +7,7 @@ import com.google.gson.annotations.SerializedName
  * (BaseResponse<CourseDetailResponseDto> 형태로 내려온다.)
  */
 data class CourseDetailResponseDto(
-    @SerializedName("courseId") val courseId: Long,
+    @SerializedName("courseId") val courseId: Long?,
     @SerializedName("title") val title: String,
     // ISO-8601 날짜 문자열(yyyy-MM-dd).
     @SerializedName("savedDate") val savedDate: String,

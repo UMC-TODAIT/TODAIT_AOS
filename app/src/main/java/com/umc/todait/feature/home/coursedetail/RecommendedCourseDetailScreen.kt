@@ -1,5 +1,9 @@
 package com.umc.todait.feature.home.coursedetail
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -38,6 +42,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -51,6 +56,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.core.content.res.ResourcesCompat
+import androidx.core.graphics.createBitmap
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
@@ -59,6 +66,7 @@ import com.kakao.vectormap.KakaoMapReadyCallback
 import com.kakao.vectormap.LatLng
 import com.kakao.vectormap.MapLifeCycleCallback
 import com.kakao.vectormap.MapView
+import com.kakao.vectormap.camera.CameraUpdate
 import com.kakao.vectormap.camera.CameraUpdateFactory
 import com.kakao.vectormap.label.LabelOptions
 import com.kakao.vectormap.label.LabelStyle
@@ -78,6 +86,7 @@ import com.umc.todait.ui.theme.Gray200
 import com.umc.todait.ui.theme.Gray400
 import com.umc.todait.ui.theme.Gray500
 import com.umc.todait.ui.theme.Gray900
+import com.umc.todait.ui.theme.Pink800
 import com.umc.todait.ui.theme.Pink900
 import com.umc.todait.ui.theme.TodaitTheme
 import com.umc.todait.ui.theme.White
@@ -331,24 +340,103 @@ private fun RecommendedCourseMap(places: List<CourseDetailPlaceUiModel>, modifie
 
     LaunchedEffect(kakaoMap, places) {
         val map = kakaoMap ?: return@LaunchedEffect
-        val labelLayer = map.labelManager?.layer
+        val labelManager = map.labelManager ?: return@LaunchedEffect
+        val labelLayer = labelManager.layer
         labelLayer?.removeAll()
-        val styles = map.labelManager?.addLabelStyles(
-            LabelStyles.from(LabelStyle.from(R.drawable.ic_place_deco_cloud)),
-        )
+
+        // 핀마다 번호가 다르니 스타일도 장소마다 따로 만든다.
         places.forEach { place ->
+            val styles = labelManager.addLabelStyles(
+                LabelStyles.from(LabelStyle.from(createOrderPinBitmap(context, place.visitOrder))),
+            )
             labelLayer?.addLabel(
                 LabelOptions.from(LatLng.from(place.latitude, place.longitude)).setStyles(styles),
             )
         }
-        val center = places.firstOrNull()
-        val target = if (center != null) LatLng.from(center.latitude, center.longitude) else DEFAULT_CENTER
-        map.moveCamera(CameraUpdateFactory.newCenterPosition(target, DEFAULT_ZOOM))
+        map.moveCamera(courseCameraUpdate(places))
+    }
+}
+
+/**
+ * 방문 순번이 적힌 원형 핀 비트맵을 그린다.
+ *
+ * 1번(코스 시작)만 흰 배경 + 핑크 테두리 + 핑크 숫자로 강조하고, 나머지는 핑크 배경 + 흰 숫자다(Figma).
+ * drawable로 두지 않고 런타임에 그리는 이유는 장소 개수가 가변이라 번호별 이미지를 미리 만들 수 없기 때문이다.
+ */
+private fun createOrderPinBitmap(context: Context, order: Int): Bitmap {
+    val isFirst = order == FIRST_VISIT_ORDER
+    val density = context.resources.displayMetrics.density
+    val sizePx = (if (isFirst) FIRST_PIN_SIZE_DP else PIN_SIZE_DP) * density
+    val strokePx = PIN_STROKE_DP * density
+    // 안티에일리어싱된 가장자리가 비트맵 밖으로 나가 잘리므로, 원 크기는 그대로 두고 여백만 덧댄다.
+    val paddingPx = PIN_ANTIALIAS_PADDING_DP * density
+    val bitmapSizePx = (sizePx + paddingPx * 2f).toInt()
+
+    val bitmap = createBitmap(bitmapSizePx, bitmapSizePx)
+    val canvas = Canvas(bitmap)
+    val center = bitmapSizePx / 2f
+    // 테두리는 선의 절반이 원 밖으로 나가므로 반지름을 그만큼 당겨야 지정한 지름이 유지된다.
+    val radius = if (isFirst) sizePx / 2f - strokePx / 2f else sizePx / 2f
+
+    canvas.drawCircle(
+        center,
+        center,
+        radius,
+        Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.FILL
+            color = (if (isFirst) White else Pink800).toArgb()
+        },
+    )
+    if (isFirst) {
+        canvas.drawCircle(
+            center,
+            center,
+            radius,
+            Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                style = Paint.Style.STROKE
+                strokeWidth = strokePx
+                color = Pink900.toArgb()
+            },
+        )
+    }
+
+    val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = (if (isFirst) Pink900 else White).toArgb()
+        textSize = sizePx * PIN_TEXT_SIZE_RATIO
+        textAlign = Paint.Align.CENTER
+        typeface = ResourcesCompat.getFont(context, R.font.suit_semibold)
+    }
+    // drawText의 y는 baseline이라, 글자 높이의 중앙이 원 중앙에 오도록 보정한다.
+    val baselineY = center - (textPaint.descent() + textPaint.ascent()) / 2f
+    canvas.drawText(order.toString(), center, baselineY, textPaint)
+    return bitmap
+}
+
+/** 코스의 모든 핀이 한 화면에 들어오도록 카메라를 맞춘다(장소가 하나뿐이면 그 장소를 중심에 둔다). */
+private fun courseCameraUpdate(places: List<CourseDetailPlaceUiModel>): CameraUpdate {
+    val points = places.map { LatLng.from(it.latitude, it.longitude) }
+    return when (points.size) {
+        0 -> CameraUpdateFactory.newCenterPosition(DEFAULT_CENTER, DEFAULT_ZOOM)
+        1 -> CameraUpdateFactory.newCenterPosition(points.first(), DEFAULT_ZOOM)
+        else -> CameraUpdateFactory.fitMapPoints(points.toTypedArray(), MAP_FIT_PADDING_PX)
     }
 }
 
 private val DEFAULT_CENTER: LatLng = LatLng.from(37.5563, 126.9236)
 private const val DEFAULT_ZOOM = 15
+
+// 코스 순번 핀 (Figma: 1번 35x35 흰 배경+Pink900 테두리 1.5, 그 외 28x28 Pink800 배경)
+private const val FIRST_VISIT_ORDER = 1
+private const val FIRST_PIN_SIZE_DP = 35f
+private const val PIN_SIZE_DP = 28f
+private const val PIN_STROKE_DP = 1.5f
+private const val PIN_TEXT_SIZE_RATIO = 0.45f
+
+/** 원의 안티에일리어싱 가장자리가 잘리지 않도록 비트맵에 덧대는 여백. */
+private const val PIN_ANTIALIAS_PADDING_DP = 1f
+
+/** fitMapPoints 여백(px). 핀이 지도 가장자리에 붙어 잘리지 않도록 준다. */
+private const val MAP_FIT_PADDING_PX = 80
 // 보이는 카드 높이. 카드 사이 간격은 아래 Spacer 로 따로 두고, 그 구간에도 타임라인 선이 이어진다.
 private val PLACE_CARD_HEIGHT = 72.dp
 private val PLACE_THUMBNAIL_WIDTH = 96.dp

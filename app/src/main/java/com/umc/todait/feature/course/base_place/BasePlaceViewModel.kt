@@ -24,8 +24,8 @@ import javax.inject.Inject
  *
  * - 진입 시 "지금 내 주변 핫플" 추천 목록을 불러온다.
  * - 검색어 입력 후 검색 시 장소명 검색 결과를 보여준다.
- * - 카드 우상단 '+' 로 기준 장소를 선택하고, 헤더 체크 → 확정 알럿 → [확인] 시
- *   지원 지역 검증 후 코스 구성하기로 이동. (카드 본문 탭은 장소 상세로 진입 — 화면 레이어에서 처리)
+ * - 카드 탭으로 기준 장소를 선택하고, 헤더 체크 → 확정 알럿 → [확인] 시
+ *   지원 지역 검증 후 코스 구성하기로 이동. (카드 롱프레스는 장소 상세로 진입 — 화면 레이어에서 처리)
  */
 @HiltViewModel
 class BasePlaceViewModel @Inject constructor(
@@ -125,7 +125,7 @@ class BasePlaceViewModel @Inject constructor(
         }
     }
 
-    /** 카드 우상단 '+' → 기준 장소 선택/해제(토글). 단일 선택. */
+    /** 카드 탭 → 기준 장소 선택/해제(토글). 단일 선택. */
     fun onSelectPlace(place: PlaceUiModel) {
         _uiState.update { state ->
             val next = if (state.selectedPlace?.key == place.key) null else place

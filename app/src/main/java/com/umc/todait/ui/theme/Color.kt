@@ -85,6 +85,39 @@ val CourseCalmGradientStart = Color(0xFFB8DCC4)
 val CourseCalmGradientEnd = Color(0xFF99C6CE)
 
 // ─────────────────────────────────────────────────────────────────────────────
+// 장소 카드 선택(Click) 상태 — 분위기별 그라데이션
+//
+// 카드를 탭해 선택되면 기본색보다 채도가 높은 그라데이션 + Green-700 테두리로 바뀐다.
+// HEX는 Figma "장소카드" 컴포넌트의 Property 1=Click 배리언트에서 추출한 확정값
+// (로맨틱 node 2242-13237 / 모던한 2242-13551 / 활발한 2242-13643 /
+//  차분한 2242-13888 / 힙한 2242-13975 / 조용한 2242-14072).
+// ─────────────────────────────────────────────────────────────────────────────
+
+// 힙한(HIP)
+val CourseHipSelectedGradientStart = Color(0xFFA2C6E2)
+val CourseHipSelectedGradientEnd = Color(0xFFC8BCFB)
+
+// 조용한(QUIET)
+val CourseQuietSelectedGradientStart = Color(0xFFD7E6BF)
+val CourseQuietSelectedGradientEnd = Color(0xFFD4D9A1)
+
+// 활발한(ACTIVE)
+val CourseActiveSelectedGradientStart = Color(0xFFFFC5B4)
+val CourseActiveSelectedGradientEnd = Color(0xFFFFD5C0)
+
+// 로맨틱(ROMANTIC)
+val CourseRomanticSelectedGradientStart = Color(0xFFFFABBF)
+val CourseRomanticSelectedGradientEnd = Color(0xFFFFB2EA)
+
+// 모던한(MODERN)
+val CourseModernSelectedGradientStart = Color(0xFFBDDFDD)
+val CourseModernSelectedGradientEnd = Color(0xFF81A6BD)
+
+// 차분한(CALM)
+val CourseCalmSelectedGradientStart = Color(0xFFB4EDC9)
+val CourseCalmSelectedGradientEnd = Color(0xFF99C6CE)
+
+// ─────────────────────────────────────────────────────────────────────────────
 // 취향 설정 — 음식 카테고리별 그라데이션 (세로 방향, 위 Start → 아래 End)
 // HEX는 Figma "취향설정" 음식 선택 카드에서 추출한 확정값(6종 전부 확정).
 // ─────────────────────────────────────────────────────────────────────────────

@@ -193,20 +193,11 @@ private fun RecommendedCourseDetailContent(
                 }
 
                 Text(
-                    text = stringResource(R.string.recommended_course_detail_long_press_hint),
+                    text = stringResource(R.string.recommended_course_detail_tap_hint),
                     style = MaterialTheme.typography.bodyMedium,
                     color = Gray400,
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
                 )
-
-                if (uiState.hashtags.isNotEmpty()) {
-                    Text(
-                        text = uiState.hashtags.joinToString(" "),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Gray500,
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
-                    )
-                }
 
                 if (uiState.saveError != null) {
                     Text(

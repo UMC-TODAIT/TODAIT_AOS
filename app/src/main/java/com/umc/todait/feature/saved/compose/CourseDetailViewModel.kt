@@ -1,7 +1,6 @@
 package com.umc.todait.feature.saved.compose
 
 import androidx.lifecycle.viewModelScope
-import com.umc.todait.R
 import com.umc.todait.core.base.BaseViewModel
 import com.umc.todait.core.network.ApiResult
 import com.umc.todait.core.network.toUiError
@@ -48,7 +47,6 @@ class CourseDetailViewModel @Inject constructor(
                             memo = data.memo ?: "",
 
                             places = data.places.map { place -> PlaceUiModel(
-                                coursePlaceId = place.coursePlaceId,
                                 placeId = place.placeId,
                                 name = place.name,
                                 address = place.address,
@@ -100,18 +98,5 @@ class CourseDetailViewModel @Inject constructor(
         _uiState.update {
             it.copy(error = null)
         }
-    }
-}
-private fun getMoodBackground(
-    code: String?
-): Int {
-    return when (code) {
-        "ROMANTIC" -> R.drawable.bg_saved_courses_romantic
-        "QUIET" -> R.drawable.bg_saved_courses_quiet
-        "MODERN" -> R.drawable.bg_saved_courses_modern
-        "HIP" -> R.drawable.bg_saved_courses_hip
-        "ACTIVE" -> R.drawable.bg_saved_courses_active
-        "CALM" -> R.drawable.bg_saved_courses_calm
-        else -> R.drawable.bg_saved_courses_romantic
     }
 }

@@ -186,8 +186,8 @@ fun CourseDetailScreen(
                                         gradient.second
                                     ),
                                     decorationRes = cardDecorationRes,
-                                    onClick = {
-                                        place.placeId?.let { placeId ->
+                                    onClick = place.placeId?.let { placeId ->
+                                        {
                                             navController.navigate(
                                                 Screen.PlaceDetail.createRoute(placeId)
                                             )

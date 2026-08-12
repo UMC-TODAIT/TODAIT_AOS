@@ -1,7 +1,6 @@
 package com.umc.todait.feature.saved.compose
 
 import androidx.lifecycle.viewModelScope
-import com.umc.todait.R
 import com.umc.todait.core.base.BaseViewModel
 import com.umc.todait.core.network.ApiResult
 import com.umc.todait.core.network.toUiError
@@ -48,15 +47,10 @@ class CourseDetailViewModel @Inject constructor(
                             memo = data.memo ?: "",
 
                             places = data.places.map { place -> PlaceUiModel(
-                                coursePlaceId = place.coursePlaceId,
                                 placeId = place.placeId,
-                                isStartPlace = place.visitOrder == 1,
                                 name = place.name,
                                 address = place.address,
-                                backgroundImage = getMoodBackground(
-                                    data.representativeMoodTag?.code
-                                ),
-                                memo = place.memo ?: ""
+                                imageUrl = place.representativeImageUrl?.takeIf { it.isNotBlank() }
                             )
                             }
                         )
@@ -100,61 +94,9 @@ class CourseDetailViewModel @Inject constructor(
         }
     }
 
-    fun updateCoursePlaceMemo(
-        courseId: Long,
-        coursePlaceId: Long,
-        memo: String?
-    ) {
-        viewModelScope.launch {
-            when (
-                val result = savedRepository.updateCoursePlaceMemo(
-                    courseId = courseId,
-                    coursePlaceId = coursePlaceId,
-                    memo = memo
-                )
-            ) {
-                is ApiResult.Success -> {
-                    _uiState.update { state ->
-                        state.copy(
-                            places = state.places.map { place ->
-                                if (place.coursePlaceId == coursePlaceId) {
-                                    place.copy(
-                                        memo = result.data.memo ?: ""
-                                    )
-                                } else {
-                                    place
-                                }
-                            },
-                            error = null
-                        )
-                    }
-                }
-
-                is ApiResult.Failure -> {
-                    _uiState.update {
-                        it.copy(error = result.toUiError())
-                    }
-                }
-            }
-        }
-    }
-
     fun clearError() {
         _uiState.update {
             it.copy(error = null)
         }
-    }
-}
-private fun getMoodBackground(
-    code: String?
-): Int {
-    return when (code) {
-        "ROMANTIC" -> R.drawable.bg_saved_courses_romantic
-        "QUIET" -> R.drawable.bg_saved_courses_quiet
-        "MODERN" -> R.drawable.bg_saved_courses_modern
-        "HIP" -> R.drawable.bg_saved_courses_hip
-        "ACTIVE" -> R.drawable.bg_saved_courses_active
-        "CALM" -> R.drawable.bg_saved_courses_calm
-        else -> R.drawable.bg_saved_courses_romantic
     }
 }

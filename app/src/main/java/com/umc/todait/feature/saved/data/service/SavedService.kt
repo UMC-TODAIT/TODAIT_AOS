@@ -5,7 +5,6 @@ import com.umc.todait.feature.saved.data.dto.CourseDetailResponseDto
 import com.umc.todait.feature.saved.data.dto.SavedCoursesResponseDto
 import com.umc.todait.feature.saved.data.dto.DeleteSavedCourseResponseDto
 import com.umc.todait.feature.saved.data.dto.UpdateCourseMemoResponseDto
-import com.umc.todait.feature.saved.data.dto.UpdateCoursePlaceMemoResponseDto
 import com.umc.todait.feature.saved.data.dto.UpdateMemoRequestDto
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -33,11 +32,4 @@ interface SavedService {
         @Path("courseId") courseId: Long,
         @Body request: UpdateMemoRequestDto
     ): BaseResponse<UpdateCourseMemoResponseDto>
-
-    @PATCH("api/courses/{courseId}/places/{coursePlaceId}/memo")
-    suspend fun updateCoursePlaceMemo(
-        @Path("courseId") courseId: Long,
-        @Path("coursePlaceId") coursePlaceId: Long,
-        @Body request: UpdateMemoRequestDto
-    ): BaseResponse<UpdateCoursePlaceMemoResponseDto>
 }

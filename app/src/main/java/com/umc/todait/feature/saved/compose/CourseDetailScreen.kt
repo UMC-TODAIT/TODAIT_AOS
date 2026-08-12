@@ -1,5 +1,6 @@
 package com.umc.todait.feature.saved.compose
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -14,8 +16,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,28 +27,42 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
 import com.umc.todait.R
+import com.umc.todait.feature.home.MOOD_DECORATIONS
+import com.umc.todait.feature.home.MOOD_GRADIENTS
+import com.umc.todait.feature.saved.PlaceUiModel
 import com.umc.todait.ui.component.CommonDialog
 import com.umc.todait.ui.component.ErrorContent
 import com.umc.todait.ui.component.LoadingIndicator
 import com.umc.todait.ui.theme.Cream
 import com.umc.todait.ui.theme.Gray600
 import com.umc.todait.ui.theme.Gray800
+import com.umc.todait.ui.theme.Pink900
 import com.umc.todait.ui.theme.Suit
 import com.umc.todait.ui.theme.TextPlaceholder
+import com.umc.todait.ui.theme.White
+import com.umc.todait.navigation.Screen
+import com.umc.todait.ui.theme.Gray200
+import com.umc.todait.ui.theme.Gray500
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.graphics.Path
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
@@ -68,10 +82,6 @@ fun CourseDetailScreen(
     val uiState by viewModel.uiState.collectAsState()
     var isEditing by remember { mutableStateOf(false) }
     var showExitDialog by remember { mutableStateOf(false) }
-
-    var editingPlaces by remember {
-        mutableStateOf(setOf<Long>())
-    }
 
     LaunchedEffect(courseId) {
         viewModel.getCourseDetail(courseId)
@@ -105,7 +115,7 @@ fun CourseDetailScreen(
                     DetailHeader(
                         navController = navController,
                         onBackClick = {
-                            if (isEditing || editingPlaces.isNotEmpty()) {
+                            if (isEditing) {
                                 showExitDialog = true
                             } else {
                                 navController.popBackStack()
@@ -130,31 +140,93 @@ fun CourseDetailScreen(
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    LazyColumn(
-                        modifier = Modifier.weight(1f)
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .verticalScroll(rememberScrollState())
+                            .padding(horizontal = 20.dp)
                     ) {
-                        itemsIndexed(uiState.places) { index, place ->
-                            PlaceCard(
-                                place = place,
-                                number = index,
-                                onEditingChanged = { placeId, editing ->
-                                    editingPlaces =
-                                        if (editing) {
-                                            editingPlaces + placeId
-                                        } else {
-                                            editingPlaces - placeId
+                        Text(
+                            text = "저장된 코스",
+                            fontFamily = Suit,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 22.sp,
+                            lineHeight = 22.sp,
+                            color = Gray800
+                        )
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Text(
+                            text = "장소를 눌러 상세 정보를 확인해보세요!",
+                            fontFamily = Suit,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 16.sp,
+                            lineHeight = 16.sp,
+                            color = Gray500
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        val gradient = MOOD_GRADIENTS[uiState.moodTagCode]
+                            ?: MOOD_GRADIENTS["CALM"]!!
+
+                        val cardDecorationRes =
+                            MOOD_DECORATIONS[uiState.moodTagCode]
+                                ?: MOOD_DECORATIONS["CALM"]!!
+
+                        Column {
+                            uiState.places.forEachIndexed { index, place ->
+                                CourseDetailPlaceRow(
+                                    place = place,
+                                    number = index + 1,
+                                    isLast = index == uiState.places.lastIndex,
+                                    gradient = listOf(
+                                        gradient.first,
+                                        gradient.second
+                                    ),
+                                    decorationRes = cardDecorationRes,
+                                    onClick = place.placeId?.let { placeId ->
+                                        {
+                                            navController.navigate(
+                                                Screen.PlaceDetail.createRoute(placeId)
+                                            )
                                         }
+                                    }
+                                )
+
+                                if (index != uiState.places.lastIndex) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(24.dp)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .width(28.dp)
+                                                .fillMaxHeight(),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .width(1.dp)
+                                                    .fillMaxHeight()
+                                                    .background(Gray200)
+                                            )
+                                        }
+
+                                        Spacer(
+                                            modifier = Modifier.width(12.dp)
+                                        )
+
+                                        Spacer(
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
                                 }
-                            )
-
-                            Spacer(
-                                modifier = Modifier.height(16.dp)
-                            )
+                            }
                         }
-
-                        item {
-                            Spacer(modifier = Modifier.height(200.dp))
-                        }
+                        Spacer(modifier = Modifier.height(200.dp))
                     }
                 }
 
@@ -502,5 +574,205 @@ private fun getMoodIcon(
         "ACTIVE" -> R.drawable.ic_mood_active
         "CALM" -> R.drawable.ic_mood_calm
         else -> R.drawable.ic_mood_romantic
+    }
+}
+
+@Composable
+private fun CourseDetailPlaceRow(
+    place: PlaceUiModel,
+    number: Int,
+    isLast: Boolean,
+    gradient: List<Color>,
+    @DrawableRes decorationRes: Int,
+    onClick: (() -> Unit)?,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(96.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(
+            modifier = Modifier
+                .width(28.dp)
+                .fillMaxHeight(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            if (number == 1) {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .background(
+                            color = Gray200,
+                            shape = CircleShape,
+                        ),
+                )
+
+                Spacer(
+                    modifier = Modifier
+                        .width(1.dp)
+                        .weight(1f)
+                        .background(Gray200),
+                )
+            } else {
+                Spacer(
+                    modifier = Modifier
+                        .width(1.dp)
+                        .weight(1f)
+                        .background(Gray200),
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .size(30.dp)
+                    .background(
+                        color = Pink900,
+                        shape = CircleShape,
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = number.toString(),
+                    fontFamily = Suit,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 16.sp,
+                    lineHeight = 16.sp,
+                    color = White,
+                )
+            }
+
+            if (isLast) {
+                Spacer(
+                    modifier = Modifier
+                        .width(1.dp)
+                        .weight(1f)
+                        .background(Gray200),
+                )
+
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .background(
+                            color = Gray200,
+                            shape = CircleShape,
+                        ),
+                )
+            } else {
+                Spacer(
+                    modifier = Modifier
+                        .width(1.dp)
+                        .weight(1f)
+                        .background(Gray200),
+                )
+
+                Canvas(
+                    modifier = Modifier
+                        .width(12.dp)
+                        .height(7.dp),
+                ) {
+                    val path = Path().apply {
+                        moveTo(0f, 0f)
+                        lineTo(size.width, 0f)
+                        lineTo(size.width / 2f, size.height)
+                        close()
+                    }
+
+                    drawPath(
+                        path = path,
+                        color = Gray200,
+                    )
+                }
+            }
+        }
+
+        Spacer(
+            modifier = Modifier.width(12.dp),
+        )
+
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .clip(RoundedCornerShape(12.dp))
+                .clickable(
+                    enabled = onClick != null,
+                    onClick = onClick ?: {},
+                )
+                .background(
+                    Brush.horizontalGradient(gradient),
+                ),
+        ) {
+            Image(
+                painter = painterResource(decorationRes),
+                contentDescription = null,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(
+                        end = 8.dp,
+                        bottom = 8.dp,
+                    )
+                    .size(30.dp)
+                    .alpha(0.9f),
+            )
+
+            Row(
+                modifier = Modifier.fillMaxSize(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+
+                PlaceThumbnail(
+                    imageUrl = place.imageUrl,
+                )
+
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(12.dp),
+                ) {
+                    Text(
+                        text = place.name,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = White,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+
+                    Spacer(
+                        modifier = Modifier.height(4.dp),
+                    )
+
+                    Text(
+                        text = place.address,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = White,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlaceThumbnail(imageUrl: String?) {
+    val thumbnailModifier = Modifier
+        .fillMaxHeight()
+        .width(96.dp)
+
+    if (imageUrl != null) {
+        AsyncImage(
+            model = imageUrl,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = thumbnailModifier,
+        )
+    } else {
+        Box(
+            modifier = thumbnailModifier
+                .background(White.copy(alpha = 0.4f))
+        )
     }
 }

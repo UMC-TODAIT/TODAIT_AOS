@@ -68,6 +68,19 @@ fun TodaitApp() {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
 
+    // 토큰 재발급 실패(refreshToken 만료·폐기) → 저장된 인증 정보는 이미 지워졌으므로 로그인부터 다시 받는다.
+    // 백스택을 통째로 비워 뒤로가기로 인증이 필요한 화면에 돌아가지 못하게 한다(로그아웃과 동일한 처리).
+    val sessionViewModel: SessionViewModel = hiltViewModel()
+    val isSessionExpired by sessionViewModel.isSessionExpired.collectAsStateWithLifecycle()
+    LaunchedEffect(isSessionExpired) {
+        if (!isSessionExpired) return@LaunchedEffect
+        navController.navigate(Screen.Login.route) {
+            popUpTo(navController.graph.id) { inclusive = true }
+            launchSingleTop = true
+        }
+        sessionViewModel.onSessionExpiredHandled()
+    }
+
     // 하단 탭바를 노출할 화면 (플로우 중간 화면에서는 숨김)
     val bottomBarRoutes = BottomTab.entries.map { it.route }.toSet()
     val showBottomBar =

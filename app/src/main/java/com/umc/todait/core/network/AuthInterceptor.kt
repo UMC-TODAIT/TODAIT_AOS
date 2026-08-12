@@ -4,6 +4,8 @@ import com.google.gson.Gson
 import com.umc.todait.BuildConfig
 import com.umc.todait.core.datastore.TokenDataStore
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -25,8 +27,9 @@ import javax.inject.Singleton
  * HTTP 상태 코드와 body의 code를 함께 확인한다 — 서버가 상태 코드를 정확히 내려주지 않는 경우에도
  * body의 code로 판단할 수 있어야 하기 때문이다.
  *
- * 재발급도 실패하면(refreshToken 자체가 만료/폐기됨) 원래 응답을 그대로 반환한다 —
- * 재로그인 유도(로그인 화면 이동 등)는 이 Interceptor가 아니라 상위 레이어(예: 공통 에러 핸들러)에서 처리한다.
+ * 재발급을 서버가 거절하면(refreshToken 만료·폐기) 저장된 토큰을 지우고 세션 만료를 알린다
+ * ([SessionExpiredNotifier] → NavHost 가 로그인 화면으로 이동). 네트워크·서버 오류처럼 일시적인 실패는
+ * 토큰을 그대로 두고 원래 응답만 돌려준다 — 다음 요청에서 다시 시도하면 되기 때문이다.
  *
  * 토큰 재발급 호출은 Retrofit이 아니라 별도의 순수 OkHttpClient로 직접 만든다 —
  * Retrofit(AuthService)이 이 Interceptor가 붙은 OkHttpClient에 의존하므로, 여기서 같은
@@ -35,9 +38,13 @@ import javax.inject.Singleton
 @Singleton
 class AuthInterceptor @Inject constructor(
     private val tokenDataStore: TokenDataStore,
+    private val sessionExpiredNotifier: SessionExpiredNotifier,
 ) : Interceptor {
 
     private val refreshClient = OkHttpClient.Builder().build()
+
+    // 동시에 401 이 여러 건 발생해도 재발급 요청은 한 번만 나가도록 직렬화한다.
+    private val refreshMutex = Mutex()
     private val gson = Gson()
 
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -57,9 +64,9 @@ class AuthInterceptor @Inject constructor(
         val response = chain.proceed(requestWithToken)
         if (!isAuthExpiredResponse(response)) return response
 
-        // refreshToken 자체가 만료/폐기됐거나 네트워크 오류면, 원래 응답을 그대로 돌려준다
-        // (재로그인 유도는 상위 레이어 몫).
-        val newAccessToken = tryRefreshAccessToken() ?: return response
+        // 재발급을 못 받았으면 원래 응답을 그대로 돌려준다. 서버가 거절한 경우에만 토큰이 지워지고
+        // 세션 만료 이벤트가 나가며, 네트워크 오류 등 일시적 실패면 토큰은 그대로 남는다.
+        val newAccessToken = refreshTokens(usedAccessToken = accessToken) ?: return response
 
         response.close()
         val retryRequest = original.newBuilder()
@@ -106,8 +113,54 @@ class AuthInterceptor @Inject constructor(
         }.getOrDefault(response.code == 403)
     }
 
-    private fun tryRefreshAccessToken(): String? = runCatching {
-        val refreshToken = runBlocking { tokenDataStore.getRefreshToken() } ?: return null
+    /**
+     * 토큰 재발급. 성공하면 새 accessToken 을 돌려준다.
+     * 서버가 거절했을 때만 저장된 인증 정보를 지우고 세션 만료를 알리며(→ 로그인 화면 이동),
+     * 네트워크·서버 오류면 토큰을 그대로 두고 null 만 돌려준다.
+     *
+     * **동시에 여러 요청이 401 을 받아도 재발급은 한 번만 실행된다.** [refreshMutex] 로 직렬화하고,
+     * 락을 잡은 뒤 저장된 accessToken 이 내가 보냈던 값([usedAccessToken])과 달라졌으면
+     * 다른 요청이 이미 갱신을 끝낸 것이므로 그 값을 그대로 쓴다.
+     */
+    private fun refreshTokens(usedAccessToken: String?): String? = runBlocking {
+        refreshMutex.withLock {
+            val current = tokenDataStore.getAccessToken()
+            if (current != null && current != usedAccessToken) return@withLock current
+
+            // 애초에 로그인 상태가 아니면(로그아웃 직후 in-flight 401 등) 지울 토큰도, 알릴 세션도 없다.
+            val refreshToken = tokenDataStore.getRefreshToken() ?: return@withLock null
+
+            when (val outcome = requestNewTokens(refreshToken)) {
+                is RefreshOutcome.Success -> {
+                    // Rotation: 요청에 쓴 기존 refreshToken 은 서버에서 폐기되므로 둘 다 교체 저장한다.
+                    tokenDataStore.saveTokens(outcome.accessToken, outcome.refreshToken)
+                    outcome.accessToken
+                }
+
+                // 서버가 명시적으로 거절 = refreshToken 이 만료·폐기된 것이라 재로그인 외에 방법이 없다.
+                RefreshOutcome.Rejected -> {
+                    tokenDataStore.clearTokens()
+                    sessionExpiredNotifier.notifySessionExpired()
+                    null
+                }
+
+                // 네트워크·서버 오류는 토큰이 멀쩡한데 못 물어본 것뿐이다. 지우면 안 된다.
+                RefreshOutcome.TransientFailure -> null
+            }
+        }
+    }
+
+    /**
+     * 재발급 결과. **거절(refreshToken 무효)과 일시적 실패(네트워크·서버 오류)를 반드시 구분한다** —
+     * 둘을 뭉뚱그리면 지하철에서 타임아웃 한 번에 멀쩡한 세션이 날아간다.
+     */
+    private sealed interface RefreshOutcome {
+        data class Success(val accessToken: String, val refreshToken: String) : RefreshOutcome
+        data object Rejected : RefreshOutcome
+        data object TransientFailure : RefreshOutcome
+    }
+
+    private fun requestNewTokens(refreshToken: String): RefreshOutcome {
         // core는 feature에 의존하지 않으므로(§5) feature의 요청 DTO를 쓰지 않고 JSON을 직접 만든다.
         val body = gson.toJson(mapOf("refreshToken" to refreshToken))
             .toRequestBody("application/json".toMediaType())
@@ -115,21 +168,55 @@ class AuthInterceptor @Inject constructor(
             .url(BuildConfig.BASE_URL + "api/auth/token/refresh")
             .post(body)
             .build()
-        refreshClient.newCall(request).execute().use { res ->
-            val json = res.body?.string() ?: return null
-            val parsed = gson.fromJson(json, BaseResponse::class.java)
-            // 재발급 실패는 HTTP 4xx로 오지만, 상태 코드와 무관하게 body의 isSuccess로 판단한다.
-            if (!parsed.isSuccess) return null
-            @Suppress("UNCHECKED_CAST")
-            val result = parsed.result as? Map<String, Any?>
-            val newAccessToken = result?.get("accessToken") as? String
-            newAccessToken?.also { token -> runBlocking { tokenDataStore.updateAccessToken(token) } }
+
+        // 연결 실패·타임아웃은 예외로 올라온다 → 토큰을 지키기 위해 일시적 실패로 분류한다.
+        return runCatching {
+            refreshClient.newCall(request).execute().use { res -> parseRefreshResponse(res, refreshToken) }
+        }.getOrElse { RefreshOutcome.TransientFailure }
+    }
+
+    private fun parseRefreshResponse(res: Response, sentRefreshToken: String): RefreshOutcome {
+        val json = res.body?.string()
+        if (json.isNullOrBlank()) {
+            return if (res.code in HTTP_CLIENT_ERROR_RANGE) RefreshOutcome.Rejected else RefreshOutcome.TransientFailure
         }
-    }.getOrNull()
+        // 게이트웨이가 HTML 을 내려주는 등 공통 Wrapper 가 아니면 서버 판단을 알 수 없으므로 토큰을 유지한다.
+        val parsed = runCatching { gson.fromJson(json, BaseResponse::class.java) }.getOrNull()
+            ?: return RefreshOutcome.TransientFailure
+
+        if (!parsed.isSuccess) return classifyFailure(res.code, parsed.code)
+
+        @Suppress("UNCHECKED_CAST")
+        val result = parsed.result as? Map<String, Any?>
+        // 성공인데 accessToken 이 없으면 응답이 깨진 것이다 — 거절로 단정하지 않는다.
+        val newAccessToken = result?.get("accessToken") as? String ?: return RefreshOutcome.TransientFailure
+        // ⚠️ Rotation 적용 **전** 서버는 refreshToken 을 내려주지 않는다. 이때는 보냈던 토큰을 그대로 유지해야
+        // 배포 전 기간에 정상 사용자가 튕기지 않는다(로테이션 적용 후에는 새 값이 온다).
+        val newRefreshToken = result["refreshToken"] as? String ?: sentRefreshToken
+        return RefreshOutcome.Success(newAccessToken, newRefreshToken)
+    }
+
+    /**
+     * 재발급 실패 응답이 **토큰이 무효해서**인지, **서버가 잠깐 아파서**인지 가른다.
+     *
+     * ⚠️ 실패는 HTTP 4xx/5xx 뿐 아니라 **HTTP 200 + isSuccess:false** 형태로도 온다
+     * (공통 API 응답 규약, 배포 서버 실측). 그래서 상태 코드만 보면 `200 + COMMON500`(서버 오류)을
+     * 거절로 오판해 멀쩡한 세션을 지워버린다. 상태 코드와 body 의 code 를 **함께** 본다.
+     */
+    private fun classifyFailure(httpStatus: Int, bodyCode: String?): RefreshOutcome {
+        val isServerError = httpStatus in HTTP_SERVER_ERROR_RANGE ||
+            (bodyCode != null && SERVER_ERROR_CODE_SUFFIX.containsMatchIn(bodyCode))
+        return if (isServerError) RefreshOutcome.TransientFailure else RefreshOutcome.Rejected
+    }
 
     private companion object {
         const val PEEK_BODY_MAX_BYTES = 2048L
         const val CODE_AUTH_401 = "AUTH401"
         const val CODE_AUTH_403 = "AUTH403"
+        val HTTP_CLIENT_ERROR_RANGE = 400..499
+        val HTTP_SERVER_ERROR_RANGE = 500..599
+
+        /** COMMON500·KAKAO_API502 처럼 응답 코드 끝의 5xx 가 서버 오류를 뜻한다. */
+        val SERVER_ERROR_CODE_SUFFIX = Regex("5\\d{2}$")
     }
 }

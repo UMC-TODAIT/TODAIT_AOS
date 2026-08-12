@@ -15,13 +15,9 @@ import com.umc.todait.feature.course.data.dto.CourseDraftSavingEnterResponseDto
 import com.umc.todait.feature.course.data.dto.CourseSaveRequestDto
 import com.umc.todait.feature.course.data.dto.CourseSaveResponseDto
 import com.umc.todait.feature.course.data.dto.ExternalPlaceDto
-import com.umc.todait.feature.course.data.dto.FoodCategoryDto
-import com.umc.todait.feature.course.data.dto.FoodCategoryListResponseDto
 import com.umc.todait.feature.course.data.dto.FoodCategorySummaryDto
 import com.umc.todait.feature.course.data.dto.HotPlaceDto
 import com.umc.todait.feature.course.data.dto.HotPlaceResultDto
-import com.umc.todait.feature.course.data.dto.MoodTagDto
-import com.umc.todait.feature.course.data.dto.MoodTagListResponseDto
 import com.umc.todait.feature.course.data.dto.MoodTagSummaryDto
 import com.umc.todait.feature.course.data.dto.OrderingEntryResponseDto
 import com.umc.todait.feature.course.data.dto.PlaceCategoryListResponseDto
@@ -43,7 +39,7 @@ import com.umc.todait.feature.course.data.dto.SearchPlaceDto
  * 코스 생성 플로우는 여러 Repository(검색·추천·상세·카테고리·임시코스)가 한 화면을 함께 채우므로
  * 플래그를 하나로 두고 **여기서만 켜고 끈다**. 실 API 연결 시 false 로 바꾸면 전체가 서버를 탄다.
  */
-internal const val USE_COURSE_MOCK = true
+internal const val USE_COURSE_MOCK = false
 
 /**
  * 코스 생성 플로우 Mock 데이터 (MVP 시연용).
@@ -109,31 +105,8 @@ object MockCourse {
         createdAt = "2026-07-26T15:30:00",
     )
 
-    // ---------- 기준 데이터 조회 (GET /api/mood-tags, GET /api/food-categories) ----------
-
-    /** 분위기 태그 목록. moodTagId·code·name 은 API 명세 확정본과 동일하다. */
-    val moodTags = MoodTagListResponseDto(
-        moodTags = listOf(
-            MoodTagDto(1, "HIP", "힙한", "트렌디하고 감각적인 분위기", 1),
-            MoodTagDto(2, "QUIET", "조용한", "차분하고 대화하기 좋은 분위기", 2),
-            MoodTagDto(3, "ACTIVE", "활발한", "밝고 에너지 있는 분위기", 3),
-            MoodTagDto(4, "ROMANTIC", "로맨틱", "데이트에 어울리는 감성적인 분위기", 4),
-            MoodTagDto(5, "MODERN", "모던한", "깔끔하고 세련된 분위기", 5),
-            MoodTagDto(6, "CALM", "차분한", "편안하고 안정적인 분위기", 6),
-        ),
-    )
-
-    /** 음식 카테고리 목록. foodCategoryId·code·name 은 API 명세 확정본과 동일하다. */
-    val foodCategories = FoodCategoryListResponseDto(
-        foodCategories = listOf(
-            FoodCategoryDto(1, "KOREAN", "한식", "한식 음식 카테고리", 1),
-            FoodCategoryDto(2, "JAPANESE", "일식", "일식 음식 카테고리", 2),
-            FoodCategoryDto(3, "WESTERN", "양식", "양식 음식 카테고리", 3),
-            FoodCategoryDto(4, "CHINESE", "중식", "중식 음식 카테고리", 4),
-            FoodCategoryDto(5, "SNACK", "분식", "분식 음식 카테고리", 5),
-            FoodCategoryDto(6, "DESSERT", "디저트", "디저트 음식 카테고리", 6),
-        ),
-    )
+    // 분위기 태그·음식 카테고리 목록은 조회 API 가 미배포(프론트 담당 합의)라 mock 이 아니라
+    // 앱 보유 기준 데이터를 쓴다. [com.umc.todait.feature.course.data.local.CourseTaxonomy] 참고.
 
     // ---------- 분위기 태그 저장 (PUT /api/course-drafts/{id}/mood-tags) ----------
 

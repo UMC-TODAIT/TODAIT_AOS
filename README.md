@@ -93,7 +93,7 @@ cd TODAIT_AOS
 2. 루트에 `local.properties` 생성 후 SDK 경로 및 API 키 추가
    ```properties
    sdk.dir=<Android SDK 경로>
-   BASE_URL="https://api.todait.example.com/"   # 백엔드 배포 후 교체
+   BASE_URL="https://api.todait.co.kr/"         # 생략하면 이 값이 기본으로 쓰입니다
    KAKAO_NATIVE_APP_KEY=<발급 키>               # 카카오 로그인 + 지도 v2 공용 네이티브 앱 키
    ```
 3. `app` 구성으로 Run ▶ (에뮬레이터 또는 실기기)

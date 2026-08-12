@@ -46,8 +46,8 @@ data class SearchPlaceDto(
     @SerializedName("subCategory") val subCategory: String?,
     // 내부 DB 등록 여부.
     @SerializedName("isRegistered") val isRegistered: Boolean,
-    // 내부 대표 이미지 또는 카테고리 기본 이미지. 항상 값이 있다.
-    @SerializedName("imageUrl") val imageUrl: String,
+    // 내부 대표 이미지 또는 카테고리 기본 이미지. 미등록 장소는 null 일 수 있다.
+    @SerializedName("imageUrl") val imageUrl: String?,
     // imageUrl 의 출처. PLACE_IMAGE(내부 대표 이미지) 또는 CATEGORY_DEFAULT(카테고리 기본 이미지).
     @SerializedName("imageType") val imageType: String,
     // 내부 장소 상세 화면으로 이동할 수 있는지. false 면 카드 탭 시 상세로 진입하지 않는다.

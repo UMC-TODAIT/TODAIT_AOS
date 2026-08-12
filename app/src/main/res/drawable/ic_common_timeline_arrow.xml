@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 코스 장소 타임라인에서 다음 장소를 가리키는 아래 방향 삼각형(Gray-200). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="15dp"
+    android:height="8dp"
+    android:viewportWidth="15"
+    android:viewportHeight="8">
+    <path
+        android:fillColor="#C7C7C7"
+        android:pathData="M6.44786,7.46886C6.83239,7.82891 7.4303,7.82891 7.81483,7.46886L13.944,1.72996C14.606,1.11015 14.1674,0 13.2605,0L1.00219,0C0.0953453,0 -0.343262,1.11015 0.3187,1.72996L6.44786,7.46886Z" />
+</vector>

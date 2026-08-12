@@ -74,6 +74,8 @@ import com.umc.todait.ui.theme.CourseCalmGradientEnd
 import com.umc.todait.ui.theme.CourseCalmGradientStart
 import com.umc.todait.ui.theme.DividerLine
 import com.umc.todait.ui.theme.Error
+import com.umc.todait.ui.theme.Gray200
+import com.umc.todait.ui.theme.Gray400
 import com.umc.todait.ui.theme.Gray500
 import com.umc.todait.ui.theme.Gray900
 import com.umc.todait.ui.theme.Pink900
@@ -190,6 +192,13 @@ private fun RecommendedCourseDetailContent(
                     SaveCoursePillButton(onClick = onSaveClick, enabled = !uiState.isSaving)
                 }
 
+                Text(
+                    text = stringResource(R.string.recommended_course_detail_long_press_hint),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Gray400,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
+                )
+
                 if (uiState.hashtags.isNotEmpty()) {
                     Text(
                         text = uiState.hashtags.joinToString(" "),
@@ -214,6 +223,7 @@ private fun RecommendedCourseDetailContent(
                 Column(
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                 ) {
+                    CourseTimelineCap(isStart = true)
                     uiState.places.forEach { place ->
                         CourseDetailPlaceRow(
                             place = place,
@@ -224,6 +234,7 @@ private fun RecommendedCourseDetailContent(
                             onClick = place.placeId?.let { placeId -> { onPlaceClick(placeId) } },
                         )
                     }
+                    CourseTimelineCap(isStart = false)
                 }
 
                 Spacer(Modifier.height(24.dp))
@@ -347,8 +358,106 @@ private fun RecommendedCourseMap(places: List<CourseDetailPlaceUiModel>, modifie
 
 private val DEFAULT_CENTER: LatLng = LatLng.from(37.5563, 126.9236)
 private const val DEFAULT_ZOOM = 15
-private val PLACE_ROW_HEIGHT = 88.dp
+// 보이는 카드 높이. 카드 사이 간격은 아래 Spacer 로 따로 두고, 그 구간에도 타임라인 선이 이어진다.
+private val PLACE_CARD_HEIGHT = 72.dp
 private val PLACE_THUMBNAIL_WIDTH = 96.dp
+// 카드 아래 여백 — 타임라인이 같은 값을 써야 화살표가 카드 사이 정중앙에 온다.
+private val PLACE_CARD_BOTTOM_GAP = 32.dp
+
+// 타임라인(순서 원 왼쪽 열) — 피그마: 점·선·화살표는 Gray-200 2px.
+private val TIMELINE_WIDTH = 28.dp
+private val TIMELINE_CIRCLE_SIZE = 24.dp
+private val TIMELINE_STROKE = 2.dp
+private val TIMELINE_DOT_SIZE = 8.dp
+private val TIMELINE_CAP_LINE_HEIGHT = 8.dp
+private val TIMELINE_ARROW_WIDTH = 15.dp
+
+/**
+ * 장소 카드 왼쪽 순서 타임라인(피그마 기준).
+ *
+ * 첫 장소 위와 마지막 장소 아래에 회색 점을 찍고, 장소 사이는 회색 선 + 아래 화살표로 잇는다.
+ * 순서 원만 Pink-900 이고 점·선·화살표는 Gray-200 이다.
+ */
+@Composable
+private fun CourseTimeline(order: Int, isLast: Boolean) {
+    Column(
+        modifier = Modifier.width(TIMELINE_WIDTH).fillMaxHeight(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        // 카드 높이만큼 차지하는 구간 — 선이 관통하고 순서 원이 그 세로 중앙에 온다.
+        Box(
+            modifier = Modifier.fillMaxWidth().weight(1f),
+            contentAlignment = Alignment.Center,
+        ) {
+            TimelineLine(modifier = Modifier.fillMaxHeight())
+            Box(
+                modifier = Modifier
+                    .size(TIMELINE_CIRCLE_SIZE)
+                    .clip(CircleShape)
+                    .background(Pink900),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = order.toString(),
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = White,
+                )
+            }
+        }
+
+        // 카드 사이 간격 — 선을 이어 그리고 그 위에 다음 장소를 가리키는 화살표를 겹친다.
+        if (!isLast) {
+            Box(
+                modifier = Modifier.fillMaxWidth().height(PLACE_CARD_BOTTOM_GAP),
+                contentAlignment = Alignment.Center,
+            ) {
+                TimelineLine(modifier = Modifier.fillMaxHeight())
+                Image(
+                    painter = painterResource(R.drawable.ic_common_timeline_arrow),
+                    contentDescription = null,
+                    modifier = Modifier.width(TIMELINE_ARROW_WIDTH),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 목록 맨 위·맨 아래에 붙는 타임라인 마감(점 + 선).
+ * 장소 행 안에 넣으면 그 행만 높이가 달라져 순서 원이 카드 중앙에서 밀리므로 행 바깥에 둔다.
+ */
+@Composable
+private fun CourseTimelineCap(isStart: Boolean) {
+    Column(
+        modifier = Modifier.width(TIMELINE_WIDTH),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        if (isStart) {
+            TimelineDot()
+            TimelineLine(modifier = Modifier.height(TIMELINE_CAP_LINE_HEIGHT))
+        } else {
+            TimelineLine(modifier = Modifier.height(TIMELINE_CAP_LINE_HEIGHT))
+            TimelineDot()
+        }
+    }
+}
+
+/** 타임라인 시작·끝을 표시하는 회색 점(꽉 찬 작은 원). */
+@Composable
+private fun TimelineDot() {
+    Box(
+        modifier = Modifier
+            .size(TIMELINE_DOT_SIZE)
+            .clip(CircleShape)
+            .background(Gray200),
+    )
+}
+
+@Composable
+private fun TimelineLine(modifier: Modifier = Modifier) {
+    Spacer(modifier = modifier.width(TIMELINE_STROKE).background(Gray200))
+}
 
 @Composable
 private fun CourseDetailPlaceRow(
@@ -361,44 +470,19 @@ private fun CourseDetailPlaceRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(IntrinsicSize.Min)
-            .padding(vertical = 8.dp),
+            .height(IntrinsicSize.Min),
     ) {
-        Column(
-            modifier = Modifier.width(28.dp).fillMaxHeight(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(24.dp)
-                    .clip(CircleShape)
-                    .background(Pink900),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = place.visitOrder.toString(),
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = White,
-                )
-            }
-            if (!isLast) {
-                Spacer(
-                    modifier = Modifier
-                        .width(2.dp)
-                        .weight(1f)
-                        .background(Pink900.copy(alpha = 0.3f)),
-                )
-            }
-        }
+        CourseTimeline(order = place.visitOrder, isLast = isLast)
 
         Spacer(Modifier.width(12.dp))
 
+        // 카드 높이는 고정하고 아래 여백은 Spacer 로 분리한다.
+        // (padding 으로 처리하면 마지막 카드만 여백이 없어 높이가 달라진다)
+        Column(modifier = Modifier.weight(1f)) {
         Box(
             modifier = Modifier
-                .weight(1f)
-                .height(PLACE_ROW_HEIGHT)
-                .padding(bottom = if (isLast) 0.dp else 16.dp)
+                .fillMaxWidth()
+                .height(PLACE_CARD_HEIGHT)
                 .clip(RoundedCornerShape(12.dp))
                 .clickable(enabled = onClick != null, onClick = onClick ?: {})
                 .background(Brush.horizontalGradient(gradient)),
@@ -440,6 +524,8 @@ private fun CourseDetailPlaceRow(
                     )
                 }
             }
+        }
+            if (!isLast) Spacer(Modifier.height(PLACE_CARD_BOTTOM_GAP))
         }
     }
 }

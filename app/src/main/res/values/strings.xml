@@ -167,6 +167,8 @@
     <string name="recommended_course_detail_save_button">코스 저장</string>
     <string name="recommended_course_detail_load_error">코스 정보를 불러오지 못했어요.</string>
     <string name="recommended_course_detail_retry">다시 시도</string>
+    <!-- 장소 카드를 길게 눌러야 상세로 갈 수 있어 사용자가 모를 수 있으므로 목록 위에 안내한다(QA 요청). -->
+    <string name="recommended_course_detail_long_press_hint">장소를 길게 눌러\n상세 정보를 확인해보세요!</string>
 
     <!-- 소셜 회원이 카카오 이메일 제공에 동의하지 않은 경우(API 명세상 email = null 은 정상 응답) -->
     <string name="mypage_email_not_provided">이메일 미등록</string>

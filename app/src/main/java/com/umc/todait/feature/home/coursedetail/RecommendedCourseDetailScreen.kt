@@ -382,7 +382,6 @@ private fun CourseDetailPlaceRow(
                     color = White,
                 )
             }
-
             if (!isLast) {
                 Spacer(
                     modifier = Modifier

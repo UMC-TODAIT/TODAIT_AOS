@@ -5,6 +5,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -59,7 +60,8 @@ fun TasteSelectionCard(
     }
     Box(
         modifier = modifier
-            .width(CARD_WIDTH)
+            // 시안은 169dp 고정이지만 그리드 칸을 채우게 두어 화면 폭에 대응한다(393dp에서 168.5dp).
+            .fillMaxWidth()
             .height(CARD_HEIGHT)
             .clip(RoundedCornerShape(CORNER_RADIUS))
             .background(Brush.verticalGradient(background))
@@ -72,7 +74,8 @@ fun TasteSelectionCard(
             )
             .clickable(onClick = onClick),
     ) {
-        // Figma: 72x72, top 112.49 / left 81.06 (카드 좌상단 기준 절대 위치).
+        // Figma: 72x72, 카드 우하단에서 오른쪽 15.94 / 아래 15.51 만큼 띄운 자리(169x200 기준 left 81.06 / top 112.49).
+        // 카드 폭이 화면에 따라 달라져도 같은 자리에 붙도록 좌상단 절대좌표 대신 우하단 기준으로 잡는다.
         // 문양마다 원본 비율이 달라(예: '조용한'/'한식'은 가로로 납작함) ContentScale.Fit이 세로로
         // 남는 여백을 위아래로 나눠 채우면 문양마다 밑바닥 위치가 들쭉날쭉해진다.
         // alignment를 BottomCenter로 고정해 모든 문양이 72x72 박스 하단에 맞춰지도록 한다.
@@ -82,25 +85,30 @@ fun TasteSelectionCard(
             contentScale = ContentScale.Fit,
             alignment = Alignment.BottomCenter,
             modifier = Modifier
-                .offset(x = DECORATION_LEFT, y = DECORATION_TOP)
+                .align(Alignment.BottomEnd)
+                .padding(end = DECORATION_END, bottom = DECORATION_BOTTOM)
                 .size(DECORATION_SIZE),
         )
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(horizontal = 16.dp, vertical = TEXT_TOP),
             horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(TEXT_GAP),
         ) {
+            // lineHeight 를 지정하지 않으면 Compose 기본 행간이 시안(SUIT 기본 ≈1.25em)보다 넓어 두 줄 간격이 벌어진다.
             Text(
                 text = title,
-                fontSize = 17.sp,
+                fontSize = 15.sp,
+                lineHeight = 19.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = White,
                 textAlign = TextAlign.Center,
             )
             Text(
                 text = hashtags,
-                fontSize = 11.sp,
+                fontSize = 13.sp,
+                lineHeight = 16.sp,
                 color = White,
                 textAlign = TextAlign.Center,
             )
@@ -109,7 +117,7 @@ fun TasteSelectionCard(
             isSelected = isSelected,
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(top = 12.dp, end = 12.dp),
+                .padding(top = 13.dp, end = 13.6.dp),
         )
     }
 }
@@ -135,11 +143,12 @@ private fun SelectionIndicator(isSelected: Boolean, modifier: Modifier = Modifie
     )
 }
 
-private val CARD_WIDTH = 169.dp
 private val CARD_HEIGHT = 200.dp
-private val CORNER_RADIUS = 16.dp
+private val CORNER_RADIUS = 12.dp
 private val SELECTED_BORDER_WIDTH = 2.dp
 private val INDICATOR_SIZE = 10.4.dp
 private val DECORATION_SIZE = 72.dp
-private val DECORATION_LEFT = 81.06.dp
-private val DECORATION_TOP = 112.49.dp
+private val DECORATION_END = 15.94.dp
+private val DECORATION_BOTTOM = 15.51.dp
+private val TEXT_TOP = 12.dp
+private val TEXT_GAP = 6.dp

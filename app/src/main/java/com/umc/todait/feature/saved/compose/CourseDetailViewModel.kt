@@ -1,5 +1,6 @@
 package com.umc.todait.feature.saved.compose
 
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.umc.todait.core.base.BaseViewModel
 import com.umc.todait.core.network.ApiResult
@@ -50,7 +51,7 @@ class CourseDetailViewModel @Inject constructor(
                                 placeId = place.placeId,
                                 name = place.name,
                                 address = place.address,
-                                imageUrl = place.representativeImageUrl?.takeIf { it.isNotBlank() }
+                                imageUrl = place.imageUrl?.takeIf { it.isNotBlank() }
                             )
                             }
                         )

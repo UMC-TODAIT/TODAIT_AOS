@@ -34,7 +34,7 @@ object MockCourseDetail {
                 placeId = 1L,
                 visitOrder = 1,
                 name = "연희동",
-                representativeImageUrl = "https://images.unsplash.com/photo-1519501025264-65ba15a82390",
+                imageUrl = "https://images.unsplash.com/photo-1519501025264-65ba15a82390",
                 address = "서울 서대문구 연희동",
                 memo = ""
             ),
@@ -44,7 +44,7 @@ object MockCourseDetail {
                 placeId = 2L,
                 visitOrder = 2,
                 name = "꿔노이",
-                representativeImageUrl = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4",
+                imageUrl = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4",
                 address = "서울 서대문구 연희맛로",
                 memo = ""
             ),
@@ -54,7 +54,7 @@ object MockCourseDetail {
                 placeId = 3L,
                 visitOrder = 3,
                 name = "코이크",
-                representativeImageUrl = "https://images.unsplash.com/photo-1551024506-0bccd828d307",
+                imageUrl = "https://images.unsplash.com/photo-1551024506-0bccd828d307",
                 address = "서울 서대문구 연희로",
                 memo = ""
             ),
@@ -64,7 +64,7 @@ object MockCourseDetail {
                 placeId = 4L,
                 visitOrder = 4,
                 name = "121 르말뒤페이",
-                representativeImageUrl = "https://images.unsplash.com/photo-1515003197210-e0cd71810b5f",
+                imageUrl = "https://images.unsplash.com/photo-1515003197210-e0cd71810b5f",
                 address = "서울 서대문구 연희동",
                 memo = ""
             )

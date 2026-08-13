@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -29,6 +30,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.ExperimentalTextApi
+import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -37,13 +41,14 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.todait.R
-import com.umc.todait.feature.course.base_place.BasePlaceSystemAlert
+import com.umc.todait.ui.component.CommonDialog
 import com.umc.todait.feature.course.base_place.PlaceUiModel
 import com.umc.todait.feature.course.data.dto.CourseDraftStatus
 import com.umc.todait.ui.component.ScreenTopBar
 import com.umc.todait.ui.theme.Cream
-import com.umc.todait.ui.theme.Gray600
-import com.umc.todait.ui.theme.Gray900
+import com.umc.todait.ui.theme.Gray350
+import com.umc.todait.ui.theme.Gray500
+import com.umc.todait.ui.theme.Gray800
 import com.umc.todait.ui.theme.Pink100
 import com.umc.todait.ui.theme.Pink800
 import com.umc.todait.ui.theme.TodaitTheme
@@ -124,17 +129,19 @@ fun SelectedPlacesScreen(
                 contentPadding = PaddingValues(bottom = 24.dp),
             ) {
                 item {
+                    Spacer(Modifier.height(22.dp))
                     CourseMap(
                         places = uiState.orderedPlaces,
                         basePlaceKey = uiState.basePlaceKey,
                         currentLocation = uiState.currentLocation,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(220.dp),
+                            .height(230.dp),
                     )
                 }
                 item {
-                    Column(modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 8.dp)) {
+                    // Figma: 지도 아래 12 → 제목(22 SemiBold, #222) → 4 → 안내(16 SemiBold, Gray-500) → 16 → 목록
+                    Column(modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 16.dp)) {
                         Text(
                             // 개수는 기준 장소를 포함한 코스 전체 장소 수.
                             text = stringResource(
@@ -142,13 +149,14 @@ fun SelectedPlacesScreen(
                                 uiState.orderedPlaces.size,
                             ),
                             style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold),
-                            color = Gray900,
+                            color = Gray800,
                         )
                         Spacer(Modifier.height(4.dp))
                         Text(
                             text = stringResource(R.string.course_compose_selected_desc),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Gray600,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Gray500,
                         )
                     }
                 }
@@ -161,7 +169,7 @@ fun SelectedPlacesScreen(
                             order = index + 1,
                             isDragging = isDragging,
                             handleModifier = Modifier.draggableHandle(),
-                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
+                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                         )
                     }
                 }
@@ -170,11 +178,10 @@ fun SelectedPlacesScreen(
 
         // 순서 저장/저장 화면 진입 실패 안내.
         uiState.submitError?.let { message ->
-            BasePlaceSystemAlert(
-                title = stringResource(R.string.course_compose_submit_error_title),
-                description = message,
+            CommonDialog(
+                title = stringResource(R.string.course_compose_submit_error_title) + "\n" + message,
                 onConfirm = viewModel::onDismissSubmitError,
-                onCancel = viewModel::onDismissSubmitError,
+                onDismiss = viewModel::onDismissSubmitError,
             )
         }
     }
@@ -201,10 +208,12 @@ private fun SelectedPlaceRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .shadow(if (isDragging) 6.dp else 0.dp, RoundedCornerShape(16.dp))
-            .clip(RoundedCornerShape(16.dp))
+            // Figma: 83dp 고정이지만 글자 크기가 커지면 늘어나도록 최소 높이로 잡는다.
+            .heightIn(min = 83.dp)
+            .shadow(if (isDragging) 6.dp else 0.dp, RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(12.dp))
             .background(Pink100)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .padding(start = 11.dp, end = 16.dp, top = 14.dp, bottom = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // 드래그 핸들(흰 점 6개). handleModifier(draggableHandle)를 잡아 드래그를 시작한다.
@@ -221,8 +230,8 @@ private fun SelectedPlaceRow(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = place.name,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = Gray900,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = Gray800,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f, fill = false),
@@ -236,7 +245,7 @@ private fun SelectedPlaceRow(
             Text(
                 text = place.address,
                 style = MaterialTheme.typography.bodySmall,
-                color = Gray600,
+                color = Gray350,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -254,24 +263,31 @@ private fun SelectedPlaceRow(
                 text = order.toString(),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Gray900,
+                color = Gray800,
             )
         }
     }
 }
 
 /** 기준 장소 행 이름 옆의 "기준장소" 칩. 흰 pill + Pink-800 텍스트. (Figma node 1678-10775) */
+@OptIn(ExperimentalTextApi::class)
 @Composable
 private fun BasePlaceChip() {
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(50))
+            .height(16.dp)
+            .clip(CircleShape)
             .background(White)
-            .padding(horizontal = 8.dp, vertical = 2.dp),
+            .padding(horizontal = 8.dp),
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = stringResource(R.string.course_compose_base_place_chip),
-            fontSize = 10.sp,
+            style = TextStyle(
+                fontSize = 10.sp,
+                lineHeight = 12.sp,
+                platformStyle = PlatformTextStyle(includeFontPadding = false),
+            ),
             color = Pink800,
             maxLines = 1,
         )

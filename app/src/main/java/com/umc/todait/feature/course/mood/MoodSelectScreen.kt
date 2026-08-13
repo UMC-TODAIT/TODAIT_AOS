@@ -25,6 +25,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.todait.R
@@ -40,8 +41,8 @@ import com.umc.todait.ui.component.TasteSelectionCard
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import com.umc.todait.ui.theme.Cream
-import com.umc.todait.ui.theme.Gray500
-import com.umc.todait.ui.theme.Gray900
+import com.umc.todait.ui.theme.Gray400
+import com.umc.todait.ui.theme.Gray800
 import com.umc.todait.ui.theme.TodaitTheme
 
 /**
@@ -123,20 +124,22 @@ private fun MoodSelectContent(
             confirmEnabled = state.isConfirmEnabled,
         )
 
+        // Figma: 구분선 아래 31 → 제목(22 SemiBold, #222) → 8 → 안내(16 SemiBold, Gray-400) → 39 → 카드 그리드
         Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(31.dp))
             Text(
                 text = stringResource(R.string.mood_select_headline),
                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold),
-                color = Gray900,
+                color = Gray800,
             )
             Spacer(Modifier.height(8.dp))
             Text(
                 text = stringResource(R.string.mood_select_subtitle, MoodSelectUiState.MIN_SELECTION),
-                style = MaterialTheme.typography.bodySmall,
-                color = Gray500,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Gray400,
             )
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(39.dp))
             if (state.submitError != null) {
                 Text(
                     text = state.submitError,
@@ -169,6 +172,7 @@ private fun MoodSelectContent(
     if (state.showResetAlert) {
         CommonDialog(
             title = stringResource(R.string.mood_select_reset_alert),
+            confirmText = stringResource(R.string.preference_reset_alert_confirm),
             onConfirm = onResetAlertConfirm,
             onDismiss = onResetAlertDismiss,
         )
@@ -186,8 +190,8 @@ private fun MoodGrid(
             .fillMaxSize()
             .padding(horizontal = 20.dp),
         contentPadding = PaddingValues(bottom = 24.dp),
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         items(moods, key = { it.code }) { mood ->
             TasteSelectionCard(

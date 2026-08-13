@@ -112,7 +112,11 @@ class BasePlaceViewModel @Inject constructor(
                         val places = result.data.places.map { it.toUiModel() }
                         state.copy(
                             listState = if (places.isEmpty()) {
-                                PlaceListState.Empty(EMPTY_SEARCH_MESSAGE)
+                                if (isUnsupportedAreaQuery(query)) {
+                                    PlaceListState.Empty(UNSUPPORTED_AREA_TITLE, UNSUPPORTED_AREA_DESC)
+                                } else {
+                                    PlaceListState.Empty(EMPTY_SEARCH_TITLE, EMPTY_SEARCH_DESC)
+                                }
                             } else {
                                 PlaceListState.Success(places)
                             },
@@ -241,14 +245,25 @@ class BasePlaceViewModel @Inject constructor(
         // 지원 지역(와이어프레임 1.3). 명세의 지역명(홍대/연남/성수) 기준.
         private val SUPPORTED_AREAS = setOf("홍대", "연남", "성수")
 
+        private fun isUnsupportedAreaQuery(query: String): Boolean {
+            val unsupportedKeywords = listOf(
+                "강남", "이태원", "신촌", "잠실", "여의도", "종로", "명동", "부산",
+                "제주", "해운대", "판교", "분당", "수원", "인천", "대구", "대전", "광주"
+            )
+            return unsupportedKeywords.any { query.contains(it) }
+        }
+
         // 명세 문구(와이어프레임 1.2 예외 상황). core/network 의 UiError.kt 와 동일하게 로직 레이어 상수로 둔다.
         private const val ERROR_UNSUPPORTED_AREA = "현재는 홍대, 연남, 성수 지역만 코스 생성을 지원해요."
         private const val ERROR_NO_COORDINATE = "장소 정보를 불러올 수 없습니다. 다른 장소를 선택해주세요."
         // 미등록 장소인데 externalPlace 필수값(외부 ID·지역·카테고리)이 비어 서버로 보낼 수 없는 경우.
         private const val ERROR_NO_PLACE_INFO = "이 장소는 기준 장소로 설정할 수 없어요. 다른 장소를 선택해주세요."
         private const val EMPTY_NEARBY_MESSAGE = "지금 추천할 수 있는 주변 핫플이 없어요."
-        // 검색 결과 없음(와이어프레임: 검색 결과 없음 화면). 디자인상 검색어를 포함하지 않는 일반 문구.
-        private const val EMPTY_SEARCH_MESSAGE = "검색 결과가 없어요"
+        // 검색 결과 없음 / 지원 지역 외 (Figma node 894:3358 / 3125:18099)
+        private const val EMPTY_SEARCH_TITLE = "검색 결과가 없어요"
+        private const val EMPTY_SEARCH_DESC = "다른 검색어로 다시 검색해보세요."
+        private const val UNSUPPORTED_AREA_TITLE = "현재 지원 지역에 해당하는 장소가 없어요."
+        private const val UNSUPPORTED_AREA_DESC = "투데잇은 현재 홍대, 연남, 성수 지역을 지원하고 있어요."
         private const val SHORT_QUERY_MESSAGE = "검색어를 2자 이상 입력해주세요."
     }
 }

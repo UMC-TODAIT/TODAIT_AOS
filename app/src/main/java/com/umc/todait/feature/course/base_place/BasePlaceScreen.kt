@@ -57,6 +57,7 @@ import coil.compose.AsyncImage
 import com.umc.todait.R
 import com.umc.todait.core.network.UiError
 import com.umc.todait.feature.course.compose.CourseMood
+import com.umc.todait.ui.component.CommonDialog
 import com.umc.todait.ui.component.ErrorContent
 import com.umc.todait.ui.component.LoadingIndicator
 import com.umc.todait.ui.component.ScreenTopBar
@@ -88,6 +89,8 @@ import com.umc.todait.ui.theme.Cream
 import com.umc.todait.ui.theme.Green700
 import com.umc.todait.ui.theme.Gray200
 import com.umc.todait.ui.theme.Gray500
+import com.umc.todait.ui.theme.Gray400
+import com.umc.todait.ui.theme.Gray800
 import com.umc.todait.ui.theme.Gray900
 import com.umc.todait.ui.theme.Pink800
 import com.umc.todait.ui.theme.SearchIconCircle
@@ -142,21 +145,25 @@ fun BasePlaceScreen(
             onRetry = viewModel::loadNearbyHotPlaces,
         )
 
-        // 시스템 알럿(딤 배경 + 커스텀 다이얼로그) 오버레이.
+        // 시스템 알럿 오버레이. 시안(컴포넌트_System 시스템알럿)이 다른 화면과 같은 흰색 알럿이라 CommonDialog 를 쓴다.
         when (val alert = uiState.alert) {
-            is BasePlaceAlert.SelectRequired -> BasePlaceSystemAlert(
-                title = stringResource(R.string.base_place_select_required_title),
-                description = stringResource(R.string.base_place_select_required_desc),
+            is BasePlaceAlert.SelectRequired -> CommonDialog(
+                title = stringResource(R.string.base_place_select_required_title) + "\n" +
+                    stringResource(R.string.base_place_select_required_desc),
                 onConfirm = viewModel::onDismissAlert,
-                onCancel = viewModel::onDismissAlert,
+                onDismiss = viewModel::onDismissAlert,
             )
 
-            is BasePlaceAlert.Confirm -> BasePlaceSystemAlert(
-                title = stringResource(R.string.base_place_confirm_title, alert.place.name),
-                description = stringResource(R.string.base_place_confirm_desc, alert.place.name),
-                errorMessage = uiState.confirmError,
+            is BasePlaceAlert.Confirm -> CommonDialog(
+                // 확정 검증에 실패하면(지원 지역 외 등) 사유를 대신 보여준다.
+                title = uiState.confirmError
+                    ?: stringResource(
+                        R.string.base_place_confirm_title,
+                        alert.place.name,
+                        euroParticle(alert.place.name),
+                    ),
                 onConfirm = viewModel::onConfirmSelection,
-                onCancel = viewModel::onDismissAlert,
+                onDismiss = viewModel::onDismissAlert,
             )
 
             null -> Unit
@@ -189,8 +196,9 @@ private fun BasePlaceContent(
             onConfirm = onConfirmClick,
         )
 
+        // Figma: 구분선 아래 23 → 검색창 → 27 → 섹션 제목(22 SemiBold, #222) → 8 → 안내(16 SemiBold, Gray-400) → 24 → 목록
         Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(23.dp))
             SearchBar(
                 query = state.searchQuery,
                 onQueryChange = onSearchQueryChange,
@@ -198,7 +206,7 @@ private fun BasePlaceContent(
                 onClear = onClearSearch,
             )
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(27.dp))
             Text(
                 text = if (state.isSearching) {
                     stringResource(R.string.base_place_section_search)
@@ -206,16 +214,26 @@ private fun BasePlaceContent(
                     stringResource(R.string.base_place_section_nearby)
                 },
                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold),
-                color = Gray900,
+                color = Gray800,
             )
-            Spacer(Modifier.height(16.dp))
+            // 길게 누르기로 상세를 볼 수 있다는 안내는 추천(핫플) 목록에만 있다.
+            if (!state.isSearching) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.base_place_long_press_hint),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Gray400,
+                )
+            }
+            Spacer(Modifier.height(24.dp))
 
             Box(modifier = Modifier.weight(1f)) {
                 when (val listState = state.listState) {
                     is PlaceListState.Loading -> LoadingIndicator()
                     is PlaceListState.Empty -> PlaceEmptyState(
-                        title = listState.message,
-                        description = if (state.isSearching) {
+                        title = listState.title,
+                        description = listState.description ?: if (state.isSearching) {
                             stringResource(R.string.base_place_empty_search_desc)
                         } else {
                             null
@@ -252,8 +270,8 @@ private fun SearchBar(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(48.dp),
-        shape = RoundedCornerShape(24.dp),
+            .height(45.dp),
+        shape = RoundedCornerShape(percent = 50),
         color = White,
         shadowElevation = 4.dp,
     ) {
@@ -377,7 +395,7 @@ private fun PlaceList(
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         itemsIndexed(places, key = { _, place -> place.key }) { index, place ->
             PlaceCard(
@@ -507,16 +525,18 @@ private fun PlaceEmptyState(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
+        // Figma: 돋보기 38 → 16 → 제목(16 SemiBold) → 8 → 설명(12 SemiBold), 모두 Gray-500
         Icon(
             imageVector = Icons.Filled.Search,
             contentDescription = null,
             tint = Gray500,
-            modifier = Modifier.size(40.dp),
+            modifier = Modifier.size(38.dp),
         )
         Spacer(Modifier.height(16.dp))
         Text(
             text = title,
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold,
             color = Gray500,
         )
         if (description != null) {
@@ -603,7 +623,10 @@ private fun BasePlaceContentEmptyPreview() {
         BasePlaceContent(
             state = BasePlaceUiState(
                 searchQuery = "샴푸",
-                listState = PlaceListState.Empty("검색 결과가 없어요"),
+                listState = PlaceListState.Empty(
+                    title = "검색 결과가 없어요",
+                    description = "다른 검색어로 다시 검색해보세요.",
+                ),
             ),
             onBack = {},
             onSearchQueryChange = {},
@@ -615,4 +638,42 @@ private fun BasePlaceContentEmptyPreview() {
             onRetry = {},
         )
     }
+}
+
+@Preview(name = "지원 장소 없음", showBackground = true)
+@Composable
+private fun BasePlaceContentUnsupportedAreaPreview() {
+    TodaitTheme {
+        BasePlaceContent(
+            state = BasePlaceUiState(
+                searchQuery = "강남역",
+                listState = PlaceListState.Empty(
+                    title = stringResource(R.string.base_place_unsupported_area_title),
+                    description = stringResource(R.string.base_place_unsupported_area_desc),
+                ),
+            ),
+            onBack = {},
+            onSearchQueryChange = {},
+            onSearch = {},
+            onClearSearch = {},
+            onPlaceLongClick = {},
+            onSelectPlace = {},
+            onConfirmClick = {},
+            onRetry = {},
+        )
+    }
+}
+
+/**
+ * 장소 이름 뒤에 붙는 조사 "로"/"으로" 를 고른다.
+ *
+ * 받침이 없거나 받침이 'ㄹ' 이면 "로"(예: 뀌노이로, 신촌서울로), 그 외에는 "으로"(예: 광장으로).
+ * 한글이 아닌 글자로 끝나면(영문·숫자 상호 등) 시안 문구를 그대로 살리기 위해 "로" 로 둔다.
+ */
+private fun euroParticle(name: String): String {
+    val last = name.lastOrNull() ?: return "로"
+    if (last !in '가'..'힣') return "로"
+    val finalConsonant = (last - '가') % 28
+    // 0 = 받침 없음, 8 = 받침 'ㄹ'
+    return if (finalConsonant == 0 || finalConsonant == 8) "로" else "으로"
 }

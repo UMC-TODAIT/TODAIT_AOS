@@ -18,7 +18,7 @@ val Secondary = Color(0xFF6C5CE7)
 val Gray900 = Color(0xFF191919)
 val Gray700 = Color(0xFF464646)
 val Gray600 = Color(0xFF737373)      // 헤더 아이콘 버튼(원형) 배경
-val Gray500 = Color(0xFF8A8A8A)
+val Gray500 = Color(0xFF8E8E8E)      // Figma Gray-500
 val Gray300 = Color(0xFFD6D6D6)
 val Gray200 = Color(0xFFC7C7C7)      // 검색창 placeholder
 val Gray100 = Color(0xFFF4F4F4)
@@ -182,6 +182,7 @@ val HomePlaceMintEnd = Color(0xFF9AC7CE)
 
 // Semantic
 val Error = Color(0xFFF04438)
+val AlertWarningRed = Color(0xFFF74141)     // 시스템 알럿의 "삭제됩니다" 류 경고 문구 (Figma 시스템알럿)
 val Success = Color(0xFF12B76A)
 val Background = White
 val Surface = White

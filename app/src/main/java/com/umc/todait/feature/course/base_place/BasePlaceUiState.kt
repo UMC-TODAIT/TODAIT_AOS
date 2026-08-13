@@ -47,8 +47,11 @@ sealed interface BasePlaceAlert {
 sealed interface PlaceListState {
     data object Loading : PlaceListState
     data class Success(val places: List<PlaceUiModel>) : PlaceListState
-    /** 결과 없음(검색 결과 없음/추천 없음). [message] 는 화면 안내 문구. */
-    data class Empty(val message: String) : PlaceListState
+    /** 결과 없음(검색 결과 없음/추천 없음/지원 지역 외). [title] 은 메인 문구, [description] 은 보조 문구. */
+    data class Empty(
+        val title: String,
+        val description: String? = null,
+    ) : PlaceListState
     data class Error(val message: String) : PlaceListState
 }
 

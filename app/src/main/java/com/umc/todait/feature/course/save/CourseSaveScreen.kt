@@ -439,7 +439,8 @@ private fun TagBottomSheet(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = SCREEN_PADDING, vertical = 16.dp),
+                    // Figma: 헤더 버튼 바로 아래에 안내 문구가 붙는다(아래 여백 거의 없음).
+                    .padding(start = SCREEN_PADDING, end = SCREEN_PADDING, top = 16.dp, bottom = 2.dp),
             ) {
                 HeaderCircleButton(
                     modifier = Modifier.align(Alignment.CenterStart),
@@ -468,7 +469,7 @@ private fun TagBottomSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = SCREEN_PADDING),
-                style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
+                style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.SemiBold),
                 color = Gray400,
                 textAlign = TextAlign.Center,
             )

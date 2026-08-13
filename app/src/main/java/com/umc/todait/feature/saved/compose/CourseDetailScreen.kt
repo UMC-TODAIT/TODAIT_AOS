@@ -243,17 +243,20 @@ fun CourseDetailScreen(
                 )
 
                 if (showExitDialog) {
+                    // Figma 시스템알럿2: 강조(우측)가 "계속 수정하기", 회색(좌측)이 "나가기"다.
                     CommonDialog(
-                        title = "수정 중인 메모가 있습니다.\n저장하지 않고 나가시겠습니까?",
-                        confirmText = "나가기",
-                        cancelText = "계속 수정하기",
+                        title = "수정 중인 메모가 있어요.\n저장하지 않고 나가시겠어요?",
+                        confirmText = "계속 수정하기",
+                        cancelText = "나가기",
                         onConfirm = {
                             showExitDialog = false
-                            navController.popBackStack()
                         },
                         onDismiss = {
                             showExitDialog = false
-                        }
+                            navController.popBackStack()
+                        },
+                        // 바깥 탭/뒤로가기는 나가기가 아니라 알럿만 닫는다.
+                        onDismissRequest = { showExitDialog = false },
                     )
                 }
             }

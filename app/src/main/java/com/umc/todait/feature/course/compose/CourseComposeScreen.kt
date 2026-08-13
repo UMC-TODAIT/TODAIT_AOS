@@ -54,7 +54,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.umc.todait.R
 import com.umc.todait.core.network.UiError
-import com.umc.todait.feature.course.base_place.BasePlaceSystemAlert
+import com.umc.todait.ui.component.CommonDialog
 import com.umc.todait.feature.course.base_place.PlaceUiModel
 import com.umc.todait.feature.course.data.dto.CourseDraftStatus
 import com.umc.todait.ui.component.ErrorContent
@@ -87,6 +87,7 @@ import com.umc.todait.ui.theme.CourseRomanticSelectedGradientEnd
 import com.umc.todait.ui.theme.CourseRomanticSelectedGradientStart
 import com.umc.todait.ui.theme.Cream
 import com.umc.todait.ui.theme.Gray200
+import com.umc.todait.ui.theme.Gray400
 import com.umc.todait.ui.theme.Gray500
 import com.umc.todait.ui.theme.Green700
 import com.umc.todait.ui.theme.Pink600
@@ -158,31 +159,29 @@ fun CourseComposeScreen(
         )
 
         when (val alert = uiState.alert) {
-            CourseComposeAlert.Duplicate -> BasePlaceSystemAlert(
-                title = stringResource(R.string.course_compose_duplicate_title),
-                description = stringResource(R.string.course_compose_duplicate_desc),
+            CourseComposeAlert.Duplicate -> CommonDialog(
+                title = stringResource(R.string.course_compose_duplicate_title) + "\n" +
+                    stringResource(R.string.course_compose_duplicate_desc),
                 onConfirm = viewModel::onDismissAlert,
-                onCancel = viewModel::onDismissAlert,
+                onDismiss = viewModel::onDismissAlert,
             )
 
             // 선택 장소 추가 실패. 서버가 준 문구(중복·기준 장소·최대 개수 등)를 그대로 보여준다.
-            is CourseComposeAlert.AddFailed -> BasePlaceSystemAlert(
-                title = stringResource(R.string.course_compose_add_error_title),
-                description = alert.message,
+            is CourseComposeAlert.AddFailed -> CommonDialog(
+                title = stringResource(R.string.course_compose_add_error_title) + "\n" + alert.message,
                 onConfirm = viewModel::onDismissAlert,
-                onCancel = viewModel::onDismissAlert,
+                onDismiss = viewModel::onDismissAlert,
             )
 
             null -> Unit
         }
 
-        // 단계 전환 실패(권한/상태 충돌 등) 안내. 확인만 있는 단일 알럿으로 띄운다.
+        // 단계 전환 실패(권한/상태 충돌 등) 안내.
         uiState.submitError?.let { message ->
-            BasePlaceSystemAlert(
-                title = stringResource(R.string.course_compose_submit_error_title),
-                description = message,
+            CommonDialog(
+                title = stringResource(R.string.course_compose_submit_error_title) + "\n" + message,
                 onConfirm = viewModel::onDismissSubmitError,
-                onCancel = viewModel::onDismissSubmitError,
+                onDismiss = viewModel::onDismissSubmitError,
             )
         }
     }
@@ -229,11 +228,13 @@ private fun CourseComposeContent(
             contentPadding = PaddingValues(bottom = 24.dp),
         ) {
             // 상단 지도(기준 장소 + 선택 장소 핀). 카카오맵 v2.
+            // Figma: 구분선 아래 22, 높이 230, 좌우로 화면 밖까지 늘어난다(라운드는 화면 밖).
             item {
+                Spacer(Modifier.height(22.dp))
                 mapContent(
                     Modifier
                         .fillMaxWidth()
-                        .height(220.dp),
+                        .height(230.dp),
                 )
             }
 
@@ -244,9 +245,19 @@ private fun CourseComposeContent(
                         categories = state.categories,
                         selectedId = state.selectedCategoryId,
                         onSelect = onSelectCategory,
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
+                        modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 9.dp),
                     )
                 }
+            }
+
+            item {
+                Text(
+                    text = stringResource(R.string.base_place_long_press_hint),
+                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 13.dp),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Gray400,
+                )
             }
 
             // 추천 장소 목록.
@@ -280,7 +291,7 @@ private fun CourseComposeContent(
                                 ?: fallbackMoods[index % fallbackMoods.size],
                             onAdd = { onAddPlace(place) },
                             onLongClick = { onPlaceLongClick(place) },
-                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
+                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                         )
                     }
             }

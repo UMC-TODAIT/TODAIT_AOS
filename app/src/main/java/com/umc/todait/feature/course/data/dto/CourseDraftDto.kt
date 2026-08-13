@@ -258,3 +258,121 @@ data class CourseDraftSavingEnterResponseDto(
     // 코스 저장 화면 '경로 미리보기' 영역에 그대로 표시할 장소 목록(visitOrder 오름차순).
     @SerializedName("routePreview") val routePreview: List<CourseDraftPlaceDto>,
 )
+
+/**
+ * 임시 코스 작성 단계.
+ *
+ * 앞으로 가는 전이는 각 단계의 저장/진입 API 가 알아서 시키고, 뒤로 가는 전이만
+ * "단계 이동"(PATCH .../status)으로 직접 지정한다. 그래서 [previous] 는 이전 버튼(`<`)이
+ * 보낼 targetStatus 를 고르는 데 쓴다.
+ */
+enum class CourseDraftStatus {
+    MOOD_SELECTING,
+    FOOD_SELECTING,
+    BASE_PLACE_SELECTING,
+    PLACE_SELECTING,
+    ORDERING,
+    SAVING,
+    COMPLETED,
+    ABANDONED,
+    ;
+
+    /** 이전 작성 단계. 첫 단계(MOOD_SELECTING)와 터미널 상태는 되돌아갈 곳이 없어 null 이다. */
+    val previous: CourseDraftStatus?
+        get() = when (this) {
+            FOOD_SELECTING -> MOOD_SELECTING
+            BASE_PLACE_SELECTING -> FOOD_SELECTING
+            PLACE_SELECTING -> BASE_PLACE_SELECTING
+            ORDERING -> PLACE_SELECTING
+            SAVING -> ORDERING
+            MOOD_SELECTING, COMPLETED, ABANDONED -> null
+        }
+}
+
+/**
+ * "임시 코스 이전 단계 이동"(PATCH /api/course-drafts/{courseDraftId}/status)의 요청 바디.
+ *
+ * 이전 단계 이동은 화면 이동으로 취급하므로 서버도 기존 선택 데이터를 지우지 않는다.
+ * ORDERING 으로 이동할 때만 장소 구성을 검증하고, COMPLETED/ABANDONED 는 되돌릴 수 없다.
+ */
+data class StatusUpdateRequestDto(
+    @SerializedName("targetStatus") val targetStatus: String,
+)
+
+/**
+ * "진행 중인 임시 코스 포기"(DELETE /api/course-drafts/{courseDraftId})의 result.
+ *
+ * 상태만 ABANDONED 로 바꾸고 행과 하위 무드/음식/장소 데이터를 즉시 지우지는 않는다
+ * (보관 기간은 [expiresAt]). 이미 COMPLETED/ABANDONED 면 409 다.
+ */
+data class AbandonCourseDraftResponseDto(
+    @SerializedName("courseDraftId") val courseDraftId: Long,
+    @SerializedName(value = "draftStatus", alternate = ["status"]) val draftStatus: String?,
+    @SerializedName("expiresAt") val expiresAt: String?,
+)
+
+/** 단계 이동 result. */
+data class StatusUpdateResponseDto(
+    @SerializedName("courseDraftId") val courseDraftId: Long,
+    @SerializedName(value = "draftStatus", alternate = ["status"]) val draftStatus: String?,
+)
+
+/**
+ * "진행 중인 임시 코스 조회"(GET /api/course-drafts/current)의 result.
+ *
+ * COMPLETED/ABANDONED 는 제외되고, 진행 중인 임시 코스가 없으면 **200 OK + result null** 이다
+ * (그래서 이 API 는 safeNullableApiCall 로 부른다). 여러 건이면 updatedAt DESC 기준 최신 1건.
+ *
+ * 취향 설정 화면이 기존 선택값을 되살리고, 무드/음식을 바꿀 때 초기화 알림을 띄울지
+ * 판단(=[places] 가 비어 있지 않은지)하는 데 쓴다.
+ */
+data class CurrentCourseDraftResponseDto(
+    @SerializedName("courseDraftId") val courseDraftId: Long,
+    @SerializedName(value = "draftStatus", alternate = ["status"]) val draftStatus: String?,
+    @SerializedName("createdAt") val createdAt: String?,
+    @SerializedName("updatedAt") val updatedAt: String?,
+    @SerializedName("moodTags") val moodTags: List<MoodTagSummaryDto>?,
+    @SerializedName("foodCategories") val foodCategories: List<FoodCategorySummaryDto>?,
+    // 기준 장소(BASE)와 담은 장소(SELECTED)가 함께 들어 있다.
+    @SerializedName("places") val places: List<CurrentDraftPlaceDto>?,
+) {
+    /** 저장된 장소 데이터 보유 여부. 기준 장소만 있어도 "있음"으로 본다. */
+    val hasSavedPlaces: Boolean get() = !places.isNullOrEmpty()
+
+    val savedMoodTagIds: List<Long> get() = moodTags.orEmpty().map { it.moodTagId }
+
+    val savedFoodCategoryIds: List<Long> get() = foodCategories.orEmpty().map { it.foodCategoryId }
+
+    /**
+     * 기준 장소의 내부 placeId. 코스 구성 그래프가 경로 변수로 요구한다.
+     * 기준 장소를 아직 정하지 않았으면 null 이다.
+     */
+    val basePlaceId: Long?
+        get() = places.orEmpty()
+            .firstOrNull { it.placeRole == CourseDraftPlaceDto.PLACE_ROLE_BASE }
+            ?.placeId
+
+    val status: CourseDraftStatus?
+        get() = draftStatus?.let { raw -> CourseDraftStatus.entries.firstOrNull { it.name == raw } }
+}
+
+/**
+ * 진행 중 임시 코스에 담긴 장소 한 건.
+ * [CourseDraftPlaceDto] 와 달리 카드 렌더용 area·category·imageUrl 까지 함께 내려온다.
+ */
+data class CurrentDraftPlaceDto(
+    @SerializedName("courseDraftPlaceId") val courseDraftPlaceId: Long,
+    @SerializedName("placeId") val placeId: Long,
+    // BASE(기준 장소) / SELECTED(사용자가 담은 장소).
+    @SerializedName("placeRole") val placeRole: String,
+    @SerializedName("visitOrder") val visitOrder: Int,
+    @SerializedName("name") val name: String,
+    @SerializedName("address") val address: String,
+    @SerializedName("roadAddress") val roadAddress: String?,
+    @SerializedName("latitude") val latitude: Double,
+    @SerializedName("longitude") val longitude: Double,
+    @SerializedName("imageUrl") val imageUrl: String?,
+    @SerializedName("area") val area: AreaSummaryDto?,
+    @SerializedName("category") val category: PlaceCategorySummaryDto?,
+    @SerializedName("subCategory") val subCategory: String?,
+)

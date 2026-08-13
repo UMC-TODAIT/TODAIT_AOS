@@ -29,7 +29,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.todait.R
 import com.umc.todait.core.network.UiError
+import com.umc.todait.feature.course.CourseDraftResumeDialog
+import com.umc.todait.feature.course.data.dto.CourseDraftStatus
 import com.umc.todait.feature.course.data.dto.MoodTagDto
+import com.umc.todait.ui.component.CommonDialog
 import com.umc.todait.ui.component.ErrorContent
 import com.umc.todait.ui.component.LoadingIndicator
 import com.umc.todait.ui.component.ScreenTopBar
@@ -46,6 +49,8 @@ import com.umc.todait.ui.theme.TodaitTheme
 fun MoodSelectScreen(
     onBack: () -> Unit,
     onNavigateToFood: (Long) -> Unit,
+    // 진행 중이던 임시 코스를 "이어서 하기" 로 복구할 때, 멈춰 있던 단계 화면으로 보낸다.
+    onResumeStep: (status: CourseDraftStatus, courseDraftId: Long, basePlaceId: Long?) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: MoodSelectViewModel = hiltViewModel(),
 ) {
@@ -55,8 +60,27 @@ fun MoodSelectScreen(
         viewModel.effect.collect { effect ->
             when (effect) {
                 is MoodSelectEffect.NavigateToFood -> onNavigateToFood(effect.courseDraftId)
+                is MoodSelectEffect.NavigateToStep ->
+                    onResumeStep(effect.status, effect.courseDraftId, effect.basePlaceId)
             }
         }
+    }
+
+    // 진행 중인 임시 코스가 있을 때 코스 만들기 진입에서 먼저 묻는다.
+    if (uiState.showResumePrompt) {
+        CourseDraftResumeDialog(
+            onContinue = viewModel::onResumeContinue,
+            onStartNew = viewModel::onStartNew,
+        )
+    }
+
+    // 포기(DELETE)가 실패하면 새로 만들지 않고 안내만 띄운다.
+    uiState.resumeError?.let { message ->
+        CommonDialog(
+            title = message,
+            onConfirm = viewModel::onDismissResumeError,
+            onDismiss = viewModel::onDismissResumeError,
+        )
     }
 
     MoodSelectContent(
@@ -65,6 +89,8 @@ fun MoodSelectScreen(
         onToggleMood = viewModel::onToggleMood,
         onConfirmClick = viewModel::onConfirmClick,
         onRetry = viewModel::loadMoodTags,
+        onResetAlertConfirm = viewModel::onResetAlertConfirm,
+        onResetAlertDismiss = viewModel::onResetAlertDismiss,
         modifier = modifier,
     )
 }
@@ -76,6 +102,8 @@ private fun MoodSelectContent(
     onToggleMood: (String) -> Unit,
     onConfirmClick: () -> Unit,
     onRetry: () -> Unit,
+    onResetAlertConfirm: () -> Unit,
+    onResetAlertDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -129,6 +157,16 @@ private fun MoodSelectContent(
                 )
             }
         }
+    }
+
+    // 무드를 실제로 바꿨고 임시 코스에 저장된 장소가 있을 때만 뜬다.
+    // [확인] 이 저장 API 를 부르고, 그 결과로 서버가 장소 데이터를 초기화한다.
+    if (state.showResetAlert) {
+        CommonDialog(
+            title = stringResource(R.string.mood_select_reset_alert),
+            onConfirm = onResetAlertConfirm,
+            onDismiss = onResetAlertDismiss,
+        )
     }
 }
 
@@ -188,6 +226,8 @@ private fun MoodSelectContentPreview() {
             },
             onConfirmClick = {},
             onRetry = {},
+            onResetAlertConfirm = {},
+            onResetAlertDismiss = {},
         )
     }
 }

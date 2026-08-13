@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.umc.todait.core.network.ApiResult
 import com.umc.todait.core.network.toUiError
 import com.umc.todait.feature.course.compose.CourseMood
+import com.umc.todait.feature.course.data.dto.CourseDraftStatus
 import com.umc.todait.feature.course.data.repository.CourseDraftRepository
 import com.umc.todait.feature.course.data.repository.TaxonomyRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -61,6 +62,20 @@ class CourseSaveViewModel @Inject constructor(
 
                 is ApiResult.Failure -> Unit
             }
+        }
+    }
+
+    /**
+     * 이전 버튼(`<`) → 단계 이동 API 호출 후 순서 설정 화면으로 돌아간다.
+     *
+     * 단순 화면 이동이라 입력값·장소를 지우지도, 알림을 띄우지도 않는다. 단계 이동 호출이
+     * 실패해도 화면은 넘긴다 — 사용자에게는 뒤로 가기일 뿐이다.
+     * 임시 코스 핸들은 이 화면도 인자로 받아 쓰므로 [courseDraftId] 로 넘겨받는다.
+     */
+    fun onBackClick(courseDraftId: Long) {
+        viewModelScope.launch {
+            courseDraftRepository.moveToStatus(courseDraftId, CourseDraftStatus.ORDERING)
+            _effect.send(CourseSaveEffect.NavigateBack)
         }
     }
 

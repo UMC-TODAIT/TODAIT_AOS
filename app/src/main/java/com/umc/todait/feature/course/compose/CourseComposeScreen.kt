@@ -56,6 +56,7 @@ import com.umc.todait.R
 import com.umc.todait.core.network.UiError
 import com.umc.todait.feature.course.base_place.BasePlaceSystemAlert
 import com.umc.todait.feature.course.base_place.PlaceUiModel
+import com.umc.todait.feature.course.data.dto.CourseDraftStatus
 import com.umc.todait.ui.component.ErrorContent
 import com.umc.todait.ui.component.LoadingIndicator
 import com.umc.todait.ui.component.ScreenTopBar
@@ -134,6 +135,8 @@ fun CourseComposeScreen(
             when (effect) {
                 CourseComposeEffect.NavigateToSelected -> onNavigateToSelected()
                 CourseComposeEffect.NavigateToSave -> Unit
+                // 이전 버튼은 단계 이동 API 를 먼저 부르므로 화면 이동도 ViewModel 이 알려줄 때 한다.
+                CourseComposeEffect.NavigateBack -> onBack()
             }
         }
     }
@@ -141,7 +144,8 @@ fun CourseComposeScreen(
     Box(modifier = modifier.fillMaxSize()) {
         CourseComposeContent(
             state = uiState,
-            onBack = onBack,
+            // 이 화면은 PLACE_SELECTING 단계 → 기준 장소 설정으로 되돌린다.
+            onBack = { viewModel.onBackClick(CourseDraftStatus.PLACE_SELECTING) },
             // ✓ 는 canConfirm(담은 장소 ≥1)일 때만 활성 → 순서 설정 단계로 전환 요청.
             onConfirm = viewModel::onSelectionConfirmed,
             onSelectCategory = viewModel::onSelectCategory,

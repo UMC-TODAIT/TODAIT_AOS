@@ -8,6 +8,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -36,6 +37,7 @@ import com.umc.todait.feature.auth.signupcomplete.SignupCompleteScreen
 import com.umc.todait.feature.auth.terms.TermsAgreementScreen
 import com.umc.todait.feature.auth.terms.TermsFlow
 import com.umc.todait.feature.course.base_place.BasePlaceScreen
+import com.umc.todait.feature.course.data.dto.CourseDraftStatus
 import com.umc.todait.feature.course.food.FoodSelectScreen
 import com.umc.todait.feature.course.mood.MoodSelectScreen
 import com.umc.todait.feature.course.compose.CourseComposeScreen
@@ -349,6 +351,9 @@ fun TodaitApp() {
                     onNavigateToFood = { courseDraftId ->
                         navController.navigate(Screen.FoodSelect.createRoute(courseDraftId))
                     },
+                    onResumeStep = { status, courseDraftId, basePlaceId ->
+                        navController.navigateToDraftStep(status, courseDraftId, basePlaceId)
+                    },
                 )
             }
             composable(
@@ -504,5 +509,50 @@ fun TodaitApp() {
                 MyPageScreen(navController = navController)
             }
         }
+    }
+}
+
+/**
+ * "이어서 하기" — 진행 중이던 임시 코스가 멈춰 있던 단계 화면으로 보낸다.
+ *
+ * 코스 구성 플로우의 세 화면(장소 선택·순서 설정·저장)은 중첩 그래프 안에 있고 그래프가
+ * courseDraftId·basePlaceId 를 경로 변수로 요구한다. 그래서 그래프 진입 화면부터 쌓은 뒤
+ * 목표 화면까지 밀어 넣는다 — 이렇게 해야 되돌아갈 back stack 도 정상적으로 만들어진다.
+ *
+ * 기준 장소가 아직 없으면(=[basePlaceId] 가 null) 그래프에 들어갈 수 없으므로
+ * 기준 장소 설정 화면까지만 보낸다.
+ */
+private fun NavHostController.navigateToDraftStep(
+    status: CourseDraftStatus,
+    courseDraftId: Long,
+    basePlaceId: Long?,
+) {
+    when (status) {
+        // 분위기 선택은 이미 보고 있는 화면이라 이동하지 않는다(화면에서 선택값만 되살린다).
+        CourseDraftStatus.MOOD_SELECTING -> Unit
+
+        CourseDraftStatus.FOOD_SELECTING -> navigate(Screen.FoodSelect.createRoute(courseDraftId))
+
+        CourseDraftStatus.BASE_PLACE_SELECTING -> navigate(Screen.BasePlace.createRoute(courseDraftId))
+
+        CourseDraftStatus.PLACE_SELECTING,
+        CourseDraftStatus.ORDERING,
+        CourseDraftStatus.SAVING,
+        -> {
+            if (basePlaceId == null) {
+                navigate(Screen.BasePlace.createRoute(courseDraftId))
+                return
+            }
+            navigate(Screen.CourseComposeGraph.createRoute(courseDraftId, basePlaceId))
+            if (status == CourseDraftStatus.ORDERING || status == CourseDraftStatus.SAVING) {
+                navigate(Screen.SelectedPlaces.route)
+            }
+            if (status == CourseDraftStatus.SAVING) {
+                navigate(Screen.CourseSave.route)
+            }
+        }
+
+        // current 조회에서 내려오지 않는 상태들(명세). 방어적으로 아무 데도 보내지 않는다.
+        CourseDraftStatus.COMPLETED, CourseDraftStatus.ABANDONED -> Unit
     }
 }

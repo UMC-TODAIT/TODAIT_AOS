@@ -2,6 +2,8 @@ package com.umc.todait.feature.course.data.repository
 
 import com.umc.todait.core.network.ApiResult
 import com.umc.todait.core.network.safeApiCall
+import com.umc.todait.core.network.safeNullableApiCall
+import com.umc.todait.feature.course.data.dto.AbandonCourseDraftResponseDto
 import com.umc.todait.feature.course.data.dto.BasePlaceSetRequestDto
 import com.umc.todait.feature.course.data.dto.BasePlaceSetResponseDto
 import com.umc.todait.feature.course.data.dto.CourseDraftCreateResponseDto
@@ -10,8 +12,10 @@ import com.umc.todait.feature.course.data.dto.CourseDraftMoodTagSaveResponseDto
 import com.umc.todait.feature.course.data.dto.CourseDraftPlaceAddRequestDto
 import com.umc.todait.feature.course.data.dto.CourseDraftPlaceAddResponseDto
 import com.umc.todait.feature.course.data.dto.CourseDraftSavingEnterResponseDto
+import com.umc.todait.feature.course.data.dto.CourseDraftStatus
 import com.umc.todait.feature.course.data.dto.CourseSaveRequestDto
 import com.umc.todait.feature.course.data.dto.CourseSaveResponseDto
+import com.umc.todait.feature.course.data.dto.CurrentCourseDraftResponseDto
 import com.umc.todait.feature.course.data.dto.ExternalPlaceDto
 import com.umc.todait.feature.course.data.dto.FoodCategorySaveRequestDto
 import com.umc.todait.feature.course.data.dto.MoodTagSaveRequestDto
@@ -19,6 +23,8 @@ import com.umc.todait.feature.course.data.dto.OrderingEntryResponseDto
 import com.umc.todait.feature.course.data.dto.PlaceOrderItemDto
 import com.umc.todait.feature.course.data.dto.PlaceOrderUpdateRequestDto
 import com.umc.todait.feature.course.data.dto.PlaceOrderUpdateResponseDto
+import com.umc.todait.feature.course.data.dto.StatusUpdateRequestDto
+import com.umc.todait.feature.course.data.dto.StatusUpdateResponseDto
 import com.umc.todait.feature.course.data.mock.MockCourse
 import com.umc.todait.feature.course.data.mock.USE_COURSE_MOCK
 import com.umc.todait.feature.course.data.service.CourseDraftService
@@ -185,6 +191,49 @@ class CourseDraftRepository @Inject constructor(
         )
         if (USE_COURSE_MOCK) return ApiResult.Success(MockCourse.courseSaveResult(request))
         return safeApiCall { courseDraftService.saveCourse(courseDraftId, request) }
+    }
+
+    /**
+     * 이전 단계 이동 (PATCH /api/course-drafts/{courseDraftId}/status).
+     *
+     * 이전 버튼(`<`)이 부른다. 화면 이동으로만 취급되어 서버도 무드·음식·기준 장소·선택 장소·
+     * 순서를 그대로 둔다. 되돌릴 곳이 없는 단계(MOOD_SELECTING·터미널)는 호출하지 않는다.
+     */
+    suspend fun moveToStatus(
+        courseDraftId: Long,
+        targetStatus: CourseDraftStatus,
+    ): ApiResult<StatusUpdateResponseDto> {
+        if (USE_COURSE_MOCK) {
+            return ApiResult.Success(MockCourse.statusUpdateResult(courseDraftId, targetStatus.name))
+        }
+        return safeApiCall {
+            courseDraftService.updateStatus(courseDraftId, StatusUpdateRequestDto(targetStatus.name))
+        }
+    }
+
+    /**
+     * 진행 중인 임시 코스 조회 (GET /api/course-drafts/current).
+     *
+     * 취향 설정 화면이 기존 선택값을 되살리고, 무드/음식 변경 시 초기화 알림을 띄울지
+     * (=저장된 장소가 있는지) 판단하는 데 쓴다.
+     *
+     * ⚠️ 진행 중인 임시 코스가 없으면 **성공 + null** 이다(오류가 아니다). 호출부는
+     * `ApiResult.Success(null)` 을 "새로 시작"으로 다뤄야 한다.
+     */
+    suspend fun getCurrentCourseDraft(): ApiResult<CurrentCourseDraftResponseDto?> {
+        if (USE_COURSE_MOCK) return ApiResult.Success(MockCourse.currentCourseDraft)
+        return safeNullableApiCall { courseDraftService.getCurrentCourseDraft() }
+    }
+
+    /**
+     * 진행 중인 임시 코스 포기 (DELETE /api/course-drafts/{courseDraftId}).
+     *
+     * 코스 만들기 진입에서 [새로 만들기] 를 골랐을 때 부른다. 성공한 뒤에만 새 임시 코스를
+     * 만들어야 한다 — 실패하면 기존 임시 코스가 그대로 남아 다음 진입에서 또 물어보게 된다.
+     */
+    suspend fun abandonCourseDraft(courseDraftId: Long): ApiResult<AbandonCourseDraftResponseDto> {
+        if (USE_COURSE_MOCK) return ApiResult.Success(MockCourse.abandonResult(courseDraftId))
+        return safeApiCall { courseDraftService.abandonCourseDraft(courseDraftId) }
     }
 
     companion object {

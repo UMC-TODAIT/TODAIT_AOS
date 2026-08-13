@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.umc.todait.core.network.ApiResult
 import com.umc.todait.core.network.toUiError
+import com.umc.todait.feature.course.data.dto.CourseDraftStatus
+import com.umc.todait.feature.course.data.dto.CurrentCourseDraftResponseDto
 import com.umc.todait.feature.course.data.repository.CourseDraftRepository
 import com.umc.todait.feature.course.data.repository.TaxonomyRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -38,11 +40,21 @@ class MoodSelectViewModel @Inject constructor(
     // 코스 생성 플로우 전체가 공유하는 임시 코스 핸들. 이 화면에서 최초 발급된다.
     private var courseDraftId: Long? = null
 
+    // 진입 시 조회한 "진행 중인 임시 코스". 이어서 하기/새로 만들기 선택에 쓰고,
+    // 이어서 할 때는 이 응답으로 화면을 복원해 current 를 다시 부르지 않는다.
+    private var inProgressDraft: CurrentCourseDraftResponseDto? = null
+
     init {
         loadMoodTags()
     }
 
-    /** 분위기 태그 목록 조회(GET /api/mood-tags). 에러 화면의 재시도에서도 재사용한다. */
+    /**
+     * 분위기 태그 목록 조회(GET /api/mood-tags) + 진행 중 임시 코스의 기존 선택값 복원.
+     * 에러 화면의 재시도에서도 재사용한다.
+     *
+     * 목록을 먼저 그리고 그 위에 기존 선택값을 덧입힌다. 이전 버튼(`<`)으로 돌아왔을 때
+     * 저장했던 무드가 선택된 채로 보여야 하기 때문이다.
+     */
     fun loadMoodTags() {
         _uiState.update { it.copy(listState = MoodListState.Loading) }
         viewModelScope.launch {
@@ -50,11 +62,109 @@ class MoodSelectViewModel @Inject constructor(
                 is ApiResult.Success -> {
                     val moods = result.data.moodTags.map { it.toUiModel() }
                     _uiState.update { it.copy(listState = MoodListState.Success(moods)) }
+                    checkInProgressDraft()
                 }
 
                 is ApiResult.Failure ->
                     _uiState.update { it.copy(listState = MoodListState.Error(result.toUiError().message)) }
             }
+        }
+    }
+
+    /**
+     * 코스 만들기 진입 시 진행 중인 임시 코스가 있는지 확인한다(GET /api/course-drafts/current).
+     *
+     * 있으면 "이어서 하기 / 새로 만들기"를 묻는다. 없으면(성공 + null) 지금까지처럼 새로 시작하고,
+     * 임시 코스는 확인(✅) 시점에 발급한다. 조회가 실패해도 화면을 막지 않는다 — 그냥 새로 시작한다.
+     *
+     * 이전 버튼(`<`)으로 이 화면에 돌아온 경우에는 back stack entry 가 살아 있어 ViewModel 이
+     * 재생성되지 않으므로 여기까지 오지 않는다(=되돌아올 때마다 묻지 않는다).
+     */
+    private suspend fun checkInProgressDraft() {
+        // 이 플로우에서 이미 쓰고 있는 임시 코스가 있으면 물을 이유가 없다.
+        if (courseDraftId != null) return
+        val draft = (courseDraftRepository.getCurrentCourseDraft() as? ApiResult.Success)?.data ?: return
+        inProgressDraft = draft
+        _uiState.update { it.copy(showResumePrompt = true) }
+    }
+
+    /**
+     * [이어서 하기] → 임시 코스를 그대로 이어서 쓴다.
+     *
+     * 멈춰 있던 단계가 분위기 선택이면 이 화면에서 선택값만 되살리고, 그 이후 단계면
+     * 해당 화면으로 이동한다. current 응답을 이미 들고 있어 다시 조회하지 않는다.
+     */
+    fun onResumeContinue() {
+        val draft = inProgressDraft ?: return
+        _uiState.update { it.copy(showResumePrompt = false) }
+        courseDraftId = draft.courseDraftId
+
+        val status = draft.status ?: CourseDraftStatus.MOOD_SELECTING
+        if (status == CourseDraftStatus.MOOD_SELECTING) {
+            applySavedSelection(draft)
+            return
+        }
+        viewModelScope.launch {
+            _effect.send(
+                MoodSelectEffect.NavigateToStep(
+                    status = status,
+                    courseDraftId = draft.courseDraftId,
+                    basePlaceId = draft.basePlaceId,
+                ),
+            )
+        }
+    }
+
+    /**
+     * [새로 만들기] → 기존 임시 코스를 포기하고 새 임시 코스로 처음부터 시작한다.
+     *
+     * ⚠️ 포기(DELETE)가 성공한 뒤에만 새로 만든다(POST). 실패하면 기존 임시 코스가 그대로 남으므로
+     * 새로 만들지 않고 안내만 띄운다 — 그냥 넘어가면 지워진 줄 알았던 코스가 다음 진입에 또 나온다.
+     */
+    fun onStartNew() {
+        val draft = inProgressDraft ?: return
+        _uiState.update { it.copy(showResumePrompt = false, isSubmitting = true, resumeError = null) }
+
+        viewModelScope.launch {
+            val abandoned = courseDraftRepository.abandonCourseDraft(draft.courseDraftId)
+            if (abandoned is ApiResult.Failure) {
+                _uiState.update {
+                    it.copy(isSubmitting = false, showResumePrompt = true, resumeError = ERROR_ABANDON_FAILED)
+                }
+                return@launch
+            }
+
+            inProgressDraft = null
+            when (val created = courseDraftRepository.createCourseDraft()) {
+                is ApiResult.Success -> {
+                    courseDraftId = created.data.courseDraftId
+                    _uiState.update { it.copy(isSubmitting = false) }
+                }
+
+                is ApiResult.Failure ->
+                    // 임시 코스는 확인(✅) 시점에 다시 발급을 시도하므로 화면은 그대로 쓸 수 있다.
+                    _uiState.update { it.copy(isSubmitting = false) }
+            }
+        }
+    }
+
+    /** 포기 실패 안내를 닫는다. 안내를 닫으면 다시 "이어서 하기 / 새로 만들기"를 고를 수 있다. */
+    fun onDismissResumeError() {
+        _uiState.update { it.copy(resumeError = null) }
+    }
+
+    /** current 응답의 저장된 분위기 선택을 화면에 입힌다. */
+    private fun applySavedSelection(draft: CurrentCourseDraftResponseDto) {
+        val savedIds = draft.savedMoodTagIds.toSet()
+        _uiState.update { state ->
+            val current = state.listState as? MoodListState.Success ?: return@update state
+            state.copy(
+                listState = current.copy(
+                    moods = current.moods.map { it.copy(isSelected = it.moodTagId in savedIds) },
+                ),
+                savedMoodTagIds = savedIds,
+                hasSavedPlaces = draft.hasSavedPlaces,
+            )
         }
     }
 
@@ -76,11 +186,55 @@ class MoodSelectViewModel @Inject constructor(
         }
     }
 
-    /** 헤더 확인(체크) 버튼 → 분위기 선택 저장 후 음식 선택 화면으로 이동. */
+    /**
+     * 헤더 확인(체크) 버튼. 실제 변경은 여기서만 확정된다(카드 탭은 화면 내 선택 상태만 바꾼다).
+     *
+     * - 저장된 값과 같으면: 저장 API 없이 그대로 다음 단계로 이동
+     * - 달라졌고 저장된 장소가 없으면: 알림 없이 저장 후 이동
+     * - 달라졌고 저장된 장소가 있으면: 초기화 확인 알림 (서버가 장소 데이터를 초기화한다)
+     */
     fun onConfirmClick() {
         val state = _uiState.value
         if (!state.isConfirmEnabled) return
-        val selectedIds = state.selectedMoodTagIds
+
+        when {
+            !state.isSelectionChanged -> navigateWithoutSaving()
+            state.needsResetConfirm -> _uiState.update { it.copy(showResetAlert = true) }
+            else -> saveAndNavigate()
+        }
+    }
+
+    /** 초기화 확인 알림 [확인] → 저장 API 호출 후 다음 단계로 이동. */
+    fun onResetAlertConfirm() {
+        _uiState.update { it.copy(showResetAlert = false) }
+        saveAndNavigate()
+    }
+
+    /** 초기화 확인 알림 [취소] → 저장하지 않고 현재 화면 유지. 선택 상태는 사용자가 바꾼 그대로 둔다. */
+    fun onResetAlertDismiss() {
+        _uiState.update { it.copy(showResetAlert = false) }
+    }
+
+    /**
+     * 선택값이 그대로일 때. 저장 API 를 부르지 않고 넘어간다.
+     *
+     * 이 경로는 이미 저장된 임시 코스가 있다는 뜻이라 [courseDraftId] 가 항상 있지만,
+     * 조회가 실패해 모르는 상태로 여기 올 수도 있어 없으면 저장 경로로 돌린다.
+     */
+    private fun navigateWithoutSaving() {
+        val draftId = courseDraftId
+        if (draftId == null) {
+            saveAndNavigate()
+            return
+        }
+        viewModelScope.launch { _effect.send(MoodSelectEffect.NavigateToFood(draftId)) }
+    }
+
+    /** 분위기 선택 저장 후 음식 선택 화면으로 이동. */
+    private fun saveAndNavigate() {
+        val selectedIds = _uiState.value.selectedMoodTagIds
+        // 값이 실제로 바뀐 저장일 때만 서버가 장소 데이터를 초기화한다.
+        val resetsPlaces = _uiState.value.isSelectionChanged
 
         _uiState.update { it.copy(isSubmitting = true, submitError = null) }
         viewModelScope.launch {
@@ -92,7 +246,14 @@ class MoodSelectViewModel @Inject constructor(
 
             when (val result = courseDraftRepository.saveMoodTags(draftId, selectedIds)) {
                 is ApiResult.Success -> {
-                    _uiState.update { it.copy(isSubmitting = false) }
+                    // 저장에 성공했으니 기준값도 옮겨둔다. 다시 돌아와 그대로 확인하면 재저장하지 않는다.
+                    _uiState.update {
+                        it.copy(
+                            isSubmitting = false,
+                            savedMoodTagIds = selectedIds.toSet(),
+                            hasSavedPlaces = if (resetsPlaces) false else it.hasSavedPlaces,
+                        )
+                    }
                     _effect.send(MoodSelectEffect.NavigateToFood(draftId))
                 }
 
@@ -116,5 +277,6 @@ class MoodSelectViewModel @Inject constructor(
 
     private companion object {
         const val ERROR_DRAFT_REQUIRED = "코스 생성 정보를 불러오지 못했어요. 다시 시도해주세요."
+        const val ERROR_ABANDON_FAILED = "기존 코스를 정리하지 못했어요. 다시 시도해주세요."
     }
 }

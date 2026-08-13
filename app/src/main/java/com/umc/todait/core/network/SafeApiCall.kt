@@ -39,6 +39,31 @@ suspend fun <T> safeApiCall(call: suspend () -> BaseResponse<T>): ApiResult<T> {
 }
 
 /**
+ * [safeApiCall] 의 result 허용 버전.
+ *
+ * 대부분의 API 는 성공 응답에 result 가 반드시 있어서 null 이면 규약 위반(=실패)이지만,
+ * "없음"이 정상인 조회가 있다 — 예: `GET /api/course-drafts/current` 는 진행 중인 임시 코스가
+ * 없으면 200 OK + `result: null` 을 준다. 이런 API 를 [safeApiCall] 로 부르면 빈 상태가
+ * 서버 오류로 둔갑하므로 이쪽을 쓴다. 성공 여부는 [BaseResponse.isSuccess] 로만 판단한다.
+ */
+suspend fun <T> safeNullableApiCall(call: suspend () -> BaseResponse<T>): ApiResult<T?> {
+    return try {
+        val response = call()
+        if (response.isSuccess) {
+            ApiResult.Success(response.result)
+        } else {
+            ApiResult.Failure.ServerError(code = response.code, message = response.message)
+        }
+    } catch (e: HttpException) {
+        e.toServerError()
+    } catch (e: IOException) {
+        ApiResult.Failure.NetworkError(e)
+    } catch (e: Throwable) {
+        ApiResult.Failure.UnknownError(e)
+    }
+}
+
+/**
  * HTTP 오류 응답의 body(공통 Wrapper)를 파싱해 서버가 준 code·message 를 살린다.
  * body 가 없거나 규약과 다른 형태면 HTTP 상태 코드만 담아 반환한다.
  */

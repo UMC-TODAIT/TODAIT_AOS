@@ -39,6 +39,15 @@ data class FoodSelectUiState(
     val listState: FoodListState = FoodListState.Loading,
     val isSubmitting: Boolean = false,
     val submitError: String? = null,
+    /**
+     * 진입 시점에 서버에 저장돼 있던 음식 카테고리 id. 확인(✅) 시 현재 선택값과 비교해
+     * 실제로 바뀌었는지 판단한다. 저장된 값이 없으면 빈 목록이다.
+     */
+    val savedFoodCategoryIds: Set<Long> = emptySet(),
+    /** 임시 코스에 저장된 장소(기준 장소 포함)가 있는지. 초기화 알림 노출 조건. */
+    val hasSavedPlaces: Boolean = false,
+    /** 음식 취향 변경 시 장소 초기화 확인 알림 노출 여부. */
+    val showResetAlert: Boolean = false,
 ) {
     private val foods: List<FoodOptionUiModel>
         get() = (listState as? FoodListState.Success)?.foods.orEmpty()
@@ -47,6 +56,18 @@ data class FoodSelectUiState(
 
     /** 선택한 음식 카테고리 id 목록(저장 API 요청값). */
     val selectedFoodCategoryIds: List<Long> get() = foods.filter { it.isSelected }.map { it.foodCategoryId }
+
+    /**
+     * 저장된 값에서 실제로 달라졌는지. 순서는 의미가 없어 집합으로 비교한다.
+     * 값이 그대로면 저장 API 를 부르지 않고 다음 단계로 넘어간다.
+     */
+    val isSelectionChanged: Boolean get() = selectedFoodCategoryIds.toSet() != savedFoodCategoryIds
+
+    /**
+     * 확인(✅) 시 초기화 알림을 띄워야 하는지.
+     * 음식 취향이 바뀌었고 + 저장된 장소가 있을 때만이다(서버가 장소 데이터를 초기화한다).
+     */
+    val needsResetConfirm: Boolean get() = isSelectionChanged && hasSavedPlaces
 
     /** 명세: 최소 1개 이상 선택해야 저장할 수 있다. */
     val isConfirmEnabled: Boolean get() = selectedCount >= MIN_SELECTION && !isSubmitting
@@ -165,4 +186,7 @@ private val FALLBACK_VISUAL = FoodVisual(
 sealed interface FoodSelectEffect {
     /** 저장 성공 → 기준 장소 설정 화면으로 이동. 코스 생성 플로우 전체가 공유하는 임시 코스 핸들을 이어서 들고 간다. */
     data class NavigateToBasePlace(val courseDraftId: Long) : FoodSelectEffect
+
+    /** 이전 버튼(`<`) → 단계 이동 API 를 부른 뒤 분위기 선택 화면으로 돌아간다. */
+    data object NavigateBack : FoodSelectEffect
 }

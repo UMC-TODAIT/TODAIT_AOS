@@ -9,6 +9,7 @@ import com.umc.todait.core.network.toUiError
 import com.umc.todait.feature.course.base_place.PlaceUiModel
 import com.umc.todait.feature.course.base_place.toUiModel
 import com.umc.todait.feature.course.data.dto.CourseDraftPlaceDto
+import com.umc.todait.feature.course.data.dto.CourseDraftStatus
 import com.umc.todait.feature.course.data.repository.CourseDraftRepository
 import com.umc.todait.feature.course.data.repository.CourseDraftRepository.Companion.FIRST_SELECTED_VISIT_ORDER
 import com.umc.todait.feature.course.data.repository.CourseDraftRepository.Companion.FIRST_VISIT_ORDER
@@ -65,10 +66,45 @@ class CourseComposeViewModel @Inject constructor(
     val effect = _effect.receiveAsFlow()
 
     init {
-        loadBasePlace()
+        // 둘 다 orderedPlaces 를 세우므로 순서를 고정한다. 담아둔 장소가 있으면 그 순서가 곧 코스 동선이고,
+        // 없을 때만 기준 장소 하나로 시작한다. (동시에 돌리면 늦게 끝난 쪽이 순서를 덮어쓴다.)
+        viewModelScope.launch {
+            restoreDraftPlaces()
+            if (_uiState.value.orderedPlaces.isEmpty()) loadBasePlace()
+        }
         loadCurrentLocation()
         // 카테고리(탭)가 있어야 추천을 조회할 수 있어(placeCategoryCode 필요) 카테고리 로드 후 추천을 부른다.
         loadCategories()
+    }
+
+    /**
+     * 임시 코스에 이미 담겨 있는 장소를 되살린다(GET /api/course-drafts/current).
+     *
+     * "이어서 하기"로 코스 구성 단계에 복귀하면 서버에는 기준 장소와 담은 장소가 남아 있지만
+     * 화면 상태는 비어 있다. 응답의 visitOrder 순서를 그대로 코스 동선으로 삼고,
+     * placeRole=BASE 인 장소를 기준 장소로 표시한다.
+     *
+     * 담은 장소가 하나도 없으면(기준 장소 직후) [loadBasePlace] 가 세운 상태를 그대로 둔다.
+     * 조회에 실패해도 화면은 정상 동작한다 — 추천 목록에서 다시 담으면 된다.
+     */
+    private suspend fun restoreDraftPlaces() {
+        val draft = (courseDraftRepository.getCurrentCourseDraft() as? ApiResult.Success)?.data ?: return
+        if (draft.courseDraftId != courseDraftId) return
+
+        val places = draft.places.orEmpty().sortedBy { it.visitOrder }
+        if (places.isEmpty()) return
+
+        val restored = places.map { it.toUiModel() }
+        val baseKey = places.firstOrNull { it.placeRole == CourseDraftPlaceDto.PLACE_ROLE_BASE }
+            ?.let { base -> restored.firstOrNull { it.placeId == base.placeId }?.key }
+
+        _uiState.update { state ->
+            state.copy(
+                orderedPlaces = restored,
+                // 기준 장소를 못 찾으면(응답에 BASE 가 없음) 그래프 인자로 받은 기준 장소를 그대로 쓴다.
+                basePlaceKey = baseKey ?: state.basePlaceKey,
+            )
+        }
     }
 
     /**
@@ -90,20 +126,18 @@ class CourseComposeViewModel @Inject constructor(
      * 확정된 placeId 로 장소 카드 상세를 한 번 더 불러 화면 모델을 채운다.
      * 실패해도 추천 목록은 볼 수 있어야 하므로 목록 상태는 건드리지 않는다.
      */
-    private fun loadBasePlace() {
-        viewModelScope.launch {
-            when (val result = placeRepository.getPlaceDetail(basePlaceId)) {
-                is ApiResult.Success -> _uiState.update { state ->
-                    val base = result.data.toBasePlaceUiModel()
-                    state.copy(
-                        // 기준 장소도 코스 목록의 일원이다. 처음엔 맨 앞에 놓고, 이후 드래그로 옮길 수 있다.
-                        orderedPlaces = listOf(base) + state.orderedPlaces.filterNot { it.key == base.key },
-                        basePlaceKey = base.key,
-                    )
-                }
-
-                is ApiResult.Failure -> Unit
+    private suspend fun loadBasePlace() {
+        when (val result = placeRepository.getPlaceDetail(basePlaceId)) {
+            is ApiResult.Success -> _uiState.update { state ->
+                val base = result.data.toBasePlaceUiModel()
+                state.copy(
+                    // 기준 장소도 코스 목록의 일원이다. 처음엔 맨 앞에 놓고, 이후 드래그로 옮길 수 있다.
+                    orderedPlaces = listOf(base) + state.orderedPlaces.filterNot { it.key == base.key },
+                    basePlaceKey = base.key,
+                )
             }
+
+            is ApiResult.Failure -> Unit
         }
     }
 
@@ -350,6 +384,23 @@ class CourseComposeViewModel @Inject constructor(
         }
     }
 
+    /**
+     * 이전 버튼(`<`) → 단계 이동 API 호출 후 이전 화면으로 돌아간다.
+     *
+     * 코스 구성 플로우의 세 화면(장소 선택 PLACE_SELECTING · 순서 설정 ORDERING · 저장 SAVING)이
+     * 이 ViewModel 을 공유하므로 어느 화면에서 눌렀는지를 [from] 으로 받아 그 이전 단계로 보낸다.
+     *
+     * 단순 화면 이동이라 담은 장소·순서를 지우지도, 알림을 띄우지도 않는다. 단계 이동 호출이
+     * 실패해도 화면은 넘긴다 — 사용자에게는 뒤로 가기일 뿐이다.
+     */
+    fun onBackClick(from: CourseDraftStatus) {
+        val target = from.previous
+        viewModelScope.launch {
+            if (target != null) courseDraftRepository.moveToStatus(courseDraftId, target)
+            _effect.send(CourseComposeEffect.NavigateBack)
+        }
+    }
+
     fun onDismissAlert() {
         _uiState.update { it.copy(alert = null) }
     }
@@ -392,4 +443,7 @@ sealed interface CourseComposeEffect {
 
     /** 코스 저장 화면으로 이동. */
     data object NavigateToSave : CourseComposeEffect
+
+    /** 이전 버튼(`<`) → 단계 이동 API 를 부른 뒤 이전 화면으로 돌아간다. */
+    data object NavigateBack : CourseComposeEffect
 }

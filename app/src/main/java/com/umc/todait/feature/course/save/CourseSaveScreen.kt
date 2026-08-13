@@ -113,6 +113,8 @@ fun CourseSaveScreen(
             when (effect) {
                 CourseSaveEffect.NavigateToSavedCourses -> onNavigateToSavedCourses()
                 CourseSaveEffect.NavigateToHome -> onNavigateToHome()
+                // 이전 버튼은 단계 이동 API 를 먼저 부르므로 화면 이동도 ViewModel 이 알려줄 때 한다.
+                CourseSaveEffect.NavigateBack -> onBack()
             }
         }
     }
@@ -173,7 +175,8 @@ fun CourseSaveScreen(
         onMemoChange = viewModel::onMemoChange,
         onStartAddTag = viewModel::onStartAddTag,
         onSave = viewModel::onSave,
-        onBack = onBack,
+        // 이 화면은 SAVING 단계 → 순서 설정으로 되돌린다.
+        onBack = { viewModel.onBackClick(courseDraftId) },
         modifier = modifier,
     )
 }

@@ -39,6 +39,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.todait.R
 import com.umc.todait.feature.course.base_place.BasePlaceSystemAlert
 import com.umc.todait.feature.course.base_place.PlaceUiModel
+import com.umc.todait.feature.course.data.dto.CourseDraftStatus
 import com.umc.todait.ui.component.ScreenTopBar
 import com.umc.todait.ui.theme.Cream
 import com.umc.todait.ui.theme.Gray600
@@ -85,6 +86,8 @@ fun SelectedPlacesScreen(
             when (effect) {
                 CourseComposeEffect.NavigateToSave -> onNavigateToSave()
                 CourseComposeEffect.NavigateToSelected -> Unit
+                // 이전 버튼은 단계 이동 API 를 먼저 부르므로 화면 이동도 ViewModel 이 알려줄 때 한다.
+                CourseComposeEffect.NavigateBack -> onBack()
             }
         }
     }
@@ -97,7 +100,8 @@ fun SelectedPlacesScreen(
         ) {
             ScreenTopBar(
                 title = stringResource(R.string.course_compose_title),
-                onBack = onBack,
+                // 이 화면은 ORDERING 단계 → 장소 선택으로 되돌린다.
+                onBack = { viewModel.onBackClick(CourseDraftStatus.ORDERING) },
                 onConfirm = viewModel::onOrderConfirmed,
                 confirmContentDescription = "확정",
             )

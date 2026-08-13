@@ -53,6 +53,7 @@ import com.umc.todait.R
 import com.umc.todait.ui.component.HeaderCircleButton
 import com.umc.todait.ui.theme.DisabledButtonGray
 import com.umc.todait.ui.theme.DisabledConfirmGray
+import com.umc.todait.feature.auth.onboarding.NicknameStatus
 import com.umc.todait.ui.theme.Error
 import com.umc.todait.ui.theme.Gray300
 import com.umc.todait.ui.theme.Gray500
@@ -91,6 +92,7 @@ fun SignupScreen(
         uiState = uiState,
         onBackClick = onBackClick,
         onNicknameChange = viewModel::onNicknameChange,
+        onCheckNicknameClick = viewModel::onCheckNicknameClick,
         onEmailChange = viewModel::onEmailChange,
         onCodeChange = viewModel::onCodeChange,
         onPasswordChange = viewModel::onPasswordChange,
@@ -107,6 +109,7 @@ private fun SignupContent(
     uiState: SignupUiState,
     onBackClick: () -> Unit,
     onNicknameChange: (String) -> Unit,
+    onCheckNicknameClick: () -> Unit,
     onEmailChange: (String) -> Unit,
     onCodeChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
@@ -151,7 +154,29 @@ private fun SignupContent(
                 value = uiState.nickname,
                 onValueChange = onNicknameChange,
                 placeholder = stringResource(R.string.signup_name_placeholder),
+                trailingIcon = {
+                    Box(modifier = Modifier.padding(end = 12.dp)) {
+                        InlinePillButton(
+                            text = stringResource(R.string.social_nickname_check_button),
+                            enabled = uiState.canCheckNickname,
+                            onClick = onCheckNicknameClick,
+                        )
+                    }
+                },
             )
+            if (uiState.nicknameStatus != NicknameStatus.IDLE) {
+                Spacer(Modifier.height(6.dp))
+                val isAvailable = uiState.nicknameStatus == NicknameStatus.AVAILABLE
+                Text(
+                    text = stringResource(
+                        if (isAvailable) R.string.social_nickname_available_message
+                        else R.string.social_nickname_unavailable_message,
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Medium,
+                    color = if (isAvailable) Success else Error,
+                )
+            }
             Spacer(Modifier.height(20.dp))
 
             AuthTextField(
@@ -469,7 +494,8 @@ private fun SignupScreenPreview() {
     TodaitTheme {
         SignupContent(
             uiState = SignupUiState(),
-            onBackClick = {}, onNicknameChange = {}, onEmailChange = {}, onCodeChange = {},
+            onBackClick = {}, onNicknameChange = {}, onCheckNicknameClick = {},
+            onEmailChange = {}, onCodeChange = {},
             onPasswordChange = {}, onPasswordConfirmChange = {},
             onSendCodeClick = {}, onVerifyCodeClick = {}, onSubmitClick = {},
         )

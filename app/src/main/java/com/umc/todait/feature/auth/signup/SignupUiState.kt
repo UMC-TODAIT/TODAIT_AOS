@@ -1,5 +1,7 @@
 package com.umc.todait.feature.auth.signup
 
+import com.umc.todait.feature.auth.onboarding.NicknameStatus
+
 private val EMAIL_REGEX = Regex("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
 private val PASSWORD_REGEX = Regex("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}$")
 private val NICKNAME_REGEX = Regex("^[0-9A-Za-z가-힣]{2,12}$")
@@ -21,6 +23,9 @@ sealed interface EmailVerificationState {
  */
 data class SignupUiState(
     val nickname: String = "",
+    /** 닉네임 중복 확인 결과. 입력이 바뀌면 IDLE 로 되돌린다. */
+    val nicknameStatus: NicknameStatus = NicknameStatus.IDLE,
+    val isCheckingNickname: Boolean = false,
     val email: String = "",
     val code: String = "",
     val verificationState: EmailVerificationState = EmailVerificationState.Idle,
@@ -35,6 +40,10 @@ data class SignupUiState(
 ) {
     val isNicknameValid: Boolean
         get() = NICKNAME_REGEX.matches(nickname)
+
+    /** 중복 확인 버튼 활성: 닉네임이 비어있지 않고 검사 중이 아닐 때(닉네임 설정 화면과 동일). */
+    val canCheckNickname: Boolean
+        get() = nickname.isNotBlank() && !isCheckingNickname
 
     val isEmailValid: Boolean
         get() = email.isNotEmpty() && EMAIL_REGEX.matches(email)
@@ -51,8 +60,9 @@ data class SignupUiState(
     val canVerifyCode: Boolean
         get() = verificationState is EmailVerificationState.CodeSent && code.isNotBlank() && !isVerifyingCode
 
+    // 중복 확인을 통과한 닉네임만 가입할 수 있다 — 확인을 안 하면 서버가 MEMBER409 로 거절한다.
     val isSignupEnabled: Boolean
-        get() = isNicknameValid &&
+        get() = nicknameStatus == NicknameStatus.AVAILABLE &&
             verificationState is EmailVerificationState.Verified &&
             isPasswordValid &&
             isPasswordConfirmMatching &&

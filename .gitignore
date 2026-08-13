@@ -12,3 +12,6 @@ build/
 local.properties
 *.keystore
 *.jks
+
+# Kotlin 컴파일러 작업 디렉터리 (에러 로그 등 빌드 산출물)
+.kotlin/

@@ -48,6 +48,7 @@ import com.umc.todait.ui.theme.DisabledConfirmGray
 import com.umc.todait.ui.theme.Error
 import com.umc.todait.ui.theme.GoogleBadgeBlue
 import com.umc.todait.ui.theme.GoogleBadgeText
+import com.umc.todait.ui.theme.Gray200
 import com.umc.todait.ui.theme.Gray300
 import com.umc.todait.ui.theme.Gray500
 import com.umc.todait.ui.theme.Gray700
@@ -254,7 +255,7 @@ private fun SocialNicknameTopBar(onBackClick: () -> Unit) {
                 color = Gray900,
             )
         }
-        HorizontalDivider(color = Gray300)
+        HorizontalDivider(color = Gray200)
     }
 }
 

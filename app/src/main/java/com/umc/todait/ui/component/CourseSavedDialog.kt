@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -23,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.umc.todait.R
 import com.umc.todait.ui.theme.Cream
 import com.umc.todait.ui.theme.Gray400
@@ -37,12 +39,15 @@ fun CourseSaveDialog(
     onSkipClick: () -> Unit
 ) {
     Dialog(
-        onDismissRequest = onSkipClick
+        onDismissRequest = onSkipClick,
+        // 시안 폭(332)을 고정하지 않고 좌우 여백으로 잡아 화면 폭에 대응한다.
+        properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Surface(
             modifier = Modifier
-                .width(332.dp)
-                .height(460.dp),
+                .padding(horizontal = 30.dp)
+                .fillMaxWidth()
+                .widthIn(max = 380.dp),
             shape = RoundedCornerShape(12.dp),
             color = Cream
         ) {
@@ -62,7 +67,7 @@ fun CourseSaveDialog(
                     color = Gray800
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
                     text = "저장한 코스는 저장된코스에서 확인할 수 있어요",
@@ -74,18 +79,18 @@ fun CourseSaveDialog(
 
                 CourseSaveDecoration()
 
-                Spacer(modifier = Modifier.height(36.dp))
+                Spacer(modifier = Modifier.height(25.dp))
 
                 Button(
                     onClick = onMoveClick,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp)
-                        .padding(horizontal = 24.dp),
+                        .padding(horizontal = 18.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Pink600
                     ),
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
                         text = "저장된 코스로 이동하기",
@@ -101,12 +106,13 @@ fun CourseSaveDialog(
                     text = "건너뛰기",
                     color = Gray400,
                     fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.clickable {
                         onSkipClick()
                     }
                 )
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(29.dp))
             }
         }
     }

@@ -232,8 +232,8 @@ private fun BasePlaceContent(
                 when (val listState = state.listState) {
                     is PlaceListState.Loading -> LoadingIndicator()
                     is PlaceListState.Empty -> PlaceEmptyState(
-                        title = listState.message,
-                        description = if (state.isSearching) {
+                        title = listState.title,
+                        description = listState.description ?: if (state.isSearching) {
                             stringResource(R.string.base_place_empty_search_desc)
                         } else {
                             null
@@ -525,16 +525,18 @@ private fun PlaceEmptyState(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
+        // Figma: 돋보기 38 → 16 → 제목(16 SemiBold) → 8 → 설명(12 SemiBold), 모두 Gray-500
         Icon(
             imageVector = Icons.Filled.Search,
             contentDescription = null,
             tint = Gray500,
-            modifier = Modifier.size(40.dp),
+            modifier = Modifier.size(38.dp),
         )
         Spacer(Modifier.height(16.dp))
         Text(
             text = title,
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold,
             color = Gray500,
         )
         if (description != null) {
@@ -621,7 +623,34 @@ private fun BasePlaceContentEmptyPreview() {
         BasePlaceContent(
             state = BasePlaceUiState(
                 searchQuery = "샴푸",
-                listState = PlaceListState.Empty("검색 결과가 없어요"),
+                listState = PlaceListState.Empty(
+                    title = "검색 결과가 없어요",
+                    description = "다른 검색어로 다시 검색해보세요.",
+                ),
+            ),
+            onBack = {},
+            onSearchQueryChange = {},
+            onSearch = {},
+            onClearSearch = {},
+            onPlaceLongClick = {},
+            onSelectPlace = {},
+            onConfirmClick = {},
+            onRetry = {},
+        )
+    }
+}
+
+@Preview(name = "지원 장소 없음", showBackground = true)
+@Composable
+private fun BasePlaceContentUnsupportedAreaPreview() {
+    TodaitTheme {
+        BasePlaceContent(
+            state = BasePlaceUiState(
+                searchQuery = "강남역",
+                listState = PlaceListState.Empty(
+                    title = stringResource(R.string.base_place_unsupported_area_title),
+                    description = stringResource(R.string.base_place_unsupported_area_desc),
+                ),
             ),
             onBack = {},
             onSearchQueryChange = {},

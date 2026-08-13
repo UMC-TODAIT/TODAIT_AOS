@@ -43,7 +43,7 @@ import com.umc.todait.feature.course.base_place.PlaceUiModel
 import com.umc.todait.feature.course.data.dto.CourseDraftStatus
 import com.umc.todait.ui.component.ScreenTopBar
 import com.umc.todait.ui.theme.Cream
-import com.umc.todait.ui.theme.Gray300
+import com.umc.todait.ui.theme.Gray350
 import com.umc.todait.ui.theme.Gray500
 import com.umc.todait.ui.theme.Gray800
 import com.umc.todait.ui.theme.Pink100
@@ -242,7 +242,7 @@ private fun SelectedPlaceRow(
             Text(
                 text = place.address,
                 style = MaterialTheme.typography.bodySmall,
-                color = Gray300,
+                color = Gray350,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )

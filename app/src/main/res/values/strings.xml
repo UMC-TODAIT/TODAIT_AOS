@@ -110,7 +110,9 @@
     <string name="base_place_section_nearby">지금 내 주변 핫플</string>
     <string name="base_place_section_search">검색 결과</string>
     <string name="base_place_long_press_hint">장소를 길게 눌러 상세 정보를 확인해보세요!</string>
-    <string name="base_place_empty_search_desc">검색어를 다시 확인해주세요.</string>
+    <string name="base_place_empty_search_desc">다른 검색어로 다시 검색해보세요.</string>
+    <string name="base_place_unsupported_area_title">현재 지원 지역에 해당하는 장소가 없어요.</string>
+    <string name="base_place_unsupported_area_desc">투데잇은 현재 홍대, 연남, 성수 지역을 지원하고 있어요.</string>
     <!-- %2$s 는 앞 이름의 받침에 따라 "로"/"으로" 가 들어간다 (Figma 시스템알럿) -->
     <string name="base_place_confirm_title">기준 장소를 ‘%1$s’%2$s 시작할까요?</string>
     <string name="base_place_confirm_desc">\'%1$s\'을 중심으로 코스가 구성돼요.</string>

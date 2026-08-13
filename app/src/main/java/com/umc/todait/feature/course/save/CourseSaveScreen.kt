@@ -108,11 +108,16 @@ fun CourseSaveScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    // 코스 생성 때 고른 분위기를 태그로 미리 선택해 둔다(최초 1회).
+    LaunchedEffect(courseDraftId) { viewModel.onEnter(courseDraftId) }
+
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
                 CourseSaveEffect.NavigateToSavedCourses -> onNavigateToSavedCourses()
                 CourseSaveEffect.NavigateToHome -> onNavigateToHome()
+                // 이전 버튼은 단계 이동 API 를 먼저 부르므로 화면 이동도 ViewModel 이 알려줄 때 한다.
+                CourseSaveEffect.NavigateBack -> onBack()
             }
         }
     }
@@ -173,7 +178,8 @@ fun CourseSaveScreen(
         onMemoChange = viewModel::onMemoChange,
         onStartAddTag = viewModel::onStartAddTag,
         onSave = viewModel::onSave,
-        onBack = onBack,
+        // 이 화면은 SAVING 단계 → 순서 설정으로 되돌린다.
+        onBack = { viewModel.onBackClick(courseDraftId) },
         modifier = modifier,
     )
 }

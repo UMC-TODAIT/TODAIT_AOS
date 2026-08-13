@@ -3,6 +3,7 @@ package com.umc.todait.feature.course.mood
 import androidx.annotation.DrawableRes
 import androidx.compose.ui.graphics.Color
 import com.umc.todait.R
+import com.umc.todait.feature.course.data.dto.CourseDraftStatus
 import com.umc.todait.feature.course.data.dto.MoodTagDto
 import com.umc.todait.ui.theme.CourseActiveGradientEnd
 import com.umc.todait.ui.theme.CourseActiveGradientStart
@@ -39,6 +40,22 @@ data class MoodSelectUiState(
     val listState: MoodListState = MoodListState.Loading,
     val isSubmitting: Boolean = false,
     val submitError: String? = null,
+    /**
+     * 진입 시점에 서버에 저장돼 있던 분위기 태그 id. 확인(✅) 시 현재 선택값과 비교해
+     * 실제로 바뀌었는지 판단한다. 저장된 값이 없으면 빈 목록이다.
+     */
+    val savedMoodTagIds: Set<Long> = emptySet(),
+    /** 임시 코스에 저장된 장소(기준 장소 포함)가 있는지. 초기화 알림 노출 조건. */
+    val hasSavedPlaces: Boolean = false,
+    /** 무드 변경 시 장소 초기화 확인 알림 노출 여부. */
+    val showResetAlert: Boolean = false,
+    /**
+     * 진행 중인 임시 코스가 있어 "이어서 하기 / 새로 만들기"를 묻는 중인지.
+     * 코스 만들기 진입 시 조회 결과에 따라 켜지고, 둘 중 하나를 고르면 꺼진다.
+     */
+    val showResumePrompt: Boolean = false,
+    /** [새로 만들기] 의 포기(DELETE) 실패 안내. 실패 시 새 임시 코스를 만들지 않는다. */
+    val resumeError: String? = null,
 ) {
     private val moods: List<MoodOptionUiModel>
         get() = (listState as? MoodListState.Success)?.moods.orEmpty()
@@ -47,6 +64,18 @@ data class MoodSelectUiState(
 
     /** 선택한 분위기 태그 id 목록(저장 API 요청값). */
     val selectedMoodTagIds: List<Long> get() = moods.filter { it.isSelected }.map { it.moodTagId }
+
+    /**
+     * 저장된 값에서 실제로 달라졌는지. 순서는 의미가 없어 집합으로 비교한다.
+     * 값이 그대로면 저장 API 를 부르지 않고 다음 단계로 넘어간다.
+     */
+    val isSelectionChanged: Boolean get() = selectedMoodTagIds.toSet() != savedMoodTagIds
+
+    /**
+     * 확인(✅) 시 초기화 알림을 띄워야 하는지.
+     * 무드가 바뀌었고 + 저장된 장소가 있을 때만이다(서버가 장소 데이터를 초기화한다).
+     */
+    val needsResetConfirm: Boolean get() = isSelectionChanged && hasSavedPlaces
 
     /** 명세: 최소 2개 이상 최대 6개 이하일 때만 저장할 수 있다. */
     val isConfirmEnabled: Boolean
@@ -167,4 +196,16 @@ private val FALLBACK_VISUAL = MoodVisual(
 sealed interface MoodSelectEffect {
     /** 저장 성공 → 음식 선택 화면으로 이동. 발급/재사용된 임시 코스 핸들을 들고 간다. */
     data class NavigateToFood(val courseDraftId: Long) : MoodSelectEffect
+
+    /**
+     * "이어서 하기" → 임시 코스가 멈춰 있던 단계 화면으로 이동한다.
+     *
+     * [basePlaceId] 는 코스 구성 그래프(장소 선택·순서 설정·저장)로 갈 때만 필요하다.
+     * 기준 장소가 아직 없으면 null 이고, 그때는 기준 장소 설정 화면까지만 간다.
+     */
+    data class NavigateToStep(
+        val status: CourseDraftStatus,
+        val courseDraftId: Long,
+        val basePlaceId: Long?,
+    ) : MoodSelectEffect
 }

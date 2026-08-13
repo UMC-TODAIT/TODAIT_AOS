@@ -1,6 +1,7 @@
 package com.umc.todait.feature.course.data.mock
 
 import com.umc.todait.core.mock.MockImages
+import com.umc.todait.feature.course.data.dto.AbandonCourseDraftResponseDto
 import com.umc.todait.feature.course.data.dto.AddedCourseDraftPlaceDto
 import com.umc.todait.feature.course.data.dto.AreaSummaryDto
 import com.umc.todait.feature.course.data.dto.BasePlaceResultDto
@@ -14,6 +15,7 @@ import com.umc.todait.feature.course.data.dto.CourseDraftPlaceDto
 import com.umc.todait.feature.course.data.dto.CourseDraftSavingEnterResponseDto
 import com.umc.todait.feature.course.data.dto.CourseSaveRequestDto
 import com.umc.todait.feature.course.data.dto.CourseSaveResponseDto
+import com.umc.todait.feature.course.data.dto.CurrentCourseDraftResponseDto
 import com.umc.todait.feature.course.data.dto.ExternalPlaceDto
 import com.umc.todait.feature.course.data.dto.FoodCategorySummaryDto
 import com.umc.todait.feature.course.data.dto.HotPlaceDto
@@ -32,6 +34,7 @@ import com.umc.todait.feature.course.data.dto.RecommendedPlaceDto
 import com.umc.todait.feature.course.data.dto.RecommendedPlaceResultDto
 import com.umc.todait.feature.course.data.dto.SavedCoursePlaceDto
 import com.umc.todait.feature.course.data.dto.SearchPlaceDto
+import com.umc.todait.feature.course.data.dto.StatusUpdateResponseDto
 
 /**
  * MVP 시연용 스위치: true 면 코스 플로우의 Repository 가 서버 대신 [MockCourse] 를 반환한다.
@@ -124,6 +127,30 @@ object MockCourse {
         courseDraftId = courseDraft.courseDraftId,
         draftStatus = "BASE_PLACE_SELECTING",
         foodCategories = allFoods.filter { it.foodCategoryId in foodCategoryIds },
+    )
+
+    // ---------- 단계 이동 (PATCH /api/course-drafts/{id}/status) ----------
+
+    /** 이전 버튼(`<`)의 단계 이동. 요청한 단계를 그대로 돌려준다. */
+    fun statusUpdateResult(courseDraftId: Long, targetStatus: String) = StatusUpdateResponseDto(
+        courseDraftId = courseDraftId,
+        draftStatus = targetStatus,
+    )
+
+    // ---------- 진행 중 임시 코스 조회 (GET /api/course-drafts/current) ----------
+
+    /**
+     * mock 에서는 "진행 중인 임시 코스 없음"(200 + result null)으로 둔다.
+     * 취향 설정 화면이 항상 빈 선택으로 시작해 mock 플로우를 처음부터 밟을 수 있다.
+     */
+    val currentCourseDraft: CurrentCourseDraftResponseDto? = null
+
+    // ---------- 임시 코스 포기 (DELETE /api/course-drafts/{id}) ----------
+
+    fun abandonResult(courseDraftId: Long) = AbandonCourseDraftResponseDto(
+        courseDraftId = courseDraftId,
+        draftStatus = "ABANDONED",
+        expiresAt = null,
     )
 
     // ---------- 기준 장소 설정 (PATCH /api/course-drafts/{id}/base-place) ----------

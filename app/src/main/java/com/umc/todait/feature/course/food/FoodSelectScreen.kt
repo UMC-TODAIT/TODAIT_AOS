@@ -26,10 +26,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.todait.R
 import com.umc.todait.core.network.UiError
 import com.umc.todait.feature.course.data.dto.FoodCategoryDto
+import com.umc.todait.ui.component.CommonDialog
 import com.umc.todait.ui.component.ErrorContent
 import com.umc.todait.ui.component.LoadingIndicator
 import com.umc.todait.ui.component.ScreenTopBar
@@ -51,20 +54,27 @@ fun FoodSelectScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    // 뒤 단계에서 이전 버튼으로 돌아왔을 때 저장 기준값을 다시 받아온다(장소 보유 여부가 바뀌었을 수 있다).
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.onScreenResumed() }
+
     LaunchedEffect(viewModel) {
         viewModel.effect.collect { effect ->
             when (effect) {
                 is FoodSelectEffect.NavigateToBasePlace -> onNavigateToBasePlace(effect.courseDraftId)
+                // 이전 버튼은 단계 이동 API 를 먼저 부르므로 화면 이동도 ViewModel 이 알려줄 때 한다.
+                FoodSelectEffect.NavigateBack -> onBack()
             }
         }
     }
 
     FoodSelectContent(
         state = uiState,
-        onBack = onBack,
+        onBack = viewModel::onBackClick,
         onToggleFood = viewModel::onToggleFood,
         onConfirmClick = viewModel::onConfirmClick,
         onRetry = viewModel::loadFoodCategories,
+        onResetAlertConfirm = viewModel::onResetAlertConfirm,
+        onResetAlertDismiss = viewModel::onResetAlertDismiss,
         modifier = modifier,
     )
 }
@@ -76,6 +86,8 @@ private fun FoodSelectContent(
     onToggleFood: (String) -> Unit,
     onConfirmClick: () -> Unit,
     onRetry: () -> Unit,
+    onResetAlertConfirm: () -> Unit,
+    onResetAlertDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -129,6 +141,16 @@ private fun FoodSelectContent(
                 )
             }
         }
+    }
+
+    // 음식 취향을 실제로 바꿨고 임시 코스에 저장된 장소가 있을 때만 뜬다.
+    // [확인] 이 저장 API 를 부르고, 그 결과로 서버가 장소 데이터를 초기화한다.
+    if (state.showResetAlert) {
+        CommonDialog(
+            title = stringResource(R.string.food_select_reset_alert),
+            onConfirm = onResetAlertConfirm,
+            onDismiss = onResetAlertDismiss,
+        )
     }
 }
 
@@ -188,6 +210,8 @@ private fun FoodSelectContentPreview() {
             },
             onConfirmClick = {},
             onRetry = {},
+            onResetAlertConfirm = {},
+            onResetAlertDismiss = {},
         )
     }
 }

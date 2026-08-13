@@ -40,6 +40,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.umc.todait.R
 import com.umc.todait.navigation.Screen
+import com.umc.todait.navigation.navigateOnce
 import com.umc.todait.ui.component.EmptyContent
 import com.umc.todait.ui.component.ErrorContent
 import com.umc.todait.ui.component.LoadingIndicator
@@ -164,7 +165,7 @@ fun SavedCoursesScreen(
                                     SavedCourseCard(
                                         course = course,
                                         onClick = {
-                                            navController.navigate(
+                                            navController.navigateOnce(
                                                 Screen.CourseDetail.createRoute(course.id)
                                             )
                                         },
@@ -191,7 +192,7 @@ fun SavedCoursesScreen(
                                     SavedCourseCard(
                                         course = course,
                                         onClick = {
-                                            navController.navigate(
+                                            navController.navigateOnce(
                                                 Screen.CourseDetail.createRoute(course.id)
                                             )
                                         },

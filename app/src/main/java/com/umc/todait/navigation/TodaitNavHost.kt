@@ -8,6 +8,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -36,6 +37,7 @@ import com.umc.todait.feature.auth.signupcomplete.SignupCompleteScreen
 import com.umc.todait.feature.auth.terms.TermsAgreementScreen
 import com.umc.todait.feature.auth.terms.TermsFlow
 import com.umc.todait.feature.course.base_place.BasePlaceScreen
+import com.umc.todait.feature.course.data.dto.CourseDraftStatus
 import com.umc.todait.feature.course.food.FoodSelectScreen
 import com.umc.todait.feature.course.mood.MoodSelectScreen
 import com.umc.todait.feature.course.compose.CourseComposeScreen
@@ -310,13 +312,13 @@ fun TodaitApp() {
             composable(Screen.Home.route) {
                 HomeScreen(
                     onCourseClick = { courseId ->
-                        navController.navigate(Screen.RecommendedCourseDetail.createRoute(courseId))
+                        navController.navigateOnce(Screen.RecommendedCourseDetail.createRoute(courseId))
                     },
                     onPlaceClick = { placeId ->
-                        navController.navigate(Screen.PlaceDetail.createRoute(placeId))
+                        navController.navigateOnce(Screen.PlaceDetail.createRoute(placeId))
                     },
                     // TODO: 알림 화면 없음(스코프 밖) — 생기면 연결.
-                    onProfileClick = { navController.navigate(Screen.MyPage.route) },
+                    onProfileClick = { navController.navigateOnce(Screen.MyPage.route) },
                 )
             }
             composable(
@@ -328,7 +330,7 @@ fun TodaitApp() {
                 RecommendedCourseDetailScreen(
                     onBack = { navController.popBackStack() },
                     onNavigateToPlaceDetail = { placeId ->
-                        navController.navigate(Screen.PlaceDetail.createRoute(placeId))
+                        navController.navigateOnce(Screen.PlaceDetail.createRoute(placeId))
                     },
                     onNavigateToSavedCourses = {
                         // "저장된 코스"로 이동은 하단 탭 전환과 동일하게 취급한다 — BottomBar.onTabClick과
@@ -347,7 +349,10 @@ fun TodaitApp() {
                 MoodSelectScreen(
                     onBack = { navController.popBackStack() },
                     onNavigateToFood = { courseDraftId ->
-                        navController.navigate(Screen.FoodSelect.createRoute(courseDraftId))
+                        navController.navigateOnce(Screen.FoodSelect.createRoute(courseDraftId))
+                    },
+                    onResumeStep = { status, courseDraftId, basePlaceId ->
+                        navController.navigateToDraftStep(status, courseDraftId, basePlaceId)
                     },
                 )
             }
@@ -360,7 +365,7 @@ fun TodaitApp() {
                 FoodSelectScreen(
                     onBack = { navController.popBackStack() },
                     onNavigateToBasePlace = { courseDraftId ->
-                        navController.navigate(Screen.BasePlace.createRoute(courseDraftId))
+                        navController.navigateOnce(Screen.BasePlace.createRoute(courseDraftId))
                     },
                 )
             }
@@ -373,12 +378,12 @@ fun TodaitApp() {
                 BasePlaceScreen(
                     // 기준 장소가 서버에 저장된 뒤에만 넘어온다(PATCH .../base-place 성공).
                     onNavigateToCompose = { courseDraftId, basePlaceId ->
-                        navController.navigate(
+                        navController.navigateOnce(
                             Screen.CourseComposeGraph.createRoute(courseDraftId, basePlaceId),
                         )
                     },
                     onNavigateToDetail = { placeId ->
-                        navController.navigate(Screen.PlaceDetail.createRoute(placeId))
+                        navController.navigateOnce(Screen.PlaceDetail.createRoute(placeId))
                     },
                     onBack = { navController.popBackStack() },
                 )
@@ -393,10 +398,10 @@ fun TodaitApp() {
                 PlaceDetailScreen(
                     onBack = { navController.popBackStack() },
                     onSeeAllPhotos = {
-                        navController.navigate(Screen.InteriorPhotos.createRoute(placeId))
+                        navController.navigateOnce(Screen.InteriorPhotos.createRoute(placeId))
                     },
                     onSeeAllMenu = {
-                        navController.navigate(Screen.MenuFull.createRoute(placeId))
+                        navController.navigateOnce(Screen.MenuFull.createRoute(placeId))
                     },
                 )
             }
@@ -437,10 +442,10 @@ fun TodaitApp() {
                     CourseComposeScreen(
                         viewModel = viewModel,
                         onNavigateToDetail = { placeId ->
-                            navController.navigate(Screen.PlaceDetail.createRoute(placeId))
+                            navController.navigateOnce(Screen.PlaceDetail.createRoute(placeId))
                         },
                         onNavigateToSelected = {
-                            navController.navigate(Screen.SelectedPlaces.route)
+                            navController.navigateOnce(Screen.SelectedPlaces.route)
                         },
                         onBack = { navController.popBackStack() },
                     )
@@ -450,7 +455,7 @@ fun TodaitApp() {
                     val viewModel: CourseComposeViewModel = hiltViewModel(graphEntry)
                     SelectedPlacesScreen(
                         viewModel = viewModel,
-                        onNavigateToSave = { navController.navigate(Screen.CourseSave.route) },
+                        onNavigateToSave = { navController.navigateOnce(Screen.CourseSave.route) },
                         onBack = { navController.popBackStack() },
                     )
                 }
@@ -505,4 +510,59 @@ fun TodaitApp() {
             }
         }
     }
+}
+
+/**
+ * "이어서 하기" — 진행 중이던 임시 코스가 멈춰 있던 단계 화면으로 보낸다.
+ *
+ * 코스 구성 플로우의 세 화면(장소 선택·순서 설정·저장)은 중첩 그래프 안에 있고 그래프가
+ * courseDraftId·basePlaceId 를 경로 변수로 요구한다. 그래서 그래프 진입 화면부터 쌓은 뒤
+ * 목표 화면까지 밀어 넣는다 — 이렇게 해야 되돌아갈 back stack 도 정상적으로 만들어진다.
+ *
+ * 기준 장소가 아직 없으면(=[basePlaceId] 가 null) 그래프에 들어갈 수 없으므로
+ * 기준 장소 설정 화면까지만 보낸다.
+ */
+private fun NavHostController.navigateToDraftStep(
+    status: CourseDraftStatus,
+    courseDraftId: Long,
+    basePlaceId: Long?,
+) {
+    // 목표 화면 하나만 navigate 하면 back stack 이 [분위기 선택] → [목표 화면] 이 되어,
+    // 목표 화면의 이전 버튼이 단계상 이전 화면이 아니라 분위기 선택으로 돌아가 버린다
+    // (status 는 이전 단계로 갔는데 화면은 첫 단계인 어긋난 상태). 그래서 거쳐 온 화면을
+    // 순서대로 다 쌓는다. 시작점인 분위기 선택은 이미 스택에 있으므로 넣지 않는다.
+    val routes = mutableListOf<String>()
+
+    when (status) {
+        // 분위기 선택은 이미 보고 있는 화면이라 이동하지 않는다(화면에서 선택값만 되살린다).
+        CourseDraftStatus.MOOD_SELECTING -> return
+
+        // current 조회에서 내려오지 않는 상태들(명세). 방어적으로 아무 데도 보내지 않는다.
+        CourseDraftStatus.COMPLETED, CourseDraftStatus.ABANDONED -> return
+
+        CourseDraftStatus.FOOD_SELECTING -> routes += Screen.FoodSelect.createRoute(courseDraftId)
+
+        CourseDraftStatus.BASE_PLACE_SELECTING,
+        CourseDraftStatus.PLACE_SELECTING,
+        CourseDraftStatus.ORDERING,
+        CourseDraftStatus.SAVING,
+        -> {
+            routes += Screen.FoodSelect.createRoute(courseDraftId)
+            routes += Screen.BasePlace.createRoute(courseDraftId)
+
+            // 기준 장소가 아직 없으면 코스 구성 그래프에 들어갈 수 없다(경로 변수가 없다).
+            // 서버 단계가 앞서 있어도 기준 장소 화면까지만 보낸다.
+            if (status != CourseDraftStatus.BASE_PLACE_SELECTING && basePlaceId != null) {
+                routes += Screen.CourseComposeGraph.createRoute(courseDraftId, basePlaceId)
+                if (status == CourseDraftStatus.ORDERING || status == CourseDraftStatus.SAVING) {
+                    routes += Screen.SelectedPlaces.route
+                }
+                if (status == CourseDraftStatus.SAVING) {
+                    routes += Screen.CourseSave.route
+                }
+            }
+        }
+    }
+
+    routes.forEach { navigate(it) }
 }

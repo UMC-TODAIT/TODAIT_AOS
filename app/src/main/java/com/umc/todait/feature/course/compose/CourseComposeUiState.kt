@@ -2,6 +2,7 @@ package com.umc.todait.feature.course.compose
 
 import com.umc.todait.core.location.Coordinate
 import com.umc.todait.feature.course.base_place.PlaceUiModel
+import com.umc.todait.feature.course.data.dto.CurrentDraftPlaceDto
 import com.umc.todait.feature.course.data.dto.PlaceCategoryResponseDto
 import com.umc.todait.feature.course.data.dto.PlaceDetailDto
 
@@ -54,10 +55,6 @@ data class CourseComposeUiState(
      */
     val selectedPlaces: List<PlaceUiModel> get() = orderedPlaces.filterNot { it.key == basePlaceKey }
 
-    /** 기준 장소가 코스의 첫 장소인지. 순서 변경 API 페이로드 모양이 이 값에 따라 달라진다. */
-    val isBasePlaceFirst: Boolean
-        get() = basePlaceKey == null || orderedPlaces.firstOrNull()?.key == basePlaceKey
-
     /** 담은 장소가 하나라도 있어야 확정(다음 단계) 가능. */
     val canConfirm: Boolean get() = selectedPlaces.isNotEmpty()
 
@@ -104,6 +101,33 @@ fun PlaceDetailDto.toBasePlaceUiModel(): PlaceUiModel = PlaceUiModel(
     categoryCode = placeCategory.code,
     subCategory = subCategory,
     phone = phone,
+)
+
+/**
+ * 진행 중 임시 코스의 장소 DTO → 코스 구성 화면 모델.
+ *
+ * "이어서 하기"로 코스 구성 단계에 복귀할 때 담아뒀던 장소를 되살리는 데 쓴다.
+ * 응답에 카드 렌더에 필요한 이름·주소·좌표·이미지·지역·카테고리가 모두 들어 있어
+ * 장소 상세를 다시 조회하지 않아도 된다.
+ *
+ * [PlaceUiModel.courseDraftPlaceId] 를 함께 채워야 순서 변경 요청을 바로 보낼 수 있다.
+ */
+fun CurrentDraftPlaceDto.toUiModel(): PlaceUiModel = PlaceUiModel(
+    placeId = placeId,
+    name = name,
+    address = roadAddress?.takeIf { it.isNotBlank() } ?: address,
+    category = category?.name.orEmpty(),
+    areaName = area?.name.orEmpty(),
+    imageUrl = imageUrl?.takeIf { it.isNotBlank() },
+    reasonText = null,
+    latitude = latitude,
+    longitude = longitude,
+    jibunAddress = address,
+    roadAddress = roadAddress,
+    areaCode = area?.code.orEmpty(),
+    categoryCode = category?.code.orEmpty(),
+    subCategory = subCategory,
+    courseDraftPlaceId = courseDraftPlaceId,
 )
 
 /**

@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.umc.todait.core.network.ApiResult
 import com.umc.todait.core.network.toUiError
+import com.umc.todait.feature.course.data.dto.CourseDraftStatus
 import com.umc.todait.feature.course.data.repository.CourseDraftRepository
 import com.umc.todait.feature.course.data.repository.RecommendationRepository
 import com.umc.todait.feature.course.data.repository.SearchRepository
@@ -218,6 +219,19 @@ class BasePlaceViewModel @Inject constructor(
         }
     }
 
+    /**
+     * 이전 버튼(`<`) → 단계 이동 API 호출 후 음식 선택 화면으로 돌아간다.
+     *
+     * 단순 화면 이동이라 기준 장소를 지우지도, 알림을 띄우지도 않는다. 단계 이동 호출이
+     * 실패해도 화면은 넘긴다 — 사용자에게는 뒤로 가기일 뿐이다.
+     */
+    fun onBackClick() {
+        viewModelScope.launch {
+            courseDraftRepository.moveToStatus(courseDraftId, CourseDraftStatus.FOOD_SELECTING)
+            _effect.send(BasePlaceEffect.NavigateBack)
+        }
+    }
+
     private fun PlaceUiModel.hasCoordinate(): Boolean = latitude != 0.0 || longitude != 0.0
 
     companion object {
@@ -251,4 +265,7 @@ sealed interface BasePlaceEffect {
         val courseDraftId: Long,
         val basePlaceId: Long,
     ) : BasePlaceEffect
+
+    /** 이전 버튼(`<`) → 단계 이동 API 를 부른 뒤 음식 선택 화면으로 돌아간다. */
+    data object NavigateBack : BasePlaceEffect
 }

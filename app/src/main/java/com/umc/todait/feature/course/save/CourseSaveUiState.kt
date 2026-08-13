@@ -69,4 +69,7 @@ sealed interface CourseSaveEffect {
 
     /** 저장 완료 다이얼로그 [건너뛰기] → 홈으로. */
     data object NavigateToHome : CourseSaveEffect
+
+    /** 이전 버튼(`<`) → 단계 이동 API 를 부른 뒤 순서 설정 화면으로 돌아간다. */
+    data object NavigateBack : CourseSaveEffect
 }

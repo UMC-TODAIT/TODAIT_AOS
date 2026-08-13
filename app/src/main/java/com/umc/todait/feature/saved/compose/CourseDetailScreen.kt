@@ -59,6 +59,7 @@ import com.umc.todait.ui.theme.Suit
 import com.umc.todait.ui.theme.TextPlaceholder
 import com.umc.todait.ui.theme.White
 import com.umc.todait.navigation.Screen
+import com.umc.todait.navigation.navigateOnce
 import com.umc.todait.ui.theme.Gray200
 import com.umc.todait.ui.theme.Gray500
 import androidx.compose.foundation.Canvas
@@ -188,7 +189,7 @@ fun CourseDetailScreen(
                                     decorationRes = cardDecorationRes,
                                     onClick = place.placeId?.let { placeId ->
                                         {
-                                            navController.navigate(
+                                            navController.navigateOnce(
                                                 Screen.PlaceDetail.createRoute(placeId)
                                             )
                                         }

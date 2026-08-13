@@ -117,6 +117,8 @@ fun BasePlaceScreen(
             when (effect) {
                 is BasePlaceEffect.NavigateToCompose ->
                     onNavigateToCompose(effect.courseDraftId, effect.basePlaceId)
+                // 이전 버튼은 단계 이동 API 를 먼저 부르므로 화면 이동도 ViewModel 이 알려줄 때 한다.
+                BasePlaceEffect.NavigateBack -> onBack()
             }
         }
     }
@@ -124,7 +126,7 @@ fun BasePlaceScreen(
     Box(modifier = modifier.fillMaxSize()) {
         BasePlaceContent(
             state = uiState,
-            onBack = onBack,
+            onBack = viewModel::onBackClick,
             onSearchQueryChange = viewModel::onSearchQueryChange,
             onSearch = viewModel::onSearch,
             onClearSearch = viewModel::onClearSearch,

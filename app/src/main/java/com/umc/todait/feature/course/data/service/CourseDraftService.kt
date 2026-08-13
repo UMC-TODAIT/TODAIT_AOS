@@ -1,6 +1,7 @@
 package com.umc.todait.feature.course.data.service
 
 import com.umc.todait.core.network.BaseResponse
+import com.umc.todait.feature.course.data.dto.AbandonCourseDraftResponseDto
 import com.umc.todait.feature.course.data.dto.BasePlaceSetRequestDto
 import com.umc.todait.feature.course.data.dto.BasePlaceSetResponseDto
 import com.umc.todait.feature.course.data.dto.CourseDraftCreateResponseDto
@@ -11,12 +12,17 @@ import com.umc.todait.feature.course.data.dto.CourseDraftPlaceAddResponseDto
 import com.umc.todait.feature.course.data.dto.CourseDraftSavingEnterResponseDto
 import com.umc.todait.feature.course.data.dto.CourseSaveRequestDto
 import com.umc.todait.feature.course.data.dto.CourseSaveResponseDto
+import com.umc.todait.feature.course.data.dto.CurrentCourseDraftResponseDto
 import com.umc.todait.feature.course.data.dto.FoodCategorySaveRequestDto
 import com.umc.todait.feature.course.data.dto.MoodTagSaveRequestDto
 import com.umc.todait.feature.course.data.dto.OrderingEntryResponseDto
 import com.umc.todait.feature.course.data.dto.PlaceOrderUpdateRequestDto
 import com.umc.todait.feature.course.data.dto.PlaceOrderUpdateResponseDto
+import com.umc.todait.feature.course.data.dto.StatusUpdateRequestDto
+import com.umc.todait.feature.course.data.dto.StatusUpdateResponseDto
 import retrofit2.http.Body
+import retrofit2.http.DELETE
+import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
@@ -130,4 +136,36 @@ interface CourseDraftService {
         @Path("courseDraftId") courseDraftId: Long,
         @Body request: CourseSaveRequestDto,
     ): BaseResponse<CourseSaveResponseDto>
+
+    /**
+     * 임시 코스 이전 단계 이동 — PATCH /api/course-drafts/{courseDraftId}/status
+     *
+     * 이전 버튼(`<`)이 호출한다. 이전 단계 이동은 화면 이동으로 취급하므로 기존 선택 데이터
+     * (무드·음식·기준 장소·선택 장소·순서)를 삭제하지 않는다. COMPLETED/ABANDONED 는 되돌릴 수 없다.
+     */
+    @PATCH("api/course-drafts/{courseDraftId}/status")
+    suspend fun updateStatus(
+        @Path("courseDraftId") courseDraftId: Long,
+        @Body request: StatusUpdateRequestDto,
+    ): BaseResponse<StatusUpdateResponseDto>
+
+    /**
+     * 진행 중인 임시 코스 조회 — GET /api/course-drafts/current
+     *
+     * ⚠️ 진행 중인 임시 코스가 없으면 200 OK + `result: null` 이다. 오류가 아니므로
+     * 리포지토리에서 safeNullableApiCall 로 받는다.
+     */
+    @GET("api/course-drafts/current")
+    suspend fun getCurrentCourseDraft(): BaseResponse<CurrentCourseDraftResponseDto>
+
+    /**
+     * 진행 중인 임시 코스 포기 — DELETE /api/course-drafts/{courseDraftId}
+     *
+     * 코스 만들기 진입에서 [새로 만들기] 를 골랐을 때 기존 임시 코스를 ABANDONED 로 바꾼다.
+     * 이미 COMPLETED/ABANDONED 인 임시 코스는 409 다.
+     */
+    @DELETE("api/course-drafts/{courseDraftId}")
+    suspend fun abandonCourseDraft(
+        @Path("courseDraftId") courseDraftId: Long,
+    ): BaseResponse<AbandonCourseDraftResponseDto>
 }

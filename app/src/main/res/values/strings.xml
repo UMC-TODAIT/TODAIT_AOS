@@ -80,15 +80,26 @@
     <string name="terms_agreement_check_content_description">동의</string>
     <string name="terms_agreement_detail_content_description">약관 상세 보기</string>
 
+    <!-- 진행 중인 임시 코스 복구/포기 (코스 만들기 진입) -->
+    <string name="course_draft_resume_title">이전에 만들던 코스가 있어요. 이어서 완성할까요?</string>
+    <string name="course_draft_resume_warning">새로 만들기를 선택하면 기존에 구성 중이던 코스는 삭제됩니다.</string>
+    <string name="course_draft_resume_continue">이어서 하기</string>
+    <string name="course_draft_resume_start_new">새로 만들기</string>
+    <string name="course_draft_abandon_failed">기존 코스를 정리하지 못했어요. 다시 시도해주세요.</string>
+
     <!-- Mood select (분위기 선택) -->
     <string name="mood_select_title">취향 설정</string>
     <string name="mood_select_headline">오늘 어떤 분위기를 원하시나요?</string>
     <string name="mood_select_subtitle">원하는 분위기를 최소 %1$d개 이상 선택해주세요.</string>
+    <!-- 무드를 바꿔 확인(✅)했고 임시 코스에 저장된 장소가 있을 때 -->
+    <string name="mood_select_reset_alert">무드를 변경하면 저장했던 장소 정보가 초기화됩니다. 변경하시겠습니까?</string>
 
     <!-- Food select (음식 선택) -->
     <string name="food_select_title">취향 설정</string>
     <string name="food_select_headline">어떤 음식을 드시고 싶으신가요?</string>
     <string name="food_select_subtitle">음식 취향을 최소 %1$d개 이상 선택해주세요.</string>
+    <!-- 음식 취향을 바꿔 확인(✅)했고 임시 코스에 저장된 장소가 있을 때 -->
+    <string name="food_select_reset_alert">음식 취향을 변경하면 저장했던 장소 정보가 초기화됩니다. 변경하시겠습니까?</string>
 
     <!-- Base place (기준 장소 설정) -->
     <string name="base_place_title">기준 장소 설정</string>

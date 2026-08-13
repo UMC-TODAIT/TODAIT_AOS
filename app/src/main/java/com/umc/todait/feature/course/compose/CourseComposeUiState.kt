@@ -55,10 +55,6 @@ data class CourseComposeUiState(
      */
     val selectedPlaces: List<PlaceUiModel> get() = orderedPlaces.filterNot { it.key == basePlaceKey }
 
-    /** 기준 장소가 코스의 첫 장소인지. 순서 변경 API 페이로드 모양이 이 값에 따라 달라진다. */
-    val isBasePlaceFirst: Boolean
-        get() = basePlaceKey == null || orderedPlaces.firstOrNull()?.key == basePlaceKey
-
     /** 담은 장소가 하나라도 있어야 확정(다음 단계) 가능. */
     val canConfirm: Boolean get() = selectedPlaces.isNotEmpty()
 

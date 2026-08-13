@@ -11,8 +11,6 @@ import com.umc.todait.feature.course.base_place.toUiModel
 import com.umc.todait.feature.course.data.dto.CourseDraftPlaceDto
 import com.umc.todait.feature.course.data.dto.CourseDraftStatus
 import com.umc.todait.feature.course.data.repository.CourseDraftRepository
-import com.umc.todait.feature.course.data.repository.CourseDraftRepository.Companion.FIRST_SELECTED_VISIT_ORDER
-import com.umc.todait.feature.course.data.repository.CourseDraftRepository.Companion.FIRST_VISIT_ORDER
 import com.umc.todait.feature.course.data.repository.PlaceCategoryRepository
 import com.umc.todait.feature.course.data.repository.PlaceRepository
 import com.umc.todait.feature.course.data.repository.RecommendationRepository
@@ -335,11 +333,11 @@ class CourseComposeViewModel @Inject constructor(
      * 1번은 서버가 부여한 courseDraftPlaceId 를 모두 알고 있을 때만 보낸다. id 는 선택 장소 추가 응답에서
      * 받아 두지만, 이전 세션에서 담긴 장소처럼 id 를 못 받은 항목이 섞여 있으면 순서 저장을 건너뛴다.
      *
-     * ⚠️ 페이로드 모양이 기준 장소 위치에 따라 달라진다.
-     * 명세상 순서 변경 요청은 "기준 장소를 빼고 visitOrder 2부터"인데, 이는 기준 장소가 항상 1번이라는
-     * 전제에서 나온 규칙이다. 기준 장소를 다른 자리로 옮기면 그 전제로는 순서를 표현할 수 없으므로
-     * 기준 장소까지 포함해 visitOrder 1부터 보낸다. 서버가 아직 이 형태를 안 받으면 실패 응답이
-     * [CourseComposeUiState.submitError] 로 그대로 노출된다(조용히 어긋나지는 않는다).
+     * ⚠️ 페이로드는 **기준 장소를 포함한 전체 순서를 visitOrder 1부터** 보낸다.
+     * 명세는 "기준 장소를 빼고 visitOrder 2부터"라고 돼 있지만 배포 서버가 그 형태를 거부한다
+     * (COURSE_ORDER400 "방문 순서가 올바르지 않습니다" — 1번이 비어 순서가 끊긴 것으로 본다).
+     * 기준 장소를 옮기지 않은 기본 경로가 늘 여기 걸려 코스 저장까지 갈 수 없었다.
+     * 전체를 1부터 보내는 형태는 기준 장소가 1번일 때도, 다른 자리로 옮겼을 때도 200 이다.
      */
     fun onOrderConfirmed() {
         val state = _uiState.value
@@ -347,15 +345,12 @@ class CourseComposeViewModel @Inject constructor(
 
         _uiState.update { it.copy(isSubmitting = true, submitError = null) }
         viewModelScope.launch {
-            // 기준 장소가 1번이면 기존 규약대로(기준 장소 제외, 2번부터), 옮겼으면 전체를 1번부터.
-            val placesToOrder = if (state.isBasePlaceFirst) state.selectedPlaces else state.orderedPlaces
-            val firstVisitOrder = if (state.isBasePlaceFirst) FIRST_SELECTED_VISIT_ORDER else FIRST_VISIT_ORDER
-            val draftPlaceIds = placesToOrder.map { it.courseDraftPlaceId }
+            // 기준 장소를 포함한 전체 순서를 1번부터 보낸다. 위치와 무관하게 이 형태 하나만 쓴다.
+            val draftPlaceIds = state.orderedPlaces.map { it.courseDraftPlaceId }
             if (draftPlaceIds.isNotEmpty() && draftPlaceIds.all { it != null }) {
                 val orderResult = courseDraftRepository.updatePlaceOrder(
                     courseDraftId = courseDraftId,
                     orderedPlaceIds = draftPlaceIds.filterNotNull(),
-                    firstVisitOrder = firstVisitOrder,
                 )
                 if (orderResult is ApiResult.Failure) {
                     _uiState.update {

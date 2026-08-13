@@ -10,6 +10,7 @@ import com.umc.todait.core.network.ApiResult
 import com.umc.todait.core.network.toUiError
 import com.umc.todait.feature.auth.data.dto.TermAgreementDto
 import com.umc.todait.feature.auth.data.repository.AuthRepository
+import com.umc.todait.feature.auth.onboarding.NicknameStatus
 import com.umc.todait.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -52,7 +53,31 @@ class SignupViewModel @Inject constructor(
     private var countdownJob: Job? = null
 
     fun onNicknameChange(value: String) {
-        _uiState.update { it.copy(nickname = value) }
+        // 입력이 바뀌면 직전 검사 결과를 초기화해 메시지를 지운다(닉네임 설정 화면과 동일).
+        _uiState.update { it.copy(nickname = value, nicknameStatus = NicknameStatus.IDLE) }
+    }
+
+    /** 닉네임 중복 확인(GET /api/members/nickname-availability, 인증 불필요). */
+    fun onCheckNicknameClick() {
+        val nickname = _uiState.value.nickname
+        // 형식 위반(특수문자·길이)은 서버 호출 없이 즉시 사용 불가로 처리한다.
+        if (!_uiState.value.isNicknameValid) {
+            _uiState.update { it.copy(nicknameStatus = NicknameStatus.UNAVAILABLE) }
+            return
+        }
+        _uiState.update { it.copy(isCheckingNickname = true) }
+        viewModelScope.launch {
+            val result = authRepository.checkNicknameAvailability(nickname)
+            _uiState.update { state ->
+                val status = when (result) {
+                    is ApiResult.Success ->
+                        if (result.data.available) NicknameStatus.AVAILABLE else NicknameStatus.UNAVAILABLE
+                    // 네트워크/서버 오류는 우선 사용 불가로 처리한다(닉네임 설정 화면과 동일).
+                    is ApiResult.Failure -> NicknameStatus.UNAVAILABLE
+                }
+                state.copy(isCheckingNickname = false, nicknameStatus = status)
+            }
+        }
     }
 
     fun onEmailChange(value: String) {

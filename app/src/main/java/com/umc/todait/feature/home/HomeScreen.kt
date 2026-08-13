@@ -419,7 +419,6 @@ private fun HomePlacesSection(placesState: HomePlacesState, onPlaceClick: (Long)
                         offsetX = (-10).dp, offsetY = (-15).dp, scale = 0.8f,
                     )
                 },
-                onSaveClick = { /* TODO: 코스 저장 API 연동(동작 확정 필요) */ },
             )
         }
     }
@@ -439,7 +438,6 @@ private fun PlaceCard(
     onClick: () -> Unit,
     gradient: List<Color>,
     decoration: PlaceDecoration,
-    onSaveClick: () -> Unit,
 ) {
     Box(
         modifier = Modifier
@@ -500,15 +498,6 @@ private fun PlaceCard(
                 }
             }
         }
-        Image(
-            painter = painterResource(R.drawable.ic_home_place_add),
-            contentDescription = stringResource(R.string.home_place_save_content_description),
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(14.dp)
-                .size(17.dp)
-                .clickable(onClick = onSaveClick),
-        )
     }
 }
 

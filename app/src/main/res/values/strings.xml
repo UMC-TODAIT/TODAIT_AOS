@@ -160,7 +160,6 @@
     <string name="home_greeting_anonymous">오늘은 어떤 하루를 만들어볼까요?</string>
     <string name="home_section_places_title_anonymous">취향 기반 추천 장소</string>
     <string name="home_section_places_subtitle_anonymous">취향을 기반으로 추천장소를 모아봤어요.</string>
-    <string name="home_place_save_content_description">코스에 저장</string>
 
     <!-- Recommended Course Detail (추천 코스 상세) -->
     <string name="recommended_course_detail_back_content_description">뒤로가기</string>

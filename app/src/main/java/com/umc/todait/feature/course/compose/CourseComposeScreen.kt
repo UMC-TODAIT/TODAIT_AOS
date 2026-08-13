@@ -54,7 +54,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.umc.todait.R
 import com.umc.todait.core.network.UiError
-import com.umc.todait.feature.course.base_place.BasePlaceSystemAlert
+import com.umc.todait.ui.component.CommonDialog
 import com.umc.todait.feature.course.base_place.PlaceUiModel
 import com.umc.todait.feature.course.data.dto.CourseDraftStatus
 import com.umc.todait.ui.component.ErrorContent
@@ -158,31 +158,29 @@ fun CourseComposeScreen(
         )
 
         when (val alert = uiState.alert) {
-            CourseComposeAlert.Duplicate -> BasePlaceSystemAlert(
-                title = stringResource(R.string.course_compose_duplicate_title),
-                description = stringResource(R.string.course_compose_duplicate_desc),
+            CourseComposeAlert.Duplicate -> CommonDialog(
+                title = stringResource(R.string.course_compose_duplicate_title) + "\n" +
+                    stringResource(R.string.course_compose_duplicate_desc),
                 onConfirm = viewModel::onDismissAlert,
-                onCancel = viewModel::onDismissAlert,
+                onDismiss = viewModel::onDismissAlert,
             )
 
             // 선택 장소 추가 실패. 서버가 준 문구(중복·기준 장소·최대 개수 등)를 그대로 보여준다.
-            is CourseComposeAlert.AddFailed -> BasePlaceSystemAlert(
-                title = stringResource(R.string.course_compose_add_error_title),
-                description = alert.message,
+            is CourseComposeAlert.AddFailed -> CommonDialog(
+                title = stringResource(R.string.course_compose_add_error_title) + "\n" + alert.message,
                 onConfirm = viewModel::onDismissAlert,
-                onCancel = viewModel::onDismissAlert,
+                onDismiss = viewModel::onDismissAlert,
             )
 
             null -> Unit
         }
 
-        // 단계 전환 실패(권한/상태 충돌 등) 안내. 확인만 있는 단일 알럿으로 띄운다.
+        // 단계 전환 실패(권한/상태 충돌 등) 안내.
         uiState.submitError?.let { message ->
-            BasePlaceSystemAlert(
-                title = stringResource(R.string.course_compose_submit_error_title),
-                description = message,
+            CommonDialog(
+                title = stringResource(R.string.course_compose_submit_error_title) + "\n" + message,
                 onConfirm = viewModel::onDismissSubmitError,
-                onCancel = viewModel::onDismissSubmitError,
+                onDismiss = viewModel::onDismissSubmitError,
             )
         }
     }

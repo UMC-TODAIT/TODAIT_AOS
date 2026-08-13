@@ -57,6 +57,7 @@ import coil.compose.AsyncImage
 import com.umc.todait.R
 import com.umc.todait.core.network.UiError
 import com.umc.todait.feature.course.compose.CourseMood
+import com.umc.todait.ui.component.CommonDialog
 import com.umc.todait.ui.component.ErrorContent
 import com.umc.todait.ui.component.LoadingIndicator
 import com.umc.todait.ui.component.ScreenTopBar
@@ -142,21 +143,25 @@ fun BasePlaceScreen(
             onRetry = viewModel::loadNearbyHotPlaces,
         )
 
-        // 시스템 알럿(딤 배경 + 커스텀 다이얼로그) 오버레이.
+        // 시스템 알럿 오버레이. 시안(컴포넌트_System 시스템알럿)이 다른 화면과 같은 흰색 알럿이라 CommonDialog 를 쓴다.
         when (val alert = uiState.alert) {
-            is BasePlaceAlert.SelectRequired -> BasePlaceSystemAlert(
-                title = stringResource(R.string.base_place_select_required_title),
-                description = stringResource(R.string.base_place_select_required_desc),
+            is BasePlaceAlert.SelectRequired -> CommonDialog(
+                title = stringResource(R.string.base_place_select_required_title) + "\n" +
+                    stringResource(R.string.base_place_select_required_desc),
                 onConfirm = viewModel::onDismissAlert,
-                onCancel = viewModel::onDismissAlert,
+                onDismiss = viewModel::onDismissAlert,
             )
 
-            is BasePlaceAlert.Confirm -> BasePlaceSystemAlert(
-                title = stringResource(R.string.base_place_confirm_title, alert.place.name),
-                description = stringResource(R.string.base_place_confirm_desc, alert.place.name),
-                errorMessage = uiState.confirmError,
+            is BasePlaceAlert.Confirm -> CommonDialog(
+                // 확정 검증에 실패하면(지원 지역 외 등) 사유를 대신 보여준다.
+                title = uiState.confirmError
+                    ?: stringResource(
+                        R.string.base_place_confirm_title,
+                        alert.place.name,
+                        euroParticle(alert.place.name),
+                    ),
                 onConfirm = viewModel::onConfirmSelection,
-                onCancel = viewModel::onDismissAlert,
+                onDismiss = viewModel::onDismissAlert,
             )
 
             null -> Unit
@@ -615,4 +620,18 @@ private fun BasePlaceContentEmptyPreview() {
             onRetry = {},
         )
     }
+}
+
+/**
+ * 장소 이름 뒤에 붙는 조사 "로"/"으로" 를 고른다.
+ *
+ * 받침이 없거나 받침이 'ㄹ' 이면 "로"(예: 뀌노이로, 신촌서울로), 그 외에는 "으로"(예: 광장으로).
+ * 한글이 아닌 글자로 끝나면(영문·숫자 상호 등) 시안 문구를 그대로 살리기 위해 "로" 로 둔다.
+ */
+private fun euroParticle(name: String): String {
+    val last = name.lastOrNull() ?: return "로"
+    if (last !in '가'..'힣') return "로"
+    val finalConsonant = (last - '가') % 28
+    // 0 = 받침 없음, 8 = 받침 'ㄹ'
+    return if (finalConsonant == 0 || finalConsonant == 8) "로" else "으로"
 }

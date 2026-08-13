@@ -37,7 +37,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.todait.R
-import com.umc.todait.feature.course.base_place.BasePlaceSystemAlert
+import com.umc.todait.ui.component.CommonDialog
 import com.umc.todait.feature.course.base_place.PlaceUiModel
 import com.umc.todait.feature.course.data.dto.CourseDraftStatus
 import com.umc.todait.ui.component.ScreenTopBar
@@ -170,11 +170,10 @@ fun SelectedPlacesScreen(
 
         // 순서 저장/저장 화면 진입 실패 안내.
         uiState.submitError?.let { message ->
-            BasePlaceSystemAlert(
-                title = stringResource(R.string.course_compose_submit_error_title),
-                description = message,
+            CommonDialog(
+                title = stringResource(R.string.course_compose_submit_error_title) + "\n" + message,
                 onConfirm = viewModel::onDismissSubmitError,
-                onCancel = viewModel::onDismissSubmitError,
+                onDismiss = viewModel::onDismissSubmitError,
             )
         }
     }

@@ -81,7 +81,8 @@
     <string name="terms_agreement_detail_content_description">약관 상세 보기</string>
 
     <!-- 진행 중인 임시 코스 복구/포기 (코스 만들기 진입) -->
-    <string name="course_draft_resume_title">이전에 만들던 코스가 있어요. 이어서 완성할까요?</string>
+    <!-- 시안대로 문장 단위로 줄을 나눈다(폭이 좁아지면 각 줄이 한 번 더 접힌다). -->
+    <string name="course_draft_resume_title">이전에 만들던 코스가 있어요.\n이어서 완성할까요?</string>
     <string name="course_draft_resume_warning">새로 만들기를 선택하면 기존에 구성 중이던 코스는 삭제됩니다.</string>
     <string name="course_draft_resume_continue">이어서 하기</string>
     <string name="course_draft_resume_start_new">새로 만들기</string>

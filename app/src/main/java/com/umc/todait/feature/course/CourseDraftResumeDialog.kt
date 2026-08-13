@@ -3,13 +3,15 @@ package com.umc.todait.feature.course
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Surface
@@ -25,10 +27,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.umc.todait.R
+import com.umc.todait.ui.theme.AlertWarningRed
 import com.umc.todait.ui.theme.DividerLine
+import com.umc.todait.ui.theme.Gray200
 import com.umc.todait.ui.theme.Gray800
-import com.umc.todait.ui.theme.LoginHeadingPink
+import com.umc.todait.ui.theme.Pink900
 import com.umc.todait.ui.theme.TodaitTheme
 import com.umc.todait.ui.theme.White
 
@@ -42,29 +47,41 @@ import com.umc.todait.ui.theme.White
  * - [onStartNew] "새로 만들기": 기존 임시 코스를 포기(DELETE)한 뒤 새로 만든다.
  *
  * 되돌릴 수 없는 선택이라 바깥 탭/뒤로가기로는 닫히지 않는다 — 둘 중 하나를 골라야 한다.
+ *
+ * 시안(393dp 기준 304x142)을 픽셀로 고정하지 않고, 좌우 여백과 최대 폭만 잡아 화면 폭에 맞춰
+ * 늘어나게 한다. 높이도 내용에 따라 잡히므로 글자 크기 설정이 커져도 문구가 잘리지 않는다.
  */
 @Composable
 fun CourseDraftResumeDialog(
     onContinue: () -> Unit,
     onStartNew: () -> Unit,
 ) {
-    Dialog(onDismissRequest = { /* 선택 없이 닫을 수 없다. */ }) {
+    Dialog(
+        onDismissRequest = { /* 선택 없이 닫을 수 없다. */ },
+        // 시스템 기본 폭 대신 화면 폭 기준으로 직접 잡는다.
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+    ) {
         Surface(
-            modifier = Modifier.width(304.dp),
-            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier
+                .padding(horizontal = 44.dp)
+                .fillMaxWidth()
+                .widthIn(max = 360.dp),
+            shape = RoundedCornerShape(12.dp),
             color = White,
         ) {
             Column {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 24.dp),
+                        // 경고 문구가 한 줄로 들어가야 해서 좌우 여백은 최소로 둔다.
+                        .padding(horizontal = 8.dp, vertical = 17.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Text(
                         text = stringResource(R.string.course_draft_resume_title),
                         modifier = Modifier.fillMaxWidth(),
                         fontSize = 16.sp,
+                        lineHeight = 20.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Gray800,
                         textAlign = TextAlign.Center,
@@ -73,28 +90,32 @@ fun CourseDraftResumeDialog(
                     Text(
                         text = stringResource(R.string.course_draft_resume_warning),
                         modifier = Modifier.fillMaxWidth(),
-                        fontSize = 12.sp,
+                        fontSize = 10.sp,
+                        lineHeight = 12.sp,
+                        fontWeight = FontWeight.Medium,
                         // 데이터가 지워진다는 경고라 본문과 색으로 구분한다.
-                        color = LoginHeadingPink,
+                        color = AlertWarningRed,
                         textAlign = TextAlign.Center,
                     )
                 }
 
                 HorizontalDivider(color = DividerLine)
 
-                Row(modifier = Modifier.height(55.dp)) {
+                // 세로 구분선이 버튼 높이를 따라가도록 행 높이를 내용 기준으로 잡는다.
+                Row(modifier = Modifier.height(IntrinsicSize.Min)) {
                     Box(
                         modifier = Modifier
                             .weight(1f)
+                            .heightIn(min = 48.dp)
                             .fillMaxHeight()
-                            .clickable { onStartNew() },
+                            .clickable { onContinue() },
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
-                            text = stringResource(R.string.course_draft_resume_start_new),
+                            text = stringResource(R.string.course_draft_resume_continue),
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Gray800,
+                            fontWeight = FontWeight.Medium,
+                            color = Gray200,
                         )
                     }
 
@@ -103,15 +124,16 @@ fun CourseDraftResumeDialog(
                     Box(
                         modifier = Modifier
                             .weight(1f)
+                            .heightIn(min = 48.dp)
                             .fillMaxHeight()
-                            .clickable { onContinue() },
+                            .clickable { onStartNew() },
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
-                            text = stringResource(R.string.course_draft_resume_continue),
+                            text = stringResource(R.string.course_draft_resume_start_new),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = LoginHeadingPink,
+                            color = Pink900,
                         )
                     }
                 }

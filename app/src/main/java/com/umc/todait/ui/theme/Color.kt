@@ -182,6 +182,7 @@ val HomePlaceMintEnd = Color(0xFF9AC7CE)
 
 // Semantic
 val Error = Color(0xFFF04438)
+val AlertWarningRed = Color(0xFFF74141)     // 시스템 알럿의 "삭제됩니다" 류 경고 문구 (Figma 시스템알럿)
 val Success = Color(0xFF12B76A)
 val Background = White
 val Surface = White

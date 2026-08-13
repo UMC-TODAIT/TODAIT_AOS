@@ -89,6 +89,8 @@ import com.umc.todait.ui.theme.Cream
 import com.umc.todait.ui.theme.Green700
 import com.umc.todait.ui.theme.Gray200
 import com.umc.todait.ui.theme.Gray500
+import com.umc.todait.ui.theme.Gray400
+import com.umc.todait.ui.theme.Gray800
 import com.umc.todait.ui.theme.Gray900
 import com.umc.todait.ui.theme.Pink800
 import com.umc.todait.ui.theme.SearchIconCircle
@@ -194,8 +196,9 @@ private fun BasePlaceContent(
             onConfirm = onConfirmClick,
         )
 
+        // Figma: 구분선 아래 23 → 검색창 → 27 → 섹션 제목(22 SemiBold, #222) → 8 → 안내(16 SemiBold, Gray-400) → 24 → 목록
         Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(23.dp))
             SearchBar(
                 query = state.searchQuery,
                 onQueryChange = onSearchQueryChange,
@@ -203,7 +206,7 @@ private fun BasePlaceContent(
                 onClear = onClearSearch,
             )
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(27.dp))
             Text(
                 text = if (state.isSearching) {
                     stringResource(R.string.base_place_section_search)
@@ -211,9 +214,19 @@ private fun BasePlaceContent(
                     stringResource(R.string.base_place_section_nearby)
                 },
                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold),
-                color = Gray900,
+                color = Gray800,
             )
-            Spacer(Modifier.height(16.dp))
+            // 길게 누르기로 상세를 볼 수 있다는 안내는 추천(핫플) 목록에만 있다.
+            if (!state.isSearching) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.base_place_long_press_hint),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Gray400,
+                )
+            }
+            Spacer(Modifier.height(24.dp))
 
             Box(modifier = Modifier.weight(1f)) {
                 when (val listState = state.listState) {
@@ -257,8 +270,8 @@ private fun SearchBar(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(48.dp),
-        shape = RoundedCornerShape(24.dp),
+            .height(45.dp),
+        shape = RoundedCornerShape(percent = 50),
         color = White,
         shadowElevation = 4.dp,
     ) {
@@ -382,7 +395,7 @@ private fun PlaceList(
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         itemsIndexed(places, key = { _, place -> place.key }) { index, place ->
             PlaceCard(

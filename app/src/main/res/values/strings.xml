@@ -109,6 +109,7 @@
     <string name="base_place_search_hint">원하는 장소를 검색해보세요</string>
     <string name="base_place_section_nearby">지금 내 주변 핫플</string>
     <string name="base_place_section_search">검색 결과</string>
+    <string name="base_place_long_press_hint">장소를 길게 눌러 상세 정보를 확인해보세요!</string>
     <string name="base_place_empty_search_desc">검색어를 다시 확인해주세요.</string>
     <!-- %2$s 는 앞 이름의 받침에 따라 "로"/"으로" 가 들어간다 (Figma 시스템알럿) -->
     <string name="base_place_confirm_title">기준 장소를 ‘%1$s’%2$s 시작할까요?</string>

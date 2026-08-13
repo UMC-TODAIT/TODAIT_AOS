@@ -87,6 +87,7 @@ import com.umc.todait.ui.theme.CourseRomanticSelectedGradientEnd
 import com.umc.todait.ui.theme.CourseRomanticSelectedGradientStart
 import com.umc.todait.ui.theme.Cream
 import com.umc.todait.ui.theme.Gray200
+import com.umc.todait.ui.theme.Gray400
 import com.umc.todait.ui.theme.Gray500
 import com.umc.todait.ui.theme.Green700
 import com.umc.todait.ui.theme.Pink600
@@ -227,11 +228,13 @@ private fun CourseComposeContent(
             contentPadding = PaddingValues(bottom = 24.dp),
         ) {
             // 상단 지도(기준 장소 + 선택 장소 핀). 카카오맵 v2.
+            // Figma: 구분선 아래 22, 높이 230, 좌우로 화면 밖까지 늘어난다(라운드는 화면 밖).
             item {
+                Spacer(Modifier.height(22.dp))
                 mapContent(
                     Modifier
                         .fillMaxWidth()
-                        .height(220.dp),
+                        .height(230.dp),
                 )
             }
 
@@ -242,9 +245,19 @@ private fun CourseComposeContent(
                         categories = state.categories,
                         selectedId = state.selectedCategoryId,
                         onSelect = onSelectCategory,
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
+                        modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 9.dp),
                     )
                 }
+            }
+
+            item {
+                Text(
+                    text = stringResource(R.string.base_place_long_press_hint),
+                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 13.dp),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Gray400,
+                )
             }
 
             // 추천 장소 목록.
@@ -278,7 +291,7 @@ private fun CourseComposeContent(
                                 ?: fallbackMoods[index % fallbackMoods.size],
                             onAdd = { onAddPlace(place) },
                             onLongClick = { onPlaceLongClick(place) },
-                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
+                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                         )
                     }
             }

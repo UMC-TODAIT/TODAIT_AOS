@@ -16,6 +16,18 @@ import com.umc.todait.ui.theme.CourseQuietGradientEnd
 import com.umc.todait.ui.theme.CourseQuietGradientStart
 import com.umc.todait.ui.theme.CourseRomanticGradientEnd
 import com.umc.todait.ui.theme.CourseRomanticGradientStart
+import com.umc.todait.ui.theme.MoodActiveSelectedGradientEnd
+import com.umc.todait.ui.theme.MoodActiveSelectedGradientStart
+import com.umc.todait.ui.theme.MoodCalmSelectedGradientEnd
+import com.umc.todait.ui.theme.MoodCalmSelectedGradientStart
+import com.umc.todait.ui.theme.MoodHipSelectedGradientEnd
+import com.umc.todait.ui.theme.MoodHipSelectedGradientStart
+import com.umc.todait.ui.theme.MoodModernSelectedGradientEnd
+import com.umc.todait.ui.theme.MoodModernSelectedGradientStart
+import com.umc.todait.ui.theme.MoodQuietSelectedGradientEnd
+import com.umc.todait.ui.theme.MoodQuietSelectedGradientStart
+import com.umc.todait.ui.theme.MoodRomanticSelectedGradientEnd
+import com.umc.todait.ui.theme.MoodRomanticSelectedGradientStart
 
 /**
  * 분위기 선택 화면의 UI 상태.
@@ -66,6 +78,8 @@ data class MoodOptionUiModel(
     val hashtags: String,
     val gradientStart: Color,
     val gradientEnd: Color,
+    val selectedGradientStart: Color,
+    val selectedGradientEnd: Color,
     @DrawableRes val decorationRes: Int,
     val isSelected: Boolean = false,
 )
@@ -83,6 +97,8 @@ fun MoodTagDto.toUiModel(): MoodOptionUiModel {
         hashtags = visual.hashtags,
         gradientStart = visual.gradientStart,
         gradientEnd = visual.gradientEnd,
+        selectedGradientStart = visual.selectedGradientStart,
+        selectedGradientEnd = visual.selectedGradientEnd,
         decorationRes = visual.decorationRes,
     )
 }
@@ -92,27 +108,48 @@ private data class MoodVisual(
     val hashtags: String,
     val gradientStart: Color,
     val gradientEnd: Color,
+    val selectedGradientStart: Color,
+    val selectedGradientEnd: Color,
     @DrawableRes val decorationRes: Int,
 )
 
 private val MOOD_VISUALS: Map<String, MoodVisual> = mapOf(
     "HIP" to MoodVisual(
-        "#트렌디 #감각적", CourseHipGradientStart, CourseHipGradientEnd, R.drawable.ic_mood_hip,
+        hashtags = "#트렌디 #감각적",
+        gradientStart = CourseHipGradientStart, gradientEnd = CourseHipGradientEnd,
+        selectedGradientStart = MoodHipSelectedGradientStart, selectedGradientEnd = MoodHipSelectedGradientEnd,
+        decorationRes = R.drawable.ic_mood_hip,
     ),
     "QUIET" to MoodVisual(
-        "#차분 #잔잔", CourseQuietGradientStart, CourseQuietGradientEnd, R.drawable.ic_mood_quiet,
+        hashtags = "#차분 #잔잔",
+        gradientStart = CourseQuietGradientStart, gradientEnd = CourseQuietGradientEnd,
+        selectedGradientStart = MoodQuietSelectedGradientStart, selectedGradientEnd = MoodQuietSelectedGradientEnd,
+        decorationRes = R.drawable.ic_mood_quiet,
     ),
     "ACTIVE" to MoodVisual(
-        "#에너지 #액티비티", CourseActiveGradientStart, CourseActiveGradientEnd, R.drawable.ic_mood_active,
+        hashtags = "#에너지 #액티비티",
+        gradientStart = CourseActiveGradientStart, gradientEnd = CourseActiveGradientEnd,
+        selectedGradientStart = MoodActiveSelectedGradientStart, selectedGradientEnd = MoodActiveSelectedGradientEnd,
+        decorationRes = R.drawable.ic_mood_active,
     ),
     "ROMANTIC" to MoodVisual(
-        "#분위기 #낭만", CourseRomanticGradientStart, CourseRomanticGradientEnd, R.drawable.ic_mood_romantic,
+        hashtags = "#분위기 #낭만",
+        gradientStart = CourseRomanticGradientStart, gradientEnd = CourseRomanticGradientEnd,
+        selectedGradientStart = MoodRomanticSelectedGradientStart,
+        selectedGradientEnd = MoodRomanticSelectedGradientEnd,
+        decorationRes = R.drawable.ic_mood_romantic,
     ),
     "MODERN" to MoodVisual(
-        "#도시적 #세련된", CourseModernGradientStart, CourseModernGradientEnd, R.drawable.ic_mood_modern,
+        hashtags = "#도시적 #세련된",
+        gradientStart = CourseModernGradientStart, gradientEnd = CourseModernGradientEnd,
+        selectedGradientStart = MoodModernSelectedGradientStart, selectedGradientEnd = MoodModernSelectedGradientEnd,
+        decorationRes = R.drawable.ic_mood_modern,
     ),
     "CALM" to MoodVisual(
-        "#내추럴 #편한", CourseCalmGradientStart, CourseCalmGradientEnd, R.drawable.ic_mood_calm,
+        hashtags = "#내추럴 #편한",
+        gradientStart = CourseCalmGradientStart, gradientEnd = CourseCalmGradientEnd,
+        selectedGradientStart = MoodCalmSelectedGradientStart, selectedGradientEnd = MoodCalmSelectedGradientEnd,
+        decorationRes = R.drawable.ic_mood_calm,
     ),
 )
 
@@ -121,6 +158,8 @@ private val FALLBACK_VISUAL = MoodVisual(
     hashtags = "",
     gradientStart = CourseCalmGradientStart,
     gradientEnd = CourseCalmGradientEnd,
+    selectedGradientStart = MoodCalmSelectedGradientStart,
+    selectedGradientEnd = MoodCalmSelectedGradientEnd,
     decorationRes = R.drawable.ic_mood_calm,
 )
 

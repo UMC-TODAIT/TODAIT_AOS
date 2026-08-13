@@ -44,17 +44,25 @@ fun TasteSelectionCard(
     hashtags: String,
     gradientStart: Color,
     gradientEnd: Color,
+    selectedGradientStart: Color,
+    selectedGradientEnd: Color,
     @DrawableRes decorationRes: Int,
     isSelected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // 선택하면 같은 계열에서 채도가 올라간 그라데이션으로 바뀐다(Figma).
+    val background = if (isSelected) {
+        listOf(selectedGradientStart, selectedGradientEnd)
+    } else {
+        listOf(gradientStart, gradientEnd)
+    }
     Box(
         modifier = modifier
             .width(CARD_WIDTH)
             .height(CARD_HEIGHT)
             .clip(RoundedCornerShape(CORNER_RADIUS))
-            .background(Brush.verticalGradient(listOf(gradientStart, gradientEnd)))
+            .background(Brush.verticalGradient(background))
             .then(
                 if (isSelected) {
                     Modifier.border(SELECTED_BORDER_WIDTH, Green700, RoundedCornerShape(CORNER_RADIUS))

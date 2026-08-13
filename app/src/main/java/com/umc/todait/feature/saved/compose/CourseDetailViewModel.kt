@@ -1,5 +1,6 @@
 package com.umc.todait.feature.saved.compose
 
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.umc.todait.core.base.BaseViewModel
 import com.umc.todait.core.network.ApiResult

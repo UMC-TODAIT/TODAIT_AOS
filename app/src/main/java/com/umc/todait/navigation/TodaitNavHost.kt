@@ -527,32 +527,42 @@ private fun NavHostController.navigateToDraftStep(
     courseDraftId: Long,
     basePlaceId: Long?,
 ) {
+    // 목표 화면 하나만 navigate 하면 back stack 이 [분위기 선택] → [목표 화면] 이 되어,
+    // 목표 화면의 이전 버튼이 단계상 이전 화면이 아니라 분위기 선택으로 돌아가 버린다
+    // (status 는 이전 단계로 갔는데 화면은 첫 단계인 어긋난 상태). 그래서 거쳐 온 화면을
+    // 순서대로 다 쌓는다. 시작점인 분위기 선택은 이미 스택에 있으므로 넣지 않는다.
+    val routes = mutableListOf<String>()
+
     when (status) {
         // 분위기 선택은 이미 보고 있는 화면이라 이동하지 않는다(화면에서 선택값만 되살린다).
-        CourseDraftStatus.MOOD_SELECTING -> Unit
+        CourseDraftStatus.MOOD_SELECTING -> return
 
-        CourseDraftStatus.FOOD_SELECTING -> navigate(Screen.FoodSelect.createRoute(courseDraftId))
+        // current 조회에서 내려오지 않는 상태들(명세). 방어적으로 아무 데도 보내지 않는다.
+        CourseDraftStatus.COMPLETED, CourseDraftStatus.ABANDONED -> return
 
-        CourseDraftStatus.BASE_PLACE_SELECTING -> navigate(Screen.BasePlace.createRoute(courseDraftId))
+        CourseDraftStatus.FOOD_SELECTING -> routes += Screen.FoodSelect.createRoute(courseDraftId)
 
+        CourseDraftStatus.BASE_PLACE_SELECTING,
         CourseDraftStatus.PLACE_SELECTING,
         CourseDraftStatus.ORDERING,
         CourseDraftStatus.SAVING,
         -> {
-            if (basePlaceId == null) {
-                navigate(Screen.BasePlace.createRoute(courseDraftId))
-                return
-            }
-            navigate(Screen.CourseComposeGraph.createRoute(courseDraftId, basePlaceId))
-            if (status == CourseDraftStatus.ORDERING || status == CourseDraftStatus.SAVING) {
-                navigate(Screen.SelectedPlaces.route)
-            }
-            if (status == CourseDraftStatus.SAVING) {
-                navigate(Screen.CourseSave.route)
+            routes += Screen.FoodSelect.createRoute(courseDraftId)
+            routes += Screen.BasePlace.createRoute(courseDraftId)
+
+            // 기준 장소가 아직 없으면 코스 구성 그래프에 들어갈 수 없다(경로 변수가 없다).
+            // 서버 단계가 앞서 있어도 기준 장소 화면까지만 보낸다.
+            if (status != CourseDraftStatus.BASE_PLACE_SELECTING && basePlaceId != null) {
+                routes += Screen.CourseComposeGraph.createRoute(courseDraftId, basePlaceId)
+                if (status == CourseDraftStatus.ORDERING || status == CourseDraftStatus.SAVING) {
+                    routes += Screen.SelectedPlaces.route
+                }
+                if (status == CourseDraftStatus.SAVING) {
+                    routes += Screen.CourseSave.route
+                }
             }
         }
-
-        // current 조회에서 내려오지 않는 상태들(명세). 방어적으로 아무 데도 보내지 않는다.
-        CourseDraftStatus.COMPLETED, CourseDraftStatus.ABANDONED -> Unit
     }
+
+    routes.forEach { navigate(it) }
 }

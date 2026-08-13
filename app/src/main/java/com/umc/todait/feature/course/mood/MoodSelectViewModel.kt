@@ -44,6 +44,9 @@ class MoodSelectViewModel @Inject constructor(
     // 이어서 할 때는 이 응답으로 화면을 복원해 current 를 다시 부르지 않는다.
     private var inProgressDraft: CurrentCourseDraftResponseDto? = null
 
+    // 첫 ON_RESUME 은 진입 조회와 겹쳐 무의미하다. [onScreenResumed] 참고.
+    private var isFirstResume = true
+
     init {
         loadMoodTags()
     }
@@ -99,11 +102,14 @@ class MoodSelectViewModel @Inject constructor(
         _uiState.update { it.copy(showResumePrompt = false) }
         courseDraftId = draft.courseDraftId
 
+        // 뒤 단계로 점프하더라도 선택값은 먼저 입힌다. 이 화면은 스택 맨 아래에 남아 있어
+        // 사용자가 이전 버튼으로 되돌아오는데, 그때 비어 있으면 저장했던 무드가 사라진 것처럼
+        // 보이고 hasSavedPlaces 도 모르는 상태라 초기화 알림까지 건너뛰게 된다.
+        applySavedSelection(draft)
+
         val status = draft.status ?: CourseDraftStatus.MOOD_SELECTING
-        if (status == CourseDraftStatus.MOOD_SELECTING) {
-            applySavedSelection(draft)
-            return
-        }
+        if (status == CourseDraftStatus.MOOD_SELECTING) return
+
         viewModelScope.launch {
             _effect.send(
                 MoodSelectEffect.NavigateToStep(
@@ -151,6 +157,35 @@ class MoodSelectViewModel @Inject constructor(
     /** 포기 실패 안내를 닫는다. 안내를 닫으면 다시 "이어서 하기 / 새로 만들기"를 고를 수 있다. */
     fun onDismissResumeError() {
         _uiState.update { it.copy(resumeError = null) }
+    }
+
+    /**
+     * 화면으로 되돌아왔을 때 저장 기준값(저장된 무드 · 장소 보유 여부)만 다시 받아온다.
+     *
+     * ⚠️ 이 화면은 뒤로 가기로 돌아와도 back stack entry 가 살아 있어 ViewModel 이 재생성되지
+     * 않는다. 그래서 진입 때 한 번 잡은 기준값이 그대로 남는데, 그 사이 사용자가 뒤 단계에서
+     * 기준 장소를 정했다면 hasSavedPlaces 가 거짓으로 낡는다. 그 상태로 무드를 바꾸면
+     * 초기화 알림 없이 저장이 나가 서버가 장소를 지운다(에뮬레이터에서 재현). 그래서 갱신한다.
+     *
+     * 화면에 보이는 선택 상태는 건드리지 않는다 — 사용자가 바꿔둔 걸 덮으면 안 된다.
+     */
+    fun onScreenResumed() {
+        // 첫 진입은 loadMoodTags → checkInProgressDraft 가 이미 처리한다. 중복 조회를 피한다.
+        if (isFirstResume) {
+            isFirstResume = false
+            return
+        }
+        val draftId = courseDraftId ?: return
+        viewModelScope.launch {
+            val draft = (courseDraftRepository.getCurrentCourseDraft() as? ApiResult.Success)?.data ?: return@launch
+            if (draft.courseDraftId != draftId) return@launch
+            _uiState.update {
+                it.copy(
+                    savedMoodTagIds = draft.savedMoodTagIds.toSet(),
+                    hasSavedPlaces = draft.hasSavedPlaces,
+                )
+            }
+        }
     }
 
     /** current 응답의 저장된 분위기 선택을 화면에 입힌다. */
@@ -216,10 +251,13 @@ class MoodSelectViewModel @Inject constructor(
     }
 
     /**
-     * 선택값이 그대로일 때. 저장 API 를 부르지 않고 넘어간다.
+     * 선택값이 그대로일 때.
      *
-     * 이 경로는 이미 저장된 임시 코스가 있다는 뜻이라 [courseDraftId] 가 항상 있지만,
-     * 조회가 실패해 모르는 상태로 여기 올 수도 있어 없으면 저장 경로로 돌린다.
+     * ⚠️ 이슈 #105 는 "동일하면 저장 없이 다음 단계로 이동" 이지만 배포 서버에서는 그렇게 할 수
+     * 없다 — 단계를 앞으로 넘기는 수단이 저장 API 뿐이다. PATCH /status 로 전진 전이를 시도하면
+     * COURSE_DRAFT409("현재 임시 코스 상태에서는 요청을 처리할 수 없습니다") 로 막히고(에뮬레이터 확인),
+     * 저장도 전이도 안 하고 화면만 넘기면 서버가 이전 단계에 남아 다음 화면의 저장이 409 가 된다.
+     * 그래서 값이 같아도 저장 API 를 그대로 부른다.
      */
     private fun navigateWithoutSaving() {
         val draftId = courseDraftId
@@ -227,7 +265,7 @@ class MoodSelectViewModel @Inject constructor(
             saveAndNavigate()
             return
         }
-        viewModelScope.launch { _effect.send(MoodSelectEffect.NavigateToFood(draftId)) }
+        saveAndNavigate()
     }
 
     /** 분위기 선택 저장 후 음식 선택 화면으로 이동. */

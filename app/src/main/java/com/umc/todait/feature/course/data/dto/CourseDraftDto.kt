@@ -287,6 +287,23 @@ enum class CourseDraftStatus {
             SAVING -> ORDERING
             MOOD_SELECTING, COMPLETED, ABANDONED -> null
         }
+
+    /**
+     * 다음 작성 단계. 마지막 단계(SAVING)와 터미널 상태는 이어질 곳이 없어 null 이다.
+     *
+     * 무드·음식 저장 API 는 저장과 함께 단계도 넘겨준다. 그래서 선택값이 그대로라 저장을
+     * 건너뛸 때는 여기로 [previous] 의 반대 방향 전이를 직접 호출해야 한다 — 안 그러면 앱만
+     * 다음 화면으로 가고 서버는 이전 단계에 남아, 그 화면의 저장이 409 로 막힌다.
+     */
+    val next: CourseDraftStatus?
+        get() = when (this) {
+            MOOD_SELECTING -> FOOD_SELECTING
+            FOOD_SELECTING -> BASE_PLACE_SELECTING
+            BASE_PLACE_SELECTING -> PLACE_SELECTING
+            PLACE_SELECTING -> ORDERING
+            ORDERING -> SAVING
+            SAVING, COMPLETED, ABANDONED -> null
+        }
 }
 
 /**

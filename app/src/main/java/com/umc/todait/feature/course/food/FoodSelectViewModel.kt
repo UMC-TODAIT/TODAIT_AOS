@@ -37,6 +37,9 @@ class FoodSelectViewModel @Inject constructor(
         "courseDraftId 인자가 필요합니다."
     }
 
+    // 첫 ON_RESUME 은 진입 조회와 겹쳐 무의미하다. [onScreenResumed] 참고.
+    private var isFirstResume = true
+
     private val _uiState = MutableStateFlow(FoodSelectUiState())
     val uiState: StateFlow<FoodSelectUiState> = _uiState.asStateFlow()
 
@@ -94,6 +97,33 @@ class FoodSelectViewModel @Inject constructor(
         }
     }
 
+    /**
+     * 화면으로 되돌아왔을 때 저장 기준값(저장된 음식 · 장소 보유 여부)만 다시 받아온다.
+     *
+     * ⚠️ 이 화면은 뒤로 가기로 돌아와도 back stack entry 가 살아 있어 ViewModel 이 재생성되지
+     * 않는다. 그 사이 사용자가 뒤 단계에서 기준 장소를 정했다면 hasSavedPlaces 가 거짓으로
+     * 낡고, 그 상태로 음식을 바꾸면 초기화 알림 없이 저장이 나가 서버가 장소를 지운다.
+     *
+     * 화면에 보이는 선택 상태는 건드리지 않는다 — 사용자가 바꿔둔 걸 덮으면 안 된다.
+     */
+    fun onScreenResumed() {
+        // 첫 진입은 loadFoodCategories → restoreSavedSelection 이 이미 처리한다.
+        if (isFirstResume) {
+            isFirstResume = false
+            return
+        }
+        viewModelScope.launch {
+            val draft = (courseDraftRepository.getCurrentCourseDraft() as? ApiResult.Success)?.data ?: return@launch
+            if (draft.courseDraftId != courseDraftId) return@launch
+            _uiState.update {
+                it.copy(
+                    savedFoodCategoryIds = draft.savedFoodCategoryIds.toSet(),
+                    hasSavedPlaces = draft.hasSavedPlaces,
+                )
+            }
+        }
+    }
+
     /** 카드 탭 → 선택 토글. 음식은 상한이 없어 개수 제한 없이 토글한다. */
     fun onToggleFood(code: String) {
         _uiState.update { state ->
@@ -121,12 +151,22 @@ class FoodSelectViewModel @Inject constructor(
         if (!state.isConfirmEnabled) return
 
         when {
-            !state.isSelectionChanged ->
-                viewModelScope.launch { _effect.send(FoodSelectEffect.NavigateToBasePlace(courseDraftId)) }
-
+            !state.isSelectionChanged -> navigateWithoutSaving()
             state.needsResetConfirm -> _uiState.update { it.copy(showResetAlert = true) }
             else -> saveAndNavigate()
         }
+    }
+
+    /**
+     * 선택값이 그대로일 때.
+     *
+     * ⚠️ 이슈 #105 는 "동일하면 저장 없이 다음 단계로 이동" 이지만 배포 서버에서는 그렇게 할 수
+     * 없다 — 단계를 앞으로 넘기는 수단이 저장 API 뿐이다. PATCH /status 로 전진 전이를 시도하면
+     * COURSE_DRAFT409 로 막히고(에뮬레이터 확인), 저장도 전이도 안 하고 화면만 넘기면 서버가
+     * 이전 단계에 남아 다음 화면의 저장이 409 가 된다. 그래서 값이 같아도 저장 API 를 그대로 부른다.
+     */
+    private fun navigateWithoutSaving() {
+        saveAndNavigate()
     }
 
     /** 초기화 확인 알림 [확인] → 저장 API 호출 후 다음 단계로 이동. */

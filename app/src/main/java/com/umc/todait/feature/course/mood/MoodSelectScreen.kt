@@ -37,6 +37,8 @@ import com.umc.todait.ui.component.ErrorContent
 import com.umc.todait.ui.component.LoadingIndicator
 import com.umc.todait.ui.component.ScreenTopBar
 import com.umc.todait.ui.component.TasteSelectionCard
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import com.umc.todait.ui.theme.Cream
 import com.umc.todait.ui.theme.Gray500
 import com.umc.todait.ui.theme.Gray900
@@ -55,6 +57,9 @@ fun MoodSelectScreen(
     viewModel: MoodSelectViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    // 뒤 단계에서 이전 버튼으로 돌아왔을 때 저장 기준값을 다시 받아온다(장소 보유 여부가 바뀌었을 수 있다).
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.onScreenResumed() }
 
     LaunchedEffect(viewModel) {
         viewModel.effect.collect { effect ->

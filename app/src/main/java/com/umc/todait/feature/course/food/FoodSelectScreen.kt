@@ -26,6 +26,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.umc.todait.R
 import com.umc.todait.core.network.UiError
@@ -51,6 +53,9 @@ fun FoodSelectScreen(
     viewModel: FoodSelectViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    // 뒤 단계에서 이전 버튼으로 돌아왔을 때 저장 기준값을 다시 받아온다(장소 보유 여부가 바뀌었을 수 있다).
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.onScreenResumed() }
 
     LaunchedEffect(viewModel) {
         viewModel.effect.collect { effect ->

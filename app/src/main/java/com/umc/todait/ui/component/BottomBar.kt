@@ -16,9 +16,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.umc.todait.navigation.BottomTab
 import com.umc.todait.ui.theme.Gray100
-import com.umc.todait.ui.theme.Gray500
+import com.umc.todait.ui.theme.Gray400
 import com.umc.todait.ui.theme.Pink800
 
+/**
+ * 하단 탭바(Figma `컴포넌트_GNB`).
+ *
+ * 시안은 355x64 / 라운드 40 이고, 선택된 탭에만 Gray-100 알약(84x52, 라운드 31)이 깔린다.
+ * 폭은 좌우 여백 20dp 로 잡아 화면 폭에 대응한다(393dp 에서 353dp).
+ */
 @Composable
 fun BottomBar(
     currentRoute: String?,
@@ -35,14 +41,14 @@ fun BottomBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(80.dp)
+                .height(BAR_HEIGHT)
                 .shadow(
-                    elevation = 8.dp,
-                    shape = RoundedCornerShape(40.dp)
+                    elevation = 4.dp,
+                    shape = RoundedCornerShape(BAR_RADIUS)
                 )
                 .background(
                     Color.White,
-                    RoundedCornerShape(40.dp)
+                    RoundedCornerShape(BAR_RADIUS)
                 ),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -53,14 +59,16 @@ fun BottomBar(
 
                 Box(
                     modifier = Modifier
-                        .height(64.dp)
                         .weight(1f)
+                        // 알약은 탭 칸을 꽉 채우지 않는다(시안 88.75 칸 안에 84).
+                        .padding(horizontal = 2.dp)
+                        .height(PILL_HEIGHT)
                         .background(
                             if(selected)
                                 Gray100
                             else
                                 Color.Transparent,
-                            RoundedCornerShape(40.dp)
+                            RoundedCornerShape(PILL_RADIUS)
                         )
                         .clickable {
                             onTabClick(tab)
@@ -68,23 +76,25 @@ fun BottomBar(
                     contentAlignment = Alignment.Center
                 ){
                     Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
                     ){
                         Icon(
                             painter = painterResource(tab.iconRes),
                             contentDescription = null,
-                            tint = if(selected) Pink800 else Gray500,
-                            modifier = Modifier.size(24.dp)
+                            tint = if(selected) Pink800 else Gray400,
+                            modifier = Modifier.size(20.dp)
                         )
 
                         Text(
                             text = tab.label,
                             fontSize = 12.sp,
+                            lineHeight = 15.sp,
                             color =
                                 if(selected)
                                     Pink800
                                 else
-                                    Gray500
+                                    Gray400
                         )
                     }
                 }
@@ -92,3 +102,8 @@ fun BottomBar(
         }
     }
 }
+
+private val BAR_HEIGHT = 64.dp
+private val BAR_RADIUS = 40.dp
+private val PILL_HEIGHT = 52.dp
+private val PILL_RADIUS = 31.dp

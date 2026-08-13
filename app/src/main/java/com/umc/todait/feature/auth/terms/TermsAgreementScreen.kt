@@ -44,6 +44,7 @@ import com.umc.todait.R
 import com.umc.todait.feature.auth.data.dto.TermAgreementDto
 import com.umc.todait.ui.component.HeaderCircleButton
 import com.umc.todait.ui.theme.DisabledButtonGray
+import com.umc.todait.ui.theme.Gray200
 import com.umc.todait.ui.theme.Gray300
 import com.umc.todait.ui.theme.Gray500
 import com.umc.todait.ui.theme.Gray900
@@ -190,7 +191,7 @@ private fun TermsAgreementTopBar(onBackClick: () -> Unit) {
                 color = Gray900,
             )
         }
-        HorizontalDivider(color = Gray300)
+        HorizontalDivider(color = Gray200)
     }
 }
 

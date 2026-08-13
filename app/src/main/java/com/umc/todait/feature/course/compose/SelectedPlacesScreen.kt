@@ -30,6 +30,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.ExperimentalTextApi
+import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -267,17 +270,24 @@ private fun SelectedPlaceRow(
 }
 
 /** 기준 장소 행 이름 옆의 "기준장소" 칩. 흰 pill + Pink-800 텍스트. (Figma node 1678-10775) */
+@OptIn(ExperimentalTextApi::class)
 @Composable
 private fun BasePlaceChip() {
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(50))
+            .height(16.dp)
+            .clip(CircleShape)
             .background(White)
-            .padding(horizontal = 8.dp, vertical = 2.dp),
+            .padding(horizontal = 8.dp),
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = stringResource(R.string.course_compose_base_place_chip),
-            fontSize = 10.sp,
+            style = TextStyle(
+                fontSize = 10.sp,
+                lineHeight = 12.sp,
+                platformStyle = PlatformTextStyle(includeFontPadding = false),
+            ),
             color = Pink800,
             maxLines = 1,
         )

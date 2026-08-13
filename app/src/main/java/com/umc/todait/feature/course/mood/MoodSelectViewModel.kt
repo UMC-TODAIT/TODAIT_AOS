@@ -77,8 +77,12 @@ class MoodSelectViewModel @Inject constructor(
     /**
      * 코스 만들기 진입 시 진행 중인 임시 코스가 있는지 확인한다(GET /api/course-drafts/current).
      *
-     * 있으면 "이어서 하기 / 새로 만들기"를 묻는다. 없으면(성공 + null) 지금까지처럼 새로 시작하고,
-     * 임시 코스는 확인(✅) 시점에 발급한다. 조회가 실패해도 화면을 막지 않는다 — 그냥 새로 시작한다.
+     * 있으면 "이어서 하기 / 새로 만들기"를 묻는다. 없으면(성공 + result null) 명세대로 이 자리에서
+     * 바로 새 임시 코스를 발급한다(POST /api/course-drafts) — 무드 선택 화면은 그대로 쓴다.
+     *
+     * 조회 자체가 실패하면 진행 중인 코스가 있는지 알 수 없다. 이때는 화면을 막지도, 새로 만들지도
+     * 않는다 — 있는데 새로 만들면 사용자가 만들던 코스가 묻히기 때문이다. 임시 코스가 없는 채로
+     * 남지만 확인(✅) 시점의 [ensureCourseDraftId] 가 발급을 다시 시도한다.
      *
      * 이전 버튼(`<`)으로 이 화면에 돌아온 경우에는 back stack entry 가 살아 있어 ViewModel 이
      * 재생성되지 않으므로 여기까지 오지 않는다(=되돌아올 때마다 묻지 않는다).
@@ -86,9 +90,32 @@ class MoodSelectViewModel @Inject constructor(
     private suspend fun checkInProgressDraft() {
         // 이 플로우에서 이미 쓰고 있는 임시 코스가 있으면 물을 이유가 없다.
         if (courseDraftId != null) return
-        val draft = (courseDraftRepository.getCurrentCourseDraft() as? ApiResult.Success)?.data ?: return
-        inProgressDraft = draft
-        _uiState.update { it.copy(showResumePrompt = true) }
+
+        when (val result = courseDraftRepository.getCurrentCourseDraft()) {
+            is ApiResult.Success -> {
+                val draft = result.data
+                if (draft == null) {
+                    createNewDraft()
+                    return
+                }
+                inProgressDraft = draft
+                _uiState.update { it.copy(showResumePrompt = true) }
+            }
+
+            is ApiResult.Failure -> Unit
+        }
+    }
+
+    /**
+     * 새 임시 코스 발급(POST /api/course-drafts).
+     *
+     * 실패해도 화면은 그대로 쓸 수 있게 둔다 — 확인(✅) 시점에 [ensureCourseDraftId] 가 다시 시도한다.
+     */
+    private suspend fun createNewDraft() {
+        when (val created = courseDraftRepository.createCourseDraft()) {
+            is ApiResult.Success -> courseDraftId = created.data.courseDraftId
+            is ApiResult.Failure -> Unit
+        }
     }
 
     /**
@@ -141,16 +168,8 @@ class MoodSelectViewModel @Inject constructor(
             }
 
             inProgressDraft = null
-            when (val created = courseDraftRepository.createCourseDraft()) {
-                is ApiResult.Success -> {
-                    courseDraftId = created.data.courseDraftId
-                    _uiState.update { it.copy(isSubmitting = false) }
-                }
-
-                is ApiResult.Failure ->
-                    // 임시 코스는 확인(✅) 시점에 다시 발급을 시도하므로 화면은 그대로 쓸 수 있다.
-                    _uiState.update { it.copy(isSubmitting = false) }
-            }
+            createNewDraft()
+            _uiState.update { it.copy(isSubmitting = false) }
         }
     }
 

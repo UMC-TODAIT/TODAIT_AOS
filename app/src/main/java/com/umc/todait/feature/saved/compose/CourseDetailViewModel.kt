@@ -51,7 +51,7 @@ class CourseDetailViewModel @Inject constructor(
                                 placeId = place.placeId,
                                 name = place.name,
                                 address = place.address,
-                                imageUrl = place.representativeImageUrl?.takeIf { it.isNotBlank() }
+                                imageUrl = place.imageUrl?.takeIf { it.isNotBlank() }
                             )
                             }
                         )

@@ -148,6 +148,7 @@ private fun FoodSelectContent(
     if (state.showResetAlert) {
         CommonDialog(
             title = stringResource(R.string.food_select_reset_alert),
+            confirmText = stringResource(R.string.preference_reset_alert_confirm),
             onConfirm = onResetAlertConfirm,
             onDismiss = onResetAlertDismiss,
         )

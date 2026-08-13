@@ -92,15 +92,17 @@
     <string name="mood_select_title">취향 설정</string>
     <string name="mood_select_headline">오늘 어떤 분위기를 원하시나요?</string>
     <string name="mood_select_subtitle">원하는 분위기를 최소 %1$d개 이상 선택해주세요.</string>
-    <!-- 무드를 바꿔 확인(✅)했고 임시 코스에 저장된 장소가 있을 때 -->
-    <string name="mood_select_reset_alert">무드를 변경하면 저장했던 장소 정보가 초기화됩니다. 변경하시겠습니까?</string>
+    <!-- 무드를 바꿔 확인(✅)했고 임시 코스에 저장된 장소가 있을 때 (Figma 시스템알럿3) -->
+    <string name="mood_select_reset_alert">분위기를 변경하면\n저장했던 장소 정보가 초기화됩니다.\n변경하시겠습니까?</string>
 
     <!-- Food select (음식 선택) -->
     <string name="food_select_title">취향 설정</string>
     <string name="food_select_headline">어떤 음식을 드시고 싶으신가요?</string>
     <string name="food_select_subtitle">음식 취향을 최소 %1$d개 이상 선택해주세요.</string>
-    <!-- 음식 취향을 바꿔 확인(✅)했고 임시 코스에 저장된 장소가 있을 때 -->
-    <string name="food_select_reset_alert">음식 취향을 변경하면 저장했던 장소 정보가 초기화됩니다. 변경하시겠습니까?</string>
+    <!-- 음식 취향을 바꿔 확인(✅)했고 임시 코스에 저장된 장소가 있을 때 (Figma 시스템알럿3 문형) -->
+    <string name="food_select_reset_alert">음식 취향을 변경하면\n저장했던 장소 정보가 초기화됩니다.\n변경하시겠습니까?</string>
+    <!-- 무드/음식 변경 알럿의 강조(우측) 버튼 -->
+    <string name="preference_reset_alert_confirm">변경하기</string>
 
     <!-- Base place (기준 장소 설정) -->
     <string name="base_place_title">기준 장소 설정</string>

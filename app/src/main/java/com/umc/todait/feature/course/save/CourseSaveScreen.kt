@@ -108,6 +108,9 @@ fun CourseSaveScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    // 코스 생성 때 고른 분위기를 태그로 미리 선택해 둔다(최초 1회).
+    LaunchedEffect(courseDraftId) { viewModel.onEnter(courseDraftId) }
+
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {

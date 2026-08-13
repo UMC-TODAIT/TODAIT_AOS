@@ -43,8 +43,39 @@ class CourseSaveViewModel @Inject constructor(
     // 화면 프리셋(CourseMood) → 서버 mood_tag.id. 저장 요청의 moodTagIds 를 만들 때 쓴다.
     private var moodTagIdByCode: Map<String, Long> = emptyMap()
 
+    // 진입 시 태그 프리셋을 한 번만 채우기 위한 표시. 두 번째부터는 사용자가 편집한 값을 지키려고 건너뛴다.
+    private var hasPrefilledTags = false
+
     init {
         loadMoodTagIds()
+    }
+
+    /**
+     * 화면 진입 → 코스 생성 때 고른 분위기를 태그로 미리 선택해 둔다.
+     *
+     * 무드는 임시 코스에 이미 저장돼 있으므로 GET /api/course-drafts/current 의 moodTags 를
+     * 화면 프리셋([CourseMood])으로 옮긴다. 저장 요청의 moodTagIds 는 2~6개여야 하는데
+     * 분위기 선택 화면이 같은 범위를 강제하므로, 사용자가 태그를 손대지 않아도 그대로 저장할 수 있다.
+     *
+     * 사용자가 이미 태그를 편집했다면 덮지 않는다. 이전 버튼으로 나갔다 돌아와도 back stack entry 가
+     * 살아 있어 ViewModel 이 유지되므로 [hasPrefilledTags] 로 최초 1회만 채운다.
+     */
+    fun onEnter(courseDraftId: Long) {
+        if (hasPrefilledTags) return
+        hasPrefilledTags = true
+
+        viewModelScope.launch {
+            val draft = (courseDraftRepository.getCurrentCourseDraft() as? ApiResult.Success)?.data ?: return@launch
+            if (draft.courseDraftId != courseDraftId) return@launch
+
+            // code(HIP) 우선, 서버가 code 를 안 주면 name(힙한)으로도 맞춰본다.
+            val moods = draft.moodTags.orEmpty()
+                .mapNotNull { CourseMood.fromTags(listOf(it.code, it.name)) }
+                .toSet()
+            if (moods.isEmpty()) return@launch
+
+            _uiState.update { if (it.selectedTags.isEmpty()) it.copy(selectedTags = moods) else it }
+        }
     }
 
     /**

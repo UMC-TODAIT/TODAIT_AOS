@@ -99,7 +99,8 @@ import com.umc.todait.ui.theme.White
  * 코스 구성하기 - 장소카드 선택 화면(#26, 와이어프레임 "코스구성하기(카페)_기본/선택").
  *
  * 헤더(뒤로/타이틀/✓) + 스크롤 본문[지도 + 카테고리 탭 + 추천 카드]로 구성된다.
- * 추천 카드를 탭하면 코스에 담기고(길게 누르면 장소 상세), 헤더 ✓(담은 장소 ≥1일 때 활성) → **선택한 장소 화면**([SelectedPlacesScreen])으로 이동한다.
+ * 추천 카드를 탭하면 코스에 담기고 **다시 탭하면 취소된다**(길게 누르면 장소 상세).
+ * 헤더 ✓(담은 장소 ≥1일 때 활성) → 담은 장소를 서버에 커밋한 뒤 **선택한 장소 화면**([SelectedPlacesScreen])으로 이동한다.
  * 선택 상태는 상위 그래프 스코프 [CourseComposeViewModel] 을 통해 다음 화면과 공유된다.
  *
  * ⚠️ 지도는 카카오맵 v2, 드래그 순서 변경은 다음 화면에서 처리(제스처는 TODO).
@@ -147,21 +148,30 @@ fun CourseComposeScreen(
             state = uiState,
             // 이 화면은 PLACE_SELECTING 단계 → 기준 장소 설정으로 되돌린다.
             onBack = { viewModel.onBackClick(CourseDraftStatus.PLACE_SELECTING) },
-            // ✓ 는 canConfirm(담은 장소 ≥1)일 때만 활성 → 순서 설정 단계로 전환 요청.
+            // ✓ 는 canConfirm(담은 장소 ≥1)일 때만 활성 → 담은 장소 커밋 + 순서 설정 단계로 전환 요청.
             onConfirm = viewModel::onSelectionConfirmed,
             onSelectCategory = viewModel::onSelectCategory,
             // 카드 길게 누르기 → 장소 상세 화면 진입. detailAvailable=false 인 장소는 상세가 없다.
             onPlaceLongClick = { place ->
                 place.placeId?.takeIf { place.detailAvailable }?.let(onNavigateToDetail)
             },
-            onAddPlace = viewModel::onAddPlace,
+            onTogglePlace = viewModel::onTogglePlace,
             onRetry = viewModel::retry,
         )
 
         when (val alert = uiState.alert) {
-            CourseComposeAlert.Duplicate -> CommonDialog(
-                title = stringResource(R.string.course_compose_duplicate_title) + "\n" +
-                    stringResource(R.string.course_compose_duplicate_desc),
+            // 카테고리당 1곳 제약. 이미 그 자리를 차지한 장소 이름을 알려준다.
+            is CourseComposeAlert.CategoryTaken -> CommonDialog(
+                title = stringResource(R.string.course_compose_category_taken_title, alert.placeName) + "\n" +
+                    stringResource(R.string.course_compose_category_taken_desc),
+                onConfirm = viewModel::onDismissAlert,
+                onDismiss = viewModel::onDismissAlert,
+            )
+
+            // 이미 서버에 커밋된 장소(✓ 를 눌렀거나 "이어서 하기"로 되살린 장소)는 뺄 수 없다.
+            CourseComposeAlert.RemoveUnavailable -> CommonDialog(
+                title = stringResource(R.string.course_compose_remove_unavailable_title) + "\n" +
+                    stringResource(R.string.course_compose_remove_unavailable_desc),
                 onConfirm = viewModel::onDismissAlert,
                 onDismiss = viewModel::onDismissAlert,
             )
@@ -194,7 +204,7 @@ private fun CourseComposeContent(
     onConfirm: () -> Unit,
     onSelectCategory: (Long) -> Unit,
     onPlaceLongClick: (PlaceUiModel) -> Unit,
-    onAddPlace: (PlaceUiModel) -> Unit,
+    onTogglePlace: (PlaceUiModel) -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
     // 상단 지도 슬롯. 기본은 실제 카카오맵이며, @Preview 에서는 렌더 불가한 MapView 대신 placeholder 를 주입한다.
@@ -252,7 +262,7 @@ private fun CourseComposeContent(
 
             item {
                 Text(
-                    text = stringResource(R.string.base_place_long_press_hint),
+                    text = stringResource(R.string.course_compose_place_hint),
                     modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 13.dp),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
@@ -283,13 +293,13 @@ private fun CourseComposeContent(
                         RecommendCard(
                             place = place,
                             added = place.key in selectedKeys,
-                            // 담기 요청이 끝나기 전에는 카드를 다시 누를 수 없다(중복 추가 방지).
+                            // ✓ 커밋 중인 카드는 스피너를 띄우고 탭을 막는다.
                             adding = place.key in state.addingPlaceKeys,
                             // 분위기별 카드 색상. 추천 응답의 matchedMoodTags 로 결정하되,
                             // 일치한 분위기가 없을 수 있어 그때는 6종을 순번으로 부여한다.
                             mood = CourseMood.fromTags(place.moodTags)
                                 ?: fallbackMoods[index % fallbackMoods.size],
-                            onAdd = { onAddPlace(place) },
+                            onToggle = { onTogglePlace(place) },
                             onLongClick = { onPlaceLongClick(place) },
                             modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                         )
@@ -384,8 +394,8 @@ private fun CourseMood.decorationRes(): Int = when (this) {
  * (Green-700 2dp 테두리 + Click 그라데이션), 길게 누르면 장소 상세로 넘어간다.
  * (Figma: 장소카드 Default/Click 배리언트)
  *
- * [adding] 이면 담기 API 응답을 기다리는 중이라 우상단에 스피너를 노출하고 탭을 막는다.
- * 이미 담은 카드([added])의 탭은 무시한다(중복 담기 방지).
+ * 담긴 카드([added])를 다시 탭하면 선택이 취소돼 Default 배리언트로 돌아간다.
+ * [adding] 이면 ✓ 커밋(POST .../places) 응답을 기다리는 중이라 우상단에 스피너를 노출하고 탭을 막는다.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -394,7 +404,7 @@ private fun RecommendCard(
     added: Boolean,
     adding: Boolean,
     mood: CourseMood,
-    onAdd: () -> Unit,
+    onToggle: () -> Unit,
     onLongClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -416,7 +426,8 @@ private fun RecommendCard(
                 },
             )
             .combinedClickable(
-                onClick = { if (!added && !adding) onAdd() },
+                // 담기/취소 토글. 커밋 중(adding)일 때만 탭을 막는다.
+                onClick = { if (!adding) onToggle() },
                 onLongClick = onLongClick,
             ),
     ) {
@@ -574,7 +585,7 @@ private fun CourseComposeContentPreview() {
             onConfirm = {},
             onSelectCategory = {},
             onPlaceLongClick = {},
-            onAddPlace = {},
+            onTogglePlace = {},
             onRetry = {},
             mapContent = { PreviewMapPlaceholder(it) },
         )
@@ -597,7 +608,7 @@ private fun CourseComposeContentEmptySelectionPreview() {
             onConfirm = {},
             onSelectCategory = {},
             onPlaceLongClick = {},
-            onAddPlace = {},
+            onTogglePlace = {},
             onRetry = {},
             mapContent = { PreviewMapPlaceholder(it) },
         )
@@ -614,7 +625,7 @@ private fun RecommendCardPreview() {
                 added = false,
                 adding = false,
                 mood = CourseMood.ROMANTIC,
-                onAdd = {},
+                onToggle = {},
                 onLongClick = {},
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
             )
@@ -623,7 +634,7 @@ private fun RecommendCardPreview() {
                 added = true,
                 adding = false,
                 mood = CourseMood.MODERN,
-                onAdd = {},
+                onToggle = {},
                 onLongClick = {},
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
             )

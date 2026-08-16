@@ -15,8 +15,9 @@ import com.umc.todait.feature.course.data.dto.PlaceDetailDto
  *
  * - 기준 장소([basePlace], #11에서 확정)를 출발점으로, 카테고리별 추천 장소를 [recommendState] 로 노출.
  * - 카드 탭으로 코스에 담고([selectedPlaces], 담은 순서 = 코스 순서), 2) 화면에서 드래그로 순서를 수정한다.
- *   (담긴 카드는 Green-700 테두리 + Click 그라데이션으로 표시하고 탭을 무시한다.)
- * - 이미 담긴 장소를 다시 담으면 [alert] 로 중복 안내.
+ *   (담긴 카드는 Green-700 테두리 + Click 그라데이션으로 표시한다.)
+ * - 담긴 카드를 다시 탭하면 선택이 취소된다. 서버 반영은 ✓ 에서 한 번에 하므로 그 전까지는
+ *   자유롭게 되돌릴 수 있다(자세한 건 [CourseComposeViewModel] KDoc 의 "커밋 지연").
  *
  * ⚠️ 지도는 카카오맵 v2([CourseMap])로 연동돼 있다(런타임 키/렌더 확인은 별도).
  * 드래그 순서 변경 제스처/카테고리별 추천 필터/임시 코스 세션 연동은 TODO 로 남겨 후속 확장한다.
@@ -37,9 +38,10 @@ data class CourseComposeUiState(
     // 현재 선택된 카테고리 id. null 이면 미선택.
     val selectedCategoryId: Long? = null,
     val recommendState: RecommendListState = RecommendListState.Loading,
-    // 선택 장소 추가(POST .../places) 요청이 진행 중인 장소의 [PlaceUiModel.key]. 같은 카드의 중복 탭을 막는다.
+    // ✓ 커밋 단계에서 선택 장소 추가(POST .../places) 요청이 진행 중인 장소의 [PlaceUiModel.key].
+    // 해당 카드에 스피너를 띄우고 탭을 막는다.
     val addingPlaceKeys: Set<String> = emptySet(),
-    // 노출 중인 시스템 알럿(중복 선택 등). null 이면 닫힘.
+    // 노출 중인 시스템 알럿(카테고리 중복 등). null 이면 닫힘.
     val alert: CourseComposeAlert? = null,
     // 다음 단계 전환 API(ordering / places-order / saving) 호출 중. 헤더 ✓ 중복 탭을 막는다.
     val isSubmitting: Boolean = false,
@@ -61,6 +63,18 @@ data class CourseComposeUiState(
     /** 현재 선택된 카테고리 탭. 추천 조회에 필요한 code 를 여기서 얻는다. */
     val selectedCategory: PlaceCategoryUiModel?
         get() = categories.firstOrNull { it.id == selectedCategoryId }
+
+    /**
+     * [categoryCode] 대분류를 이미 차지하고 있는 장소(기준 장소 포함). 비어 있으면 null.
+     *
+     * 서버가 선택 장소 추가에서 "이미 선택된 카테고리(기준 장소 포함)와 같은 카테고리의 장소는
+     * 추가할 수 없다"고 검증하므로, 담기 전에 화면에서 같은 판정을 미리 한다.
+     * 카테고리 코드를 모르는 장소(빈 문자열)는 판정에서 제외한다 — 최종 검증은 서버가 한다.
+     */
+    fun categoryOwner(categoryCode: String): PlaceUiModel? {
+        if (categoryCode.isBlank()) return null
+        return orderedPlaces.firstOrNull { it.categoryCode.equals(categoryCode, ignoreCase = true) }
+    }
 }
 
 /**
@@ -170,8 +184,17 @@ sealed interface RecommendListState {
 
 /** 코스 구성하기 화면의 시스템 알럿 종류. */
 sealed interface CourseComposeAlert {
-    /** 이미 담은 장소를 다시 담으려 할 때(중복선택 알럿). 요청 전에 화면에서 걸러낸 경우다. */
-    data object Duplicate : CourseComposeAlert
+    /**
+     * 같은 대분류의 장소를 이미 골랐을 때. 서버가 카테고리당 1곳만 허용해 담기 전에 걸러낸다.
+     * [placeName] 은 그 카테고리를 차지하고 있는 장소 이름(기준 장소일 수도 있다).
+     */
+    data class CategoryTaken(val placeName: String) : CourseComposeAlert
+
+    /**
+     * 이미 서버 임시 코스에 올라간 장소를 빼려고 할 때.
+     * 선택 장소 삭제 API(DELETE .../places/{courseDraftPlaceId})가 아직 배포되지 않아 뺄 수 없다.
+     */
+    data object RemoveUnavailable : CourseComposeAlert
 
     /**
      * 선택 장소 추가(POST .../places)가 실패했을 때.

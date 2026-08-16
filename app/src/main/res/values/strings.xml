@@ -128,9 +128,14 @@
     <string name="course_compose_selected_section">선택한 장소 (%1$d)</string>
     <string name="course_compose_selected_desc">드래그해 순서를 수정 할 수 있어요.</string>
     <string name="course_compose_base_place_chip">기준장소</string>
-    <!-- 이미 담은 장소를 다시 담으려 할 때 (중복선택 알럿) -->
-    <string name="course_compose_duplicate_title">이미 선택한 장소에요.</string>
-    <string name="course_compose_duplicate_desc">다른 장소를 선택해주세요.</string>
+    <!-- 카드를 길게 눌러 상세, 탭해서 담기/취소 -->
+    <string name="course_compose_place_hint">장소를 눌러 담고, 다시 눌러 취소할 수 있어요!</string>
+    <!-- 같은 대분류의 장소를 이미 골랐을 때 (카테고리당 1곳) -->
+    <string name="course_compose_category_taken_title">이 카테고리는 ‘%1$s’(으)로 정해뒀어요.</string>
+    <string name="course_compose_category_taken_desc">먼저 선택을 취소한 뒤 다시 골라주세요.</string>
+    <!-- 서버에 이미 올라간 장소를 빼려 할 때 (선택 장소 삭제 API 미배포) -->
+    <string name="course_compose_remove_unavailable_title">이미 코스에 담긴 장소예요.</string>
+    <string name="course_compose_remove_unavailable_desc">지금은 취소할 수 없어요.</string>
     <!-- 다음 단계 전환 API(ordering/places-order/saving) 실패 시 -->
     <string name="course_compose_submit_error_title">다음 단계로 이동하지 못했어요.</string>
     <!-- 선택 장소 추가 API(POST .../places) 실패 시. 본문은 서버 message 를 그대로 쓴다. -->

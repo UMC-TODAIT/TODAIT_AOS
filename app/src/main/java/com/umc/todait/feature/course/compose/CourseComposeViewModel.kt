@@ -33,9 +33,27 @@ import javax.inject.Inject
  * 그래프 경로 변수로 넘어온다. 이후 단계는 모두 이 핸들 위에서 상태를 전이시킨다.
  *
  * - 진입: 기준 장소 상세 + 카테고리 탭 로드 → 카테고리별 추천 장소 조회
- * - [onAddPlace] (추천 카드 탭): POST .../places — 임시 코스에 장소를 담고 courseDraftPlaceId 를 받는다
- * - [onSelectionConfirmed] (장소 선택 ✓): PATCH .../ordering — PLACE_SELECTING → ORDERING
+ * - [onTogglePlace] (추천 카드 탭): 화면에서만 담고/뺀다. 서버 호출 없음
+ * - [onSelectionConfirmed] (장소 선택 ✓): 담은 장소를 POST .../places 로 일괄 커밋한 뒤
+ *   PATCH .../ordering — PLACE_SELECTING → ORDERING
  * - [onOrderConfirmed] (순서 설정 ✓): PATCH .../places/order 로 최종 순서 저장 후 PATCH .../saving
+ *
+ * ## ⚠️ 커밋 지연(deferred commit) — 데모 시연용 우회
+ *
+ * 원래는 추천 카드를 탭하는 즉시 POST .../places 로 서버에 담았다. 그런데 **선택 장소 삭제
+ * (DELETE .../places/{courseDraftPlaceId})가 아직 배포되지 않아** 한 번 담으면 뺄 방법이 없다.
+ * 화면에서만 빼면 서버에는 남아 (1) 최종 코스에 그대로 저장되고, (2) 순서 변경 요청의 visitOrder 가
+ * 끊겨 400 이 나고, (3) "카테고리당 1곳" 제약 때문에 같은 카테고리를 다시 고를 수 없다.
+ *
+ * 그래서 이 브랜치는 **탭 시점에 서버를 건드리지 않고**, ✓ 를 누를 때 선택한 장소를 화면 순서대로
+ * 한 번에 POST 한다. ✓ 이전의 선택/취소는 완전히 로컬이라 자유롭게 되돌릴 수 있다.
+ *
+ * 대신 두 가지를 감수한다.
+ * - ✓ 전에 앱을 벗어나면 선택 내역이 사라진다(서버에 아직 없다).
+ * - "이어서 하기"로 복귀해 서버에서 되살린 장소([restoreDraftPlaces])는 이미 커밋된 상태라
+ *   여전히 뺄 수 없다 — 삭제 API 가 나오기 전까지는 방법이 없다.
+ *
+ * 삭제 API 가 배포되면 이 우회를 걷어내고 탭 즉시 담기/빼기로 되돌리면 된다.
  */
 @HiltViewModel
 class CourseComposeViewModel @Inject constructor(
@@ -218,63 +236,57 @@ class CourseComposeViewModel @Inject constructor(
     }
 
     /**
-     * 추천 카드 탭 → 코스에 담기
-     * (POST /api/course-drafts/{courseDraftId}/places).
+     * 추천 카드 탭 → 코스에 담기 / 담은 장소 취소. **서버 호출은 하지 않는다.**
      *
-     * 서버가 임시 코스에 장소를 저장하고 courseDraftPlaceId 를 발급해 주므로, 응답을 받은 뒤에
-     * 목록 끝에 추가한다(순서 변경 API 가 placeId 가 아니라 이 id 를 쓰기 때문).
+     * 담기는 목록 끝에 붙이고(담은 순서 = 코스 순서), 이미 담은 장소를 다시 탭하면 뺀다.
+     * 서버 반영은 ✓([onSelectionConfirmed])에서 한 번에 하므로 여기서는 화면 상태만 바꾼다.
+     * (이유는 클래스 KDoc 의 "커밋 지연" 참고.)
      *
-     * 이미 담은 장소는 요청 전에 걸러 중복 알럿을 띄우고, 요청 중인 장소는 [CourseComposeUiState.addingPlaceKeys]
-     * 로 표시해 같은 카드의 중복 탭을 막는다. 최종 중복·기준 장소·최대 개수 검증은 서버가 한다.
+     * 담기 전에 서버가 POST .../places 에서 검증하는 두 가지를 미리 확인한다 — 그래야 ✓ 를 누른
+     * 뒤에야 실패를 알게 되는 일이 없다.
+     * - 담을 수 있는 장소인가(내부 placeId 가 있는가)
+     * - 같은 카테고리를 이미 골랐는가(기준 장소 포함, 카테고리당 1곳)
      */
-    fun onAddPlace(place: PlaceUiModel) {
+    fun onTogglePlace(place: PlaceUiModel) {
         val state = _uiState.value
-        if (state.selectedPlaces.any { it.key == place.key }) {
-            _uiState.update { it.copy(alert = CourseComposeAlert.Duplicate) }
+        // 커밋(POST) 중인 장소는 건드리지 않는다.
+        if (place.key in state.addingPlaceKeys) return
+
+        val selected = state.selectedPlaces.firstOrNull { it.key == place.key }
+        if (selected != null) {
+            onRemovePlace(selected)
             return
         }
-        if (place.key in state.addingPlaceKeys) return
+
         // 추천 카드는 운영자 검수를 마친 내부 장소라 placeId 가 항상 있다(외부 장소는 담을 수 없다).
-        val placeId = place.placeId ?: run {
+        if (place.placeId == null) {
             _uiState.update { it.copy(alert = CourseComposeAlert.AddFailed(UNSUPPORTED_PLACE_MESSAGE)) }
             return
         }
-
-        _uiState.update { it.copy(addingPlaceKeys = it.addingPlaceKeys + place.key) }
-        viewModelScope.launch {
-            val result = courseDraftRepository.addPlace(courseDraftId = courseDraftId, placeId = placeId)
-            _uiState.update { current ->
-                val next = current.copy(addingPlaceKeys = current.addingPlaceKeys - place.key)
-                when (result) {
-                    is ApiResult.Success -> {
-                        // 요청 중에 다른 경로로 이미 담겼다면 그대로 둔다(중복 추가 방지).
-                        if (next.selectedPlaces.any { it.key == place.key }) {
-                            next
-                        } else {
-                            val added = place.copy(courseDraftPlaceId = result.data.addedPlace.courseDraftPlaceId)
-                            next.copy(orderedPlaces = next.orderedPlaces + added)
-                        }
-                    }
-
-                    // 서버 message 가 그대로 안내 문구가 된다(예: "이미 선택한 장소입니다.").
-                    is ApiResult.Failure ->
-                        next.copy(alert = CourseComposeAlert.AddFailed(result.toUiError().message))
-                }
-            }
+        // 서버는 기준 장소를 포함해 카테고리당 1곳만 허용한다. 이미 찬 카테고리면 담지 않고 안내한다.
+        val taken = state.categoryOwner(place.categoryCode)
+        if (taken != null) {
+            _uiState.update { it.copy(alert = CourseComposeAlert.CategoryTaken(taken.name)) }
+            return
         }
+
+        _uiState.update { it.copy(orderedPlaces = it.orderedPlaces + place) }
     }
 
     /**
-     * 선택한 장소에서 빼기.
+     * 담은 장소 취소. 아직 서버에 올리지 않은 장소만 뺄 수 있다.
      *
-     * ⚠️ "선택 장소 삭제"(DELETE .../places/{courseDraftPlaceId})가 아직 개발 전이라 화면에서만 뺀다.
-     * 서버 임시 코스에는 장소가 남아 있어 순서/저장 단계에서 개수가 어긋날 수 있다.
-     * 삭제 API 가 나오면 여기서 호출하고 실패 시 목록을 되돌린다.
+     * ⚠️ 이미 커밋된 장소(courseDraftPlaceId 가 있는 장소 — ✓ 를 눌러 POST 했거나 "이어서 하기"로
+     * 되살린 장소)는 삭제 API(DELETE .../places/{courseDraftPlaceId})가 없어서 뺄 수 없다.
+     * 화면에서만 빼면 최종 코스에 그대로 남으므로, 지우는 대신 안내 알럿을 띄운다.
      */
     fun onRemovePlace(place: PlaceUiModel) {
         _uiState.update { state ->
             // 기준 장소는 화면에서 뺄 수 없다(코스의 기준점이라 빼면 임시 코스가 성립하지 않는다).
             if (place.key == state.basePlaceKey) return@update state
+            if (place.courseDraftPlaceId != null) {
+                return@update state.copy(alert = CourseComposeAlert.RemoveUnavailable)
+            }
             state.copy(orderedPlaces = state.orderedPlaces.filterNot { it.key == place.key })
         }
     }
@@ -293,11 +305,15 @@ class CourseComposeViewModel @Inject constructor(
     }
 
     /**
-     * 장소 선택 화면 헤더 ✓ → 순서 설정 화면 진입
-     * (PATCH /api/course-drafts/{courseDraftId}/ordering).
+     * 장소 선택 화면 헤더 ✓ → 담은 장소를 서버에 커밋한 뒤 순서 설정 화면으로 진입한다.
      *
-     * 멱등 API라 화면 재진입/재시도로 다시 불려도 안전하다. 응답의 courseDraftPlaceId 를
-     * 담아둔 장소들에 맞춰 붙여야 이어지는 순서 변경 API 를 호출할 수 있다.
+     * 1. POST .../places — 아직 서버에 없는 장소를 **화면에 보이는 순서대로** 하나씩 담는다.
+     *    서버가 visitOrder 를 (현재 최댓값 + 1)로 매기므로 이 순서가 그대로 코스 동선이 된다.
+     * 2. PATCH .../ordering — PLACE_SELECTING → ORDERING. 멱등이라 재시도해도 안전하고,
+     *    응답의 courseDraftPlaceId 를 담아둔 장소들에 맞춰 붙여야 순서 변경 API 를 호출할 수 있다.
+     *
+     * 1번이 도중에 실패하면 거기서 멈추고 서버 문구를 그대로 띄운다. 이미 커밋된 장소는 되돌릴
+     * 방법이 없어(삭제 API 미배포) 그대로 두고, 사용자가 ✓ 를 다시 누르면 남은 장소만 이어서 담는다.
      */
     fun onSelectionConfirmed() {
         val state = _uiState.value
@@ -305,6 +321,8 @@ class CourseComposeViewModel @Inject constructor(
 
         _uiState.update { it.copy(isSubmitting = true, submitError = null) }
         viewModelScope.launch {
+            if (!commitPendingPlaces()) return@launch
+
             when (val result = courseDraftRepository.enterOrdering(courseDraftId)) {
                 is ApiResult.Success -> {
                     _uiState.update {
@@ -322,6 +340,47 @@ class CourseComposeViewModel @Inject constructor(
                     }
             }
         }
+    }
+
+    /**
+     * 화면에서 담아둔 장소 중 아직 서버에 없는 것을 화면 순서대로 POST .../places 로 커밋한다.
+     *
+     * 순차 호출인 이유는 서버가 visitOrder 를 (현재 최댓값 + 1)로 매기기 때문이다 — 동시에 보내면
+     * 담은 순서가 코스 동선과 어긋난다. 응답으로 받은 courseDraftPlaceId 를 바로 붙여 두면
+     * 재시도 시 같은 장소를 두 번 담지 않는다.
+     *
+     * @return 전부 성공하면 true. 하나라도 실패하면 [CourseComposeUiState.submitError] 를 채우고 false.
+     */
+    private suspend fun commitPendingPlaces(): Boolean {
+        val pending = _uiState.value.selectedPlaces.filter { it.courseDraftPlaceId == null }
+        for (place in pending) {
+            // onTogglePlace 에서 이미 걸러지지만, 서버에 보낼 수 없는 장소가 남아 있으면 건너뛴다.
+            val placeId = place.placeId ?: continue
+
+            _uiState.update { it.copy(addingPlaceKeys = it.addingPlaceKeys + place.key) }
+            val result = courseDraftRepository.addPlace(courseDraftId = courseDraftId, placeId = placeId)
+            _uiState.update { it.copy(addingPlaceKeys = it.addingPlaceKeys - place.key) }
+
+            when (result) {
+                is ApiResult.Success -> _uiState.update { state ->
+                    val draftPlaceId = result.data.addedPlace.courseDraftPlaceId
+                    state.copy(
+                        orderedPlaces = state.orderedPlaces.map {
+                            if (it.key == place.key) it.copy(courseDraftPlaceId = draftPlaceId) else it
+                        },
+                    )
+                }
+
+                // 서버 message 가 그대로 안내 문구가 된다(예: "이미 선택한 장소입니다.").
+                is ApiResult.Failure -> {
+                    _uiState.update {
+                        it.copy(isSubmitting = false, submitError = result.toUiError().message)
+                    }
+                    return false
+                }
+            }
+        }
+        return true
     }
 
     /**

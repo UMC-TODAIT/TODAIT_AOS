@@ -42,8 +42,8 @@ import javax.inject.Inject
  *
  * 원래는 추천 카드를 탭하는 즉시 POST .../places 로 서버에 담았다. 그런데 **선택 장소 삭제
  * (DELETE .../places/{courseDraftPlaceId})가 아직 배포되지 않아** 한 번 담으면 뺄 방법이 없다.
- * 화면에서만 빼면 서버에는 남아 (1) 최종 코스에 그대로 저장되고, (2) 순서 변경 요청의 visitOrder 가
- * 끊겨 400 이 나고, (3) "카테고리당 1곳" 제약 때문에 같은 카테고리를 다시 고를 수 없다.
+ * 화면에서만 빼면 서버에는 남아 (1) 최종 코스에 그대로 저장되고(코스 저장 요청은 임시 코스에 담긴
+ * 장소를 그대로 쓴다), (2) 순서 변경 요청의 visitOrder 가 끊겨 400 이 난다.
  *
  * 그래서 이 브랜치는 **탭 시점에 서버를 건드리지 않고**, ✓ 를 누를 때 선택한 장소를 화면 순서대로
  * 한 번에 POST 한다. ✓ 이전의 선택/취소는 완전히 로컬이라 자유롭게 되돌릴 수 있다.
@@ -242,10 +242,9 @@ class CourseComposeViewModel @Inject constructor(
      * 서버 반영은 ✓([onSelectionConfirmed])에서 한 번에 하므로 여기서는 화면 상태만 바꾼다.
      * (이유는 클래스 KDoc 의 "커밋 지연" 참고.)
      *
-     * 담기 전에 서버가 POST .../places 에서 검증하는 두 가지를 미리 확인한다 — 그래야 ✓ 를 누른
-     * 뒤에야 실패를 알게 되는 일이 없다.
-     * - 담을 수 있는 장소인가(내부 placeId 가 있는가)
-     * - 같은 카테고리를 이미 골랐는가(기준 장소 포함, 카테고리당 1곳)
+     * 서버가 POST .../places 에서 막는 두 가지(같은 장소 중복·기준 장소 재추가)는 여기서 이미
+     * 성립하지 않는다 — 담은 장소를 다시 탭하면 취소가 되고, 기준 장소는 추천 목록에 없다.
+     * 카테고리당 1곳 같은 제약은 배포 서버에 없다(2026-08-16 실측).
      */
     fun onTogglePlace(place: PlaceUiModel) {
         val state = _uiState.value
@@ -263,13 +262,6 @@ class CourseComposeViewModel @Inject constructor(
             _uiState.update { it.copy(alert = CourseComposeAlert.AddFailed(UNSUPPORTED_PLACE_MESSAGE)) }
             return
         }
-        // 서버는 기준 장소를 포함해 카테고리당 1곳만 허용한다. 이미 찬 카테고리면 담지 않고 안내한다.
-        val taken = state.categoryOwner(place.categoryCode)
-        if (taken != null) {
-            _uiState.update { it.copy(alert = CourseComposeAlert.CategoryTaken(taken.name)) }
-            return
-        }
-
         _uiState.update { it.copy(orderedPlaces = it.orderedPlaces + place) }
     }
 

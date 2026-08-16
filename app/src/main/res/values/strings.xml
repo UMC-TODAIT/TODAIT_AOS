@@ -130,9 +130,6 @@
     <string name="course_compose_base_place_chip">기준장소</string>
     <!-- 카드를 길게 눌러 상세, 탭해서 담기/취소 -->
     <string name="course_compose_place_hint">장소를 눌러 담고, 다시 눌러 취소할 수 있어요!</string>
-    <!-- 같은 대분류의 장소를 이미 골랐을 때 (카테고리당 1곳) -->
-    <string name="course_compose_category_taken_title">이 카테고리는 ‘%1$s’(으)로 정해뒀어요.</string>
-    <string name="course_compose_category_taken_desc">먼저 선택을 취소한 뒤 다시 골라주세요.</string>
     <!-- 서버에 이미 올라간 장소를 빼려 할 때 (선택 장소 삭제 API 미배포) -->
     <string name="course_compose_remove_unavailable_title">이미 코스에 담긴 장소예요.</string>
     <string name="course_compose_remove_unavailable_desc">지금은 취소할 수 없어요.</string>

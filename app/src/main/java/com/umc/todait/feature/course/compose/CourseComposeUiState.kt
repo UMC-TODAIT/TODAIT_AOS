@@ -63,18 +63,6 @@ data class CourseComposeUiState(
     /** 현재 선택된 카테고리 탭. 추천 조회에 필요한 code 를 여기서 얻는다. */
     val selectedCategory: PlaceCategoryUiModel?
         get() = categories.firstOrNull { it.id == selectedCategoryId }
-
-    /**
-     * [categoryCode] 대분류를 이미 차지하고 있는 장소(기준 장소 포함). 비어 있으면 null.
-     *
-     * 서버가 선택 장소 추가에서 "이미 선택된 카테고리(기준 장소 포함)와 같은 카테고리의 장소는
-     * 추가할 수 없다"고 검증하므로, 담기 전에 화면에서 같은 판정을 미리 한다.
-     * 카테고리 코드를 모르는 장소(빈 문자열)는 판정에서 제외한다 — 최종 검증은 서버가 한다.
-     */
-    fun categoryOwner(categoryCode: String): PlaceUiModel? {
-        if (categoryCode.isBlank()) return null
-        return orderedPlaces.firstOrNull { it.categoryCode.equals(categoryCode, ignoreCase = true) }
-    }
 }
 
 /**
@@ -184,12 +172,6 @@ sealed interface RecommendListState {
 
 /** 코스 구성하기 화면의 시스템 알럿 종류. */
 sealed interface CourseComposeAlert {
-    /**
-     * 같은 대분류의 장소를 이미 골랐을 때. 서버가 카테고리당 1곳만 허용해 담기 전에 걸러낸다.
-     * [placeName] 은 그 카테고리를 차지하고 있는 장소 이름(기준 장소일 수도 있다).
-     */
-    data class CategoryTaken(val placeName: String) : CourseComposeAlert
-
     /**
      * 이미 서버 임시 코스에 올라간 장소를 빼려고 할 때.
      * 선택 장소 삭제 API(DELETE .../places/{courseDraftPlaceId})가 아직 배포되지 않아 뺄 수 없다.

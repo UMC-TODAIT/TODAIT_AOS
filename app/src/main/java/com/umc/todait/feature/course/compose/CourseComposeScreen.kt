@@ -160,14 +160,6 @@ fun CourseComposeScreen(
         )
 
         when (val alert = uiState.alert) {
-            // 카테고리당 1곳 제약. 이미 그 자리를 차지한 장소 이름을 알려준다.
-            is CourseComposeAlert.CategoryTaken -> CommonDialog(
-                title = stringResource(R.string.course_compose_category_taken_title, alert.placeName) + "\n" +
-                    stringResource(R.string.course_compose_category_taken_desc),
-                onConfirm = viewModel::onDismissAlert,
-                onDismiss = viewModel::onDismissAlert,
-            )
-
             // 이미 서버에 커밋된 장소(✓ 를 눌렀거나 "이어서 하기"로 되살린 장소)는 뺄 수 없다.
             CourseComposeAlert.RemoveUnavailable -> CommonDialog(
                 title = stringResource(R.string.course_compose_remove_unavailable_title) + "\n" +

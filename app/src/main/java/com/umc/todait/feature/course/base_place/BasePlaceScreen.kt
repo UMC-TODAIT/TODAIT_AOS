@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -94,6 +95,7 @@ import com.umc.todait.ui.theme.Gray800
 import com.umc.todait.ui.theme.Gray900
 import com.umc.todait.ui.theme.Pink800
 import com.umc.todait.ui.theme.SearchIconCircle
+import com.umc.todait.ui.theme.Suit
 import com.umc.todait.ui.theme.TodaitTheme
 import com.umc.todait.ui.theme.White
 
@@ -270,7 +272,8 @@ private fun SearchBar(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(45.dp),
+            // 45dp 고정이면 글꼴 배율이 커질 때 입력 글자가 잘린다 — 최소 높이로 둔다.
+            .heightIn(min = 45.dp),
         shape = RoundedCornerShape(percent = 50),
         color = White,
         shadowElevation = 4.dp,
@@ -286,7 +289,7 @@ private fun SearchBar(
                 if (query.isEmpty()) {
                     Text(
                         text = stringResource(R.string.base_place_search_hint),
-                        style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.SemiBold),
+                        style = TextStyle(fontFamily = Suit, fontSize = 16.sp, fontWeight = FontWeight.SemiBold),
                         color = Gray200,
                     )
                 }
@@ -296,6 +299,7 @@ private fun SearchBar(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     textStyle = TextStyle(
+                        fontFamily = Suit,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Gray900,
@@ -559,7 +563,7 @@ private fun ProximityBadge(text: String) {
     ) {
         Text(
             text = text,
-            style = TextStyle(fontSize = 10.sp),
+            style = TextStyle(fontFamily = Suit, fontSize = 10.sp),
             color = Pink800,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,

@@ -1,5 +1,6 @@
 package com.umc.todait.navigation
 
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -133,7 +134,11 @@ fun TodaitApp() {
         NavHost(
             navController = navController,
             startDestination = Screen.Splash.route,
-            modifier = Modifier.padding(innerPadding),
+            // imePadding: edge-to-edge 라 키보드가 화면 위에 겹쳐 올라온다. 여기서 한 번 밀어 주면
+            // 로그인·회원가입·검색·코스 저장(메모) 등 입력이 있는 화면 전부가 키보드에 가려지지 않는다.
+            modifier = Modifier
+                .padding(innerPadding)
+                .imePadding(),
         ) {
             // ---------- Auth ----------
             // 플로우: 스플래시(토큰 확인) → 로그인/이메일 로그인 → 약관 동의 → 회원가입(이메일) / 닉네임 설정(소셜) → 가입 완료

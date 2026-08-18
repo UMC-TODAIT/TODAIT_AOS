@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -77,6 +78,7 @@ import com.umc.todait.ui.theme.Gray400
 import com.umc.todait.ui.theme.Gray800
 import com.umc.todait.ui.theme.Green500
 import com.umc.todait.ui.theme.Pink500
+import com.umc.todait.ui.theme.Suit
 import com.umc.todait.ui.theme.TextPlaceholder
 import com.umc.todait.ui.theme.TodaitTheme
 import com.umc.todait.ui.theme.White
@@ -269,7 +271,7 @@ private fun CourseNameField(
     onValueChange: (String) -> Unit,
 ) {
     FieldContainer(
-        modifier = Modifier.height(53.dp),
+        modifier = Modifier.heightIn(min = 53.dp),
         shape = RoundedCornerShape(50.dp),
         contentPadding = Modifier.padding(horizontal = 28.dp),
         contentAlignment = Alignment.CenterStart,
@@ -394,17 +396,17 @@ private fun MoodTagChip(
         else Modifier
     Box(
         modifier = Modifier
-            .height(TAG_CHIP_HEIGHT)
+            .heightIn(min = TAG_CHIP_HEIGHT)
             .clip(CircleShape)
             .then(background)
             .then(selectionBorder)
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
-            .padding(horizontal = 24.dp),
+            .padding(horizontal = 24.dp, vertical = 6.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = stringResource(R.string.course_save_tag_prefix, mood.label),
-            style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold),
+            style = TextStyle(fontFamily = Suit, fontSize = 16.sp, fontWeight = FontWeight.Bold),
             color = White,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -455,7 +457,7 @@ private fun TagBottomSheet(
                 Text(
                     text = stringResource(R.string.course_save_tag_sheet_title),
                     modifier = Modifier.align(Alignment.Center),
-                    style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.SemiBold),
+                    style = TextStyle(fontFamily = Suit, fontSize = 20.sp, fontWeight = FontWeight.SemiBold),
                     color = Gray800,
                 )
                 HeaderCheckButton(
@@ -469,7 +471,7 @@ private fun TagBottomSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = SCREEN_PADDING),
-                style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.SemiBold),
+                style = TextStyle(fontFamily = Suit, fontSize = 12.sp, fontWeight = FontWeight.SemiBold),
                 color = Gray400,
                 textAlign = TextAlign.Center,
             )

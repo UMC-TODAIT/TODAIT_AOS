@@ -33,6 +33,10 @@ fun BottomBar(
     Box(
         modifier = Modifier
             .fillMaxWidth()
+            // edge-to-edge 라 이 바는 시스템 내비게이션 영역 위에 겹쳐 그려진다.
+            // 3버튼 내비게이션 기기(제스처 아님)에서는 48dp 짜리 시스템 바가 GNB 를 덮으므로
+            // 내비게이션 바 인셋만큼 먼저 띄운다.
+            .navigationBarsPadding()
             .padding(
                 horizontal = 20.dp,
                 vertical = 16.dp

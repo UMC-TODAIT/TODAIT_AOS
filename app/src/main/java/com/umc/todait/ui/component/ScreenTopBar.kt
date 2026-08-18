@@ -12,12 +12,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.umc.todait.ui.theme.Cream
 import com.umc.todait.ui.theme.DividerLine
 import com.umc.todait.ui.theme.Gray800
+import com.umc.todait.ui.theme.Suit
 import com.umc.todait.ui.theme.TodaitTheme
 
 /**
@@ -57,9 +59,14 @@ fun ScreenTopBar(
             )
             Text(
                 text = title,
-                modifier = Modifier.align(Alignment.Center),
-                style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Medium),
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    // 좌우 헤더 버튼 자리를 비워 둔다(글꼴 배율이 커져도 타이틀이 버튼을 덮지 않게).
+                    .padding(horizontal = TITLE_SIDE_INSET),
+                style = TextStyle(fontFamily = Suit, fontSize = 20.sp, fontWeight = FontWeight.Medium),
                 color = Gray800,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
             if (onConfirm != null) {
                 HeaderCheckButton(
@@ -83,6 +90,9 @@ fun ScreenTopBar(
 private val HORIZONTAL_PADDING = 24.dp
 private val VERTICAL_PADDING = 11.dp
 private val DIVIDER_INSET = 20.dp
+
+/** 타이틀 좌우로 비워 두는 폭 — 헤더 버튼(뒤로가기/확인) 영역. */
+private val TITLE_SIDE_INSET = 44.dp
 
 @Preview(showBackground = true, backgroundColor = 0xFFFDFBF3)
 @Composable

@@ -51,6 +51,7 @@ import com.umc.todait.ui.theme.Gray500
 import com.umc.todait.ui.theme.Gray800
 import com.umc.todait.ui.theme.Pink100
 import com.umc.todait.ui.theme.Pink800
+import com.umc.todait.ui.theme.Suit
 import com.umc.todait.ui.theme.TodaitTheme
 import com.umc.todait.ui.theme.White
 import sh.calvin.reorderable.ReorderableItem
@@ -275,17 +276,20 @@ private fun SelectedPlaceRow(
 private fun BasePlaceChip() {
     Box(
         modifier = Modifier
-            .height(16.dp)
+            // 16dp 고정이면 기기 글꼴 배율이 올라갔을 때 칩이 글자를 자른다 — 최소 높이로 둔다.
+            .heightIn(min = 16.dp)
             .clip(CircleShape)
             .background(White)
-            .padding(horizontal = 8.dp),
+            .padding(horizontal = 8.dp, vertical = 1.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = stringResource(R.string.course_compose_base_place_chip),
             style = TextStyle(
+                fontFamily = Suit,
                 fontSize = 10.sp,
-                lineHeight = 12.sp,
+                // 10sp 에 12sp 줄높이는 SUIT 한글의 위아래(ㅎ 윗획·받침)가 잘린다.
+                lineHeight = 14.sp,
                 platformStyle = PlatformTextStyle(includeFontPadding = false),
             ),
             color = Pink800,

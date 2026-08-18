@@ -92,6 +92,7 @@ import com.umc.todait.ui.theme.Gray500
 import com.umc.todait.ui.theme.Green700
 import com.umc.todait.ui.theme.Pink600
 import com.umc.todait.ui.theme.Pink800
+import com.umc.todait.ui.theme.Suit
 import com.umc.todait.ui.theme.TodaitTheme
 import com.umc.todait.ui.theme.White
 
@@ -325,7 +326,7 @@ private fun CategoryTabs(
             ) {
                 Text(
                     text = category.name,
-                    style = TextStyle(fontSize = 17.sp, fontWeight = FontWeight.Medium),
+                    style = TextStyle(fontFamily = Suit, fontSize = 17.sp, fontWeight = FontWeight.Medium),
                     color = if (isSelected) CategoryTabTextSelected else White,
                 )
             }
@@ -505,7 +506,7 @@ private fun ProximityBadge(text: String) {
     ) {
         Text(
             text = text,
-            style = TextStyle(fontSize = 10.sp),
+            style = TextStyle(fontFamily = Suit, fontSize = 10.sp),
             color = Pink800,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,

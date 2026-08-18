@@ -17,9 +17,13 @@
         android:networkSecurityConfig="@xml/network_security_config"
         android:usesCleartextTraffic="false">
 
+        <!-- 시안이 세로 전용이라 가로에서는 고정 높이 레이아웃이 무너진다(실기기 자동 회전 대비 세로 고정).
+             입력 화면은 키보드가 올라오면 화면을 줄인다(Compose 쪽은 NavHost 의 imePadding 이 받는다). -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.Todait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -9,8 +9,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -51,6 +53,7 @@ import com.umc.todait.ui.theme.LoginHeadingPink
 import com.umc.todait.ui.theme.Pink100
 import com.umc.todait.ui.theme.Pink400
 import com.umc.todait.ui.theme.Pink800
+import com.umc.todait.ui.theme.Suit
 import com.umc.todait.ui.theme.TodaitTheme
 import com.umc.todait.ui.theme.White
 
@@ -100,6 +103,9 @@ private fun EmailLoginContent(
         modifier = modifier
             .fillMaxSize()
             .background(Brush.verticalGradient(listOf(BgGradientTop, BgGradientBottom)))
+            // 키보드가 올라와 화면이 줄어들면(=NavHost 의 imePadding) 하단 로그인 버튼·회원가입 링크가
+            // 잘리므로 스크롤로 접근할 수 있게 한다. 세로가 짧은 기기에서도 같은 이유로 필요.
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -109,9 +115,10 @@ private fun EmailLoginContent(
         Text(
             text = stringResource(R.string.email_login_heading),
             style = TextStyle(
+                fontFamily = Suit,
                 fontWeight = FontWeight.Normal,
                 fontSize = 28.sp,
-                lineHeight = 26.sp,
+                lineHeight = 36.sp,
                 letterSpacing = (-0.02).em,
             ),
             color = LoginHeadingPink,

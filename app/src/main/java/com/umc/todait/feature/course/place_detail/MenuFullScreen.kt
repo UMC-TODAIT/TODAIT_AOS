@@ -195,7 +195,9 @@ private fun MenuRowCard(item: MenuUiItem) {
 private fun menuRowTextStyle(fontSize: TextUnit, weight: FontWeight) = TextStyle(
     fontFamily = Suit,
     fontSize = fontSize,
-    lineHeight = fontSize,
+    // 1.0em 로 두면 lineHeight 가 폰트의 ascent+descent 보다 작아 한글 위아래가 잘린다.
+    // Trim.Both 가 남는 여백을 걷어내므로, 넉넉히 잡아도 Figma 의 촘촘한 간격은 그대로 유지된다.
+    lineHeight = fontSize * 1.4f,
     fontWeight = weight,
     platformStyle = PlatformTextStyle(includeFontPadding = false),
     lineHeightStyle = LineHeightStyle(

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.size
@@ -25,6 +26,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.umc.todait.R
@@ -72,7 +74,10 @@ fun SavedCourseCard(
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    // 카드가 270dp 고정이라 긴 코스명이 여러 줄로 늘어나면 아래 장소 목록이 잘린다.
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Spacer(modifier = Modifier.height(5.dp))
 
@@ -115,7 +120,9 @@ fun SavedCourseCard(
                             text = place,
                             color = Color.White,
                             fontSize = 11.sp,
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Center,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
 
                         if (index != visiblePlaces.lastIndex) {
@@ -165,18 +172,21 @@ fun CourseTag(
 ) {
     Box(
         modifier = Modifier
-            .height(19.dp)
+            // 고정 높이면 기기 글꼴 배율이 올라갔을 때 태그 글자가 잘린다 — 최소 높이로 둔다.
+            .heightIn(min = 19.dp)
             .background(
                 backgroundColor,
                 RoundedCornerShape(99.dp)
             )
-            .padding(horizontal = 9.dp),
+            .padding(horizontal = 9.dp, vertical = 1.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
             color = Color.White,
-            fontSize = 10.sp
+            fontSize = 10.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }

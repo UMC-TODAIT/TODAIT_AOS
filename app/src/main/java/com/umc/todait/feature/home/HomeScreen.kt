@@ -42,6 +42,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -332,17 +333,22 @@ private fun CourseCard(course: CourseCardUiModel, onClick: () -> Unit) {
                     .align(Alignment.TopStart)
                     .padding(14.dp),
             ) {
+                // 카드가 222x243 고정이라 긴 코스명/해시태그가 줄바꿈되면 아래 내용이 잘린다.
                 Text(
                     text = course.title,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = White,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
                     text = course.hashtags.joinToString(" "),
                     style = MaterialTheme.typography.bodySmall,
                     color = White,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }
@@ -473,6 +479,8 @@ private fun PlaceCard(
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
                     color = White,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
@@ -480,6 +488,8 @@ private fun PlaceCard(
                     style = MaterialTheme.typography.bodySmall,
                     fontSize = 10.sp,
                     color = White,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 // 태그는 카드 아래쪽에 배치
                 Spacer(Modifier.weight(1f))

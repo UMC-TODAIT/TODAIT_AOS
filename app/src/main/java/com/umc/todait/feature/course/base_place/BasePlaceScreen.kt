@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -30,6 +31,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -37,6 +39,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -93,11 +96,13 @@ import com.umc.todait.ui.theme.Gray500
 import com.umc.todait.ui.theme.Gray400
 import com.umc.todait.ui.theme.Gray800
 import com.umc.todait.ui.theme.Gray900
+import com.umc.todait.ui.theme.Pink600
 import com.umc.todait.ui.theme.Pink800
 import com.umc.todait.ui.theme.SearchIconCircle
 import com.umc.todait.ui.theme.Suit
 import com.umc.todait.ui.theme.TodaitTheme
 import com.umc.todait.ui.theme.White
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 /**
  * 기준 장소 설정 화면(와이어프레임 1.1).
@@ -144,7 +149,10 @@ fun BasePlaceScreen(
             onSelectPlace = viewModel::onSelectPlace,
             // 헤더 체크 → 확정 알럿.
             onConfirmClick = viewModel::onConfirmClick,
-            onRetry = viewModel::loadNearbyHotPlaces,
+            // 검색 결과 목록 끝 → 다음 cursor 페이지 이어서 조회.
+            onLoadMore = viewModel::onLoadMoreSearchResults,
+            // 실패한 조회를 그대로 다시 시도한다(검색 중이면 검색을, 아니면 핫플 추천을).
+            onRetry = { if (uiState.isSearching) viewModel.onSearch() else viewModel.loadNearbyHotPlaces() },
         )
 
         // 시스템 알럿 오버레이. 시안(컴포넌트_System 시스템알럿)이 다른 화면과 같은 흰색 알럿이라 CommonDialog 를 쓴다.
@@ -183,6 +191,7 @@ private fun BasePlaceContent(
     onPlaceLongClick: (PlaceUiModel) -> Unit,
     onSelectPlace: (PlaceUiModel) -> Unit,
     onConfirmClick: () -> Unit,
+    onLoadMore: () -> Unit = {},
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -250,6 +259,10 @@ private fun BasePlaceContent(
                     is PlaceListState.Success -> PlaceList(
                         places = listState.places,
                         selectedPlaceKey = state.selectedPlace?.key,
+                        // 검색 결과에만 다음 페이지(cursor)가 있다. 핫플 추천은 페이지네이션이 없다.
+                        canLoadMore = state.canLoadMoreSearch,
+                        isLoadingMore = state.isLoadingMoreSearch,
+                        onLoadMore = onLoadMore,
                         onPlaceLongClick = onPlaceLongClick,
                         onSelectPlace = onSelectPlace,
                     )
@@ -395,8 +408,29 @@ private fun PlaceList(
     selectedPlaceKey: String?,
     onPlaceLongClick: (PlaceUiModel) -> Unit,
     onSelectPlace: (PlaceUiModel) -> Unit,
+    // 검색 결과에 이어서 볼 페이지(cursor)가 남아 있는지. 남아 있으면 목록 끝에서 자동으로 더 불러온다.
+    canLoadMore: Boolean = false,
+    isLoadingMore: Boolean = false,
+    onLoadMore: () -> Unit = {},
 ) {
+    val listState = rememberLazyListState()
+
+    // 마지막 카드 근처까지 스크롤하면 다음 페이지를 요청한다.
+    // 조건이 참으로 바뀌는 순간에만 호출되도록 distinctUntilChanged 로 묶는다(중복 요청 방지).
+    LaunchedEffect(listState, canLoadMore) {
+        if (!canLoadMore) return@LaunchedEffect
+        snapshotFlow {
+            val layoutInfo = listState.layoutInfo
+            val lastVisibleIndex = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -1
+            layoutInfo.totalItemsCount > 0 &&
+                lastVisibleIndex >= layoutInfo.totalItemsCount - LOAD_MORE_THRESHOLD
+        }
+            .distinctUntilChanged()
+            .collect { reachedEnd -> if (reachedEnd) onLoadMore() }
+    }
+
     LazyColumn(
+        state = listState,
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -412,8 +446,29 @@ private fun PlaceList(
                 onLongClick = { onPlaceLongClick(place) },
             )
         }
+
+        if (isLoadingMore) {
+            item(key = LOAD_MORE_ITEM_KEY) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = Pink600,
+                        strokeWidth = 2.dp,
+                    )
+                }
+            }
+        }
     }
 }
+
+// 목록 끝에서 몇 번째 카드가 보일 때 다음 페이지를 당겨올지.
+private const val LOAD_MORE_THRESHOLD = 3
+private const val LOAD_MORE_ITEM_KEY = "search_load_more"
 
 /**
  * 장소 카드. 좌측 장소 이미지 위에 우측으로 이어지는 그라데이션 패널을 얹고,

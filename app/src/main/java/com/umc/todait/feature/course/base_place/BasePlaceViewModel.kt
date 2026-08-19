@@ -6,11 +6,13 @@ import androidx.lifecycle.viewModelScope
 import com.umc.todait.core.network.ApiResult
 import com.umc.todait.core.network.toUiError
 import com.umc.todait.feature.course.data.dto.CourseDraftStatus
+import com.umc.todait.feature.course.data.dto.SearchEmptyReason
 import com.umc.todait.feature.course.data.repository.CourseDraftRepository
 import com.umc.todait.feature.course.data.repository.RecommendationRepository
 import com.umc.todait.feature.course.data.repository.SearchRepository
 import com.umc.todait.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -46,6 +48,18 @@ class BasePlaceViewModel @Inject constructor(
 
     private val _effect = Channel<BasePlaceEffect>(Channel.BUFFERED)
     val effect = _effect.receiveAsFlow()
+
+    // --- 검색 결과 커서 페이지네이션 상태 (명세 "프론트 연동 요약") ---
+    // 다음 요청에 넘길 cursor(직전 응답의 nextCursor). null 이면 첫 페이지이거나 더 볼 페이지가 없다는 뜻.
+    private var searchCursor: Int? = null
+    // 지금까지 누적한 검색 결과. 페이지를 이어 붙인 목록을 그대로 화면에 그린다.
+    private var searchedPlaces: List<PlaceUiModel> = emptyList()
+    // 누적 결과가 어떤 검색어의 것인지. 추가 조회 시 같은 검색어로만 이어 붙인다.
+    private var searchedQuery: String = ""
+    // 페이지 간 중복 제거 기준(명세: externalPlaceId).
+    private val seenExternalIds = mutableSetOf<String>()
+    // 진행 중인 검색 코루틴. 새 검색이 시작되면 이전 요청 결과를 버린다.
+    private var searchJob: Job? = null
 
     init {
         loadNearbyHotPlaces()
@@ -88,47 +102,141 @@ class BasePlaceViewModel @Inject constructor(
 
     /** 검색어를 비우고 추천 목록으로 되돌린다. */
     fun onClearSearch() {
-        _uiState.update { it.copy(searchQuery = "") }
+        resetSearchPaging()
+        _uiState.update { it.copy(searchQuery = "", canLoadMoreSearch = false, isLoadingMoreSearch = false) }
         loadNearbyHotPlaces()
     }
 
     /**
-     * 검색 실행(GET /api/places/search?query=).
+     * 검색 실행(GET /api/places/search?query=&cursor=&size=). 항상 첫 페이지부터 다시 조회한다.
      * 명세상 공백 제거 후 2자 미만이면 서버가 PLACE_SEARCH400 을 주므로 호출 전에 걸러낸다.
      */
     fun onSearch() {
         val query = _uiState.value.searchQuery.trim()
         if (query.length < MIN_SEARCH_QUERY_LENGTH) {
-            _uiState.update { it.copy(listState = PlaceListState.Empty(SHORT_QUERY_MESSAGE)) }
+            resetSearchPaging()
+            _uiState.update {
+                it.copy(
+                    listState = PlaceListState.Empty(SHORT_QUERY_MESSAGE),
+                    canLoadMoreSearch = false,
+                    isLoadingMoreSearch = false,
+                )
+            }
             return
         }
 
-        _uiState.update { it.copy(listState = PlaceListState.Loading) }
-        viewModelScope.launch {
-            val result = searchRepository.searchPlaces(query = query)
-            _uiState.update { state ->
-                when (result) {
-                    is ApiResult.Success -> {
-                        val places = result.data.places.map { it.toUiModel() }
-                        state.copy(
-                            listState = if (places.isEmpty()) {
-                                if (isUnsupportedAreaQuery(query)) {
-                                    PlaceListState.Empty(UNSUPPORTED_AREA_TITLE, UNSUPPORTED_AREA_DESC)
-                                } else {
-                                    PlaceListState.Empty(EMPTY_SEARCH_TITLE, EMPTY_SEARCH_DESC)
-                                }
-                            } else {
-                                PlaceListState.Success(places)
-                            },
-                        )
+        loadSearchPage(query = query, isFirstPage = true)
+    }
+
+    /**
+     * 검색 결과 목록을 끝까지 스크롤했을 때 다음 페이지를 이어서 조회한다.
+     * 남은 페이지가 없거나 이미 조회 중이면 아무것도 하지 않는다.
+     */
+    fun onLoadMoreSearchResults() {
+        val state = _uiState.value
+        if (!state.canLoadMoreSearch || state.isLoadingMoreSearch) return
+        val query = searchedQuery.takeIf { it.isNotBlank() } ?: return
+        loadSearchPage(query = query, isFirstPage = false)
+    }
+
+    /**
+     * 검색 한 페이지(또는 필요한 만큼 연속된 페이지)를 조회해 결과를 누적한다.
+     *
+     * 명세 "프론트 연동 요약" 그대로 동작한다.
+     * - 첫 요청은 cursor 없이(=1) 보내고, 이후에는 직전 응답의 nextCursor 를 cursor 로 넘긴다.
+     * - hasNext=false 이거나 nextCursor=null 이면 추가 조회를 멈춘다.
+     * - 페이지 간 중복 장소는 externalPlaceId 기준으로 제거한다.
+     * - 서버가 지원 지역 밖 장소를 걸러내는 탓에 **places 가 비어 있는데 hasNext=true 인 페이지**가
+     *   섞일 수 있다. 이때 멈추면 결과가 있는데도 "검색 결과가 없어요"가 뜨므로,
+     *   새 장소를 한 건이라도 얻을 때까지 [MAX_PAGES_PER_LOAD] 페이지까지 이어서 조회한다.
+     */
+    private fun loadSearchPage(query: String, isFirstPage: Boolean) {
+        if (isFirstPage) {
+            resetSearchPaging()
+            searchedQuery = query
+            _uiState.update {
+                it.copy(
+                    listState = PlaceListState.Loading,
+                    canLoadMoreSearch = false,
+                    isLoadingMoreSearch = false,
+                )
+            }
+        } else {
+            _uiState.update { it.copy(isLoadingMoreSearch = true) }
+        }
+
+        // 이전 검색이 아직 돌고 있으면 결과를 버린다(검색어가 바뀌면 누적분도 cursor 도 재사용하지 않는다).
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
+            val sizeBefore = searchedPlaces.size
+            var failure: ApiResult.Failure? = null
+            var emptyReason: String? = null
+            var pages = 0
+
+            while (pages < MAX_PAGES_PER_LOAD) {
+                val result = searchRepository.searchPlaces(query = query, cursor = searchCursor)
+                pages++
+                val data = when (result) {
+                    is ApiResult.Failure -> {
+                        failure = result
+                        break
                     }
 
-                    is ApiResult.Failure ->
-                        state.copy(listState = PlaceListState.Error(result.toUiError().message))
+                    is ApiResult.Success -> result.data
                 }
+                emptyReason = data.emptyReason
+                // hasNext=true 라도 nextCursor 가 없으면 더 보낼 커서가 없다 → 종료 조건으로 본다.
+                searchCursor = data.nextCursor.takeIf { data.hasNext }
+
+                val newPlaces = data.places
+                    .filter { seenExternalIds.add(it.externalPlaceId) }
+                    .map { it.toUiModel() }
+                searchedPlaces = searchedPlaces + newPlaces
+
+                // 새로 담은 장소가 있으면 여기서 멈추고 화면에 그린다. 없으면 다음 커서로 이어 조회.
+                if (searchedPlaces.size > sizeBefore || searchCursor == null) break
+            }
+
+            val canLoadMore = searchCursor != null
+            val places = searchedPlaces
+            val errorMessage = failure?.toUiError()?.message
+            val listState = when {
+                // 누적된 결과가 하나도 없는 실패만 에러 화면으로 바꾼다. 이미 그린 결과가 있으면 목록을 유지한다.
+                places.isEmpty() && errorMessage != null -> PlaceListState.Error(errorMessage)
+                places.isEmpty() -> emptyStateFor(query = query, emptyReason = emptyReason)
+                else -> PlaceListState.Success(places)
+            }
+            _uiState.update { state ->
+                state.copy(
+                    listState = listState,
+                    // 추가 페이지가 실패해도 cursor 는 그대로 두어, 다시 끝까지 스크롤하면 재시도할 수 있게 한다.
+                    canLoadMoreSearch = canLoadMore,
+                    isLoadingMoreSearch = false,
+                )
             }
         }
     }
+
+    /** 검색어가 바뀌었거나 검색을 그만둘 때 누적 결과·커서를 모두 버린다. */
+    private fun resetSearchPaging() {
+        searchJob?.cancel()
+        searchJob = null
+        searchCursor = null
+        searchedPlaces = emptyList()
+        seenExternalIds.clear()
+        searchedQuery = ""
+    }
+
+    /**
+     * 최종적으로 결과가 없을 때의 빈 화면 문구.
+     * 서버가 사유(emptyReason)를 주면 그대로 따르고, 없으면 검색어로 추정한다.
+     */
+    private fun emptyStateFor(query: String, emptyReason: String?): PlaceListState.Empty =
+        if (emptyReason == SearchEmptyReason.OUTSIDE_SUPPORTED_AREA || isUnsupportedAreaQuery(query)) {
+            PlaceListState.Empty(UNSUPPORTED_AREA_TITLE, UNSUPPORTED_AREA_DESC)
+        } else {
+            PlaceListState.Empty(EMPTY_SEARCH_TITLE, EMPTY_SEARCH_DESC)
+        }
 
     /** 카드 탭 → 기준 장소 선택/해제(토글). 단일 선택. */
     fun onSelectPlace(place: PlaceUiModel) {
@@ -241,6 +349,11 @@ class BasePlaceViewModel @Inject constructor(
     companion object {
         // 명세: 검색어는 공백 제거 후 2자 이상.
         private const val MIN_SEARCH_QUERY_LENGTH = 2
+
+        // 한 번의 조회에서 이어서 볼 최대 페이지 수.
+        // 지원 지역 밖 장소만 걸린 빈 페이지(places=[], hasNext=true)를 건너뛰기 위한 상한선으로,
+        // 서버 cursor 범위(1~45)를 무한정 훑지 않도록 막는다.
+        private const val MAX_PAGES_PER_LOAD = 5
 
         // 지원 지역(와이어프레임 1.3). 명세의 지역명(홍대/연남/성수) 기준.
         private val SUPPORTED_AREAS = setOf("홍대", "연남", "성수")

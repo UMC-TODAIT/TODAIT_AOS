@@ -29,6 +29,10 @@ data class BasePlaceUiState(
     val confirmError: String? = null,
     // 기준 장소 설정 API 호출 중. 확정 알럿의 [확인] 중복 탭을 막는다.
     val isConfirming: Boolean = false,
+    // 검색 결과에 이어서 조회할 페이지(cursor)가 남아 있는지. 목록 끝까지 스크롤하면 추가 조회한다.
+    val canLoadMoreSearch: Boolean = false,
+    // 추가 페이지 조회 중. 목록 하단 인디케이터 노출 + 중복 요청 방지.
+    val isLoadingMoreSearch: Boolean = false,
 ) {
     /** 검색어가 없으면 추천 섹션, 있으면 검색 결과 섹션. */
     val isSearching: Boolean get() = searchQuery.isNotBlank()

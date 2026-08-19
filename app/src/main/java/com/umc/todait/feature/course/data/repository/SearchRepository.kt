@@ -18,11 +18,23 @@ class SearchRepository @Inject constructor(
     private val searchService: SearchService,
 ) {
 
-    /** 기준 장소 검색 (GET /api/places/search?query=) */
+    /**
+     * 기준 장소 검색 (GET /api/places/search?query=&cursor=&size=)
+     *
+     * [cursor] 는 첫 페이지에서 null 로 두고(서버가 1로 취급), 이후에는 직전 응답의
+     * nextCursor 를 그대로 넘긴다. [size] 는 한 검색어를 이어서 조회하는 동안 고정한다.
+     */
     suspend fun searchPlaces(
         query: String,
+        cursor: Int? = null,
+        size: Int = DEFAULT_SEARCH_PAGE_SIZE,
     ): ApiResult<PlaceSearchResultDto> {
         if (USE_COURSE_MOCK) return ApiResult.Success(MockCourse.searchResult(query))
-        return safeApiCall { searchService.searchPlaces(query = query) }
+        return safeApiCall { searchService.searchPlaces(query = query, cursor = cursor, size = size) }
+    }
+
+    companion object {
+        /** 명세 기본값. 1~15 범위 안에서만 바꿀 수 있다. */
+        const val DEFAULT_SEARCH_PAGE_SIZE = 10
     }
 }

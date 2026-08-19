@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -21,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -64,15 +66,27 @@ fun CourseSaveDialog(
                     text = "코스가 저장되었어요",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Gray800
+                    color = Gray800,
+                    textAlign = TextAlign.Center,
+                    // 제목은 폭을 많이 먹어서 여백을 좁게(12) 잡는다 — 좁은 기기에서 굳이 두 줄로 접히지 않게.
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp)
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
+                // 좁은 기기·큰 글꼴 배율에서는 이 문구가 한 줄에 안 들어가 두 줄로 접히는데,
+                // 그때 Text 가 다이얼로그 폭을 꽉 채워 글자가 왼쪽 끝에 붙어 보였다.
+                // 좌우 패딩 + 가운데 정렬로 접히더라도 여백 안에서 가운데 놓이게 한다.
                 Text(
                     text = "저장한 코스는 저장된코스에서 확인할 수 있어요",
                     fontSize = 12.sp,
-                    color = Gray400
+                    color = Gray400,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 18.dp)
                 )
 
                 Spacer(modifier = Modifier.height(30.dp))
@@ -85,7 +99,8 @@ fun CourseSaveDialog(
                     onClick = onMoveClick,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp)
+                        // 높이를 고정하면 글꼴 배율이 큰 기기에서 버튼 문구가 잘린다. 최소 높이로 두어 늘어나게 한다.
+                        .heightIn(min = 56.dp)
                         .padding(horizontal = 18.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Pink600

@@ -14,6 +14,19 @@ val localProperties = Properties().apply {
     if (file.exists()) file.inputStream().use { load(it) }
 }
 
+// 릴리즈 서명 키는 local.properties 에서만 읽는다(키스토어/비밀번호는 저장소에 올리지 않음).
+// 네 값이 모두 있고 키스토어 파일이 실제로 존재할 때만 release 에 서명을 붙인다.
+// 키가 없는 환경(CI, 다른 팀원)에서는 서명 없이 그대로 빌드된다.
+val releaseStoreFile = localProperties.getProperty("RELEASE_STORE_FILE")
+val releaseStorePassword = localProperties.getProperty("RELEASE_STORE_PASSWORD")
+val releaseKeyAlias = localProperties.getProperty("RELEASE_KEY_ALIAS")
+val releaseKeyPassword = localProperties.getProperty("RELEASE_KEY_PASSWORD")
+val hasReleaseSigning = !releaseStoreFile.isNullOrBlank() &&
+        !releaseStorePassword.isNullOrBlank() &&
+        !releaseKeyAlias.isNullOrBlank() &&
+        !releaseKeyPassword.isNullOrBlank() &&
+        file(releaseStoreFile).exists()
+
 android {
     namespace = "com.umc.todait"
     compileSdk = 36
@@ -22,8 +35,8 @@ android {
         applicationId = "com.umc.todait"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 5
+        versionName = "1.0.4"
 
         // local.properties 에 BASE_URL 이 없으면 배포 서버를 기본값으로 쓴다.
         buildConfigField(
@@ -46,10 +59,24 @@ android {
         )
     }
 
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = file(releaseStoreFile!!)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
         debug {
             // 카카오맵 v2 네이티브 lib(libK3fAndroid.so)는 arm64-v8a/armeabi-v7a 만 제공되고

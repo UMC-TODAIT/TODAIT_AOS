@@ -34,7 +34,7 @@ import com.umc.todait.feature.course.CourseDraftResumeDialog
 import com.umc.todait.feature.course.data.dto.CourseDraftStatus
 import com.umc.todait.feature.course.data.dto.MoodTagDto
 import com.umc.todait.ui.component.CommonDialog
-import com.umc.todait.ui.component.ErrorContent
+import com.umc.todait.ui.component.DismissibleErrorContent
 import com.umc.todait.ui.component.LoadingIndicator
 import com.umc.todait.ui.component.ScreenTopBar
 import com.umc.todait.ui.component.TasteSelectionCard
@@ -154,9 +154,10 @@ private fun MoodSelectContent(
             when (val listState = state.listState) {
                 is MoodListState.Loading -> LoadingIndicator()
 
-                is MoodListState.Error -> ErrorContent(
+                is MoodListState.Error -> DismissibleErrorContent(
                     error = UiError(message = listState.message),
                     onRetry = onRetry,
+                    modifier = Modifier.fillMaxSize(),
                 )
 
                 is MoodListState.Success -> MoodGrid(

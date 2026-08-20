@@ -81,6 +81,8 @@ fun MenuFullScreen(
                 ErrorContent(
                     error = UiError(message = detail.message),
                     onRetry = viewModel::loadPlaceDetail,
+                    // 상세를 못 띄운 화면에는 뒤에 남는 내용이 없다. [취소] 는 화면을 빠져나가는 것으로 처리한다.
+                    onDismiss = onBack,
                 )
                 OverlayBackButton(onBack = onBack)
             }

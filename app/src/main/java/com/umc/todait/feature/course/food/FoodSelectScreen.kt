@@ -34,7 +34,7 @@ import com.umc.todait.R
 import com.umc.todait.core.network.UiError
 import com.umc.todait.feature.course.data.dto.FoodCategoryDto
 import com.umc.todait.ui.component.CommonDialog
-import com.umc.todait.ui.component.ErrorContent
+import com.umc.todait.ui.component.DismissibleErrorContent
 import com.umc.todait.ui.component.LoadingIndicator
 import com.umc.todait.ui.component.ScreenTopBar
 import com.umc.todait.ui.component.TasteSelectionCard
@@ -133,9 +133,10 @@ private fun FoodSelectContent(
             when (val listState = state.listState) {
                 is FoodListState.Loading -> LoadingIndicator()
 
-                is FoodListState.Error -> ErrorContent(
+                is FoodListState.Error -> DismissibleErrorContent(
                     error = UiError(message = listState.message),
                     onRetry = onRetry,
+                    modifier = Modifier.fillMaxSize(),
                 )
 
                 is FoodListState.Success -> FoodGrid(

@@ -57,7 +57,7 @@ import com.umc.todait.core.network.UiError
 import com.umc.todait.ui.component.CommonDialog
 import com.umc.todait.feature.course.base_place.PlaceUiModel
 import com.umc.todait.feature.course.data.dto.CourseDraftStatus
-import com.umc.todait.ui.component.ErrorContent
+import com.umc.todait.ui.component.DismissibleErrorContent
 import com.umc.todait.ui.component.LoadingIndicator
 import com.umc.todait.ui.component.ScreenTopBar
 import com.umc.todait.ui.theme.CategoryTabTextSelected
@@ -274,7 +274,7 @@ private fun CourseComposeContent(
                 is RecommendListState.Error ->
                     item {
                         StatusBox {
-                            ErrorContent(
+                            DismissibleErrorContent(
                                 error = UiError(message = recommend.message),
                                 onRetry = onRetry,
                             )
